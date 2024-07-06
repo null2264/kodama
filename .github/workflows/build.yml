@@ -24,7 +24,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          ./gradlew assambleDebug
+          ./gradlew assembleDebug
 
   build-ios:
     runs-on: macos-14
