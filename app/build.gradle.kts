@@ -32,7 +32,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "Bonsai"
+            baseName = "BonsaiKt"
             isStatic = true
         }
     }

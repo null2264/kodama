@@ -1,4 +1,4 @@
-import Bonsai
+import BonsaiKt
 import UIKit
 
 @main
