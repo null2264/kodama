@@ -1,0 +1,42 @@
+name: Build app
+
+on:
+  push:
+    - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Gradle
+        uses: null2264/actions/gradle-setup@c63d62af63686cb442114b979d4bedb96a514881
+        with:
+          java: 17
+          distro: adopt
+
+      - name: Build with Gradle
+        run: |
+          ./gradlew assambleDebug
+
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Gradle
+        uses: null2264/actions/gradle-setup@c63d62af63686cb442114b979d4bedb96a514881
+        with:
+          java: 17
+          distro: adopt
+
+      - name: Build with Xcode
+        run: |
+          xcodebuild -workspace iosApp/iosApp.xcodeproj/project.xcworkspace -configuration Debug -scheme iosApp -sdk iphonesimulator
