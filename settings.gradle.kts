@@ -2,14 +2,7 @@ rootProject.name = "Bonsai"
 
 pluginManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-                includeGroupByRegex("android.*")
-            }
-        }
+        google()
         gradlePluginPortal()
         mavenCentral()
     }
@@ -17,14 +10,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-                includeGroupByRegex("android.*")
-            }
-        }
+        google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
         maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
