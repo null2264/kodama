@@ -1,5 +1,4 @@
 [versions]
-
 kotlin = "2.0.0"
 compose = "1.7.0-alpha01"
 agp = "8.4.2"
@@ -15,8 +14,7 @@ koin = "3.6.0-Beta4"
 koin-compose = "1.2.0-Beta4"
 sqldelight = "2.0.2"
 
-[libraries]
-
+[libraries]  # TODO: Split to several files (libs, androidx, kotlinx)
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
 androidx-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
@@ -36,8 +34,11 @@ sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 
-[plugins]
+supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version = "2.5.1" }
+supabase-auth = { module = "io.github.jan-tennert.supabase:compose-auth" }
+supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui" }
 
+[plugins]
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
