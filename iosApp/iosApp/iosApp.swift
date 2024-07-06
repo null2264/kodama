@@ -1,5 +1,5 @@
+import Bonsai
 import UIKit
-import ComposeApp
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
