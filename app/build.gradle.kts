@@ -53,9 +53,6 @@ kotlin {
             implementation(libs.icons.feather)
             implementation(kotlinx.serialization.json)
 
-            implementation(libs.kermit)
-
-            implementation(libs.koin.core)
             implementation(libs.koin.compose)
 
             implementation(project.dependencies.platform(libs.supabase.bom))

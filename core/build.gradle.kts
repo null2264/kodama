@@ -13,8 +13,14 @@ kotlin {
     iosSimulatorArm64()
     sourceSets {
         commonMain.dependencies {
+            api(libs.koin.core)
+            api(libs.kermit)
+
+            implementation(kotlinx.coroutines.core)
         }
         androidMain.dependencies {
+            implementation(androidx.core)
+            implementation(androidx.preference)
         }
         iosMain.dependencies {
         }
