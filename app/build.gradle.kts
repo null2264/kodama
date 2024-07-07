@@ -4,12 +4,12 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 plugins {
-    alias(libs.plugins.multiplatform)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.compose)
+    alias(kotlinx.plugins.compose)
+    alias(kotlinx.plugins.compose.compiler)
+    alias(kotlinx.plugins.multiplatform)
+    alias(kotlinx.plugins.serialization)
     alias(libs.plugins.android.application)
     alias(libs.plugins.buildconfig)
-    alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqldelight)
 }
 
@@ -20,8 +20,8 @@ kotlin {
         instrumentedTestVariant {
             sourceSetTree.set(KotlinSourceSetTree.test)
             dependencies {
-                debugImplementation(libs.androidx.testManifest)
-                implementation(libs.androidx.junit4)
+                debugImplementation(androidx.compose.test.manifest)
+                implementation(androidx.compose.test.junit4)
             }
         }
     }
@@ -47,9 +47,9 @@ kotlin {
             implementation(libs.voyager.navigator)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.composeIcons.featherIcons)
-            implementation(libs.kotlinx.serialization.json)
+            implementation(kotlinx.coroutines.core)
+            implementation(libs.icons.feather)
+            implementation(kotlinx.serialization.json)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
@@ -58,13 +58,13 @@ kotlin {
             implementation(kotlin("test"))
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
-            implementation(libs.kotlinx.coroutines.test)
+            implementation(kotlinx.coroutines.test)
         }
 
         androidMain.dependencies {
             implementation(compose.uiTooling)
-            implementation(libs.androidx.activityCompose)
-            implementation(libs.kotlinx.coroutines.android)
+            implementation(androidx.activity.compose)
+            implementation(kotlinx.coroutines.android)
             implementation(libs.sqldelight.driver.android)
         }
 

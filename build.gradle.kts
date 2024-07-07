@@ -4,12 +4,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    alias(libs.plugins.multiplatform) apply false
-    alias(libs.plugins.compose.compiler) apply false
-    alias(libs.plugins.compose) apply false
+    alias(kotlinx.plugins.multiplatform) apply false
+    alias(kotlinx.plugins.compose) apply false
+    alias(kotlinx.plugins.compose.compiler) apply false
+    alias(kotlinx.plugins.serialization) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.buildconfig) apply false
-    alias(libs.plugins.kotlinx.serialization) apply false
     alias(libs.plugins.sqldelight) apply false
 }
 

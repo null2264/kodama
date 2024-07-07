@@ -9,6 +9,14 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        create("androidx") {
+            from(files("gradle/androidx.versions.toml"))
+        }
+        create("kotlinx") {
+            from(files("gradle/kotlinx.versions.toml"))
+        }
+    }
     repositories {
         google()
         mavenCentral()
