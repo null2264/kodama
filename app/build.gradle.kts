@@ -50,6 +50,9 @@ kotlin {
             implementation(kotlinx.coroutines.core)
             implementation(libs.icons.feather)
             implementation(kotlinx.serialization.json)
+
+            implementation(libs.kermit)
+
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
 
