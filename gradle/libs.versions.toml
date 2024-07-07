@@ -1,5 +1,4 @@
 [versions]
-agp = "8.4.2"
 voyager = "1.1.0-beta02"
 coil = "3.0.0-alpha07"
 buildconfig = "5.3.5"
@@ -29,6 +28,5 @@ supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

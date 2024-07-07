@@ -4,11 +4,11 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 plugins {
+    alias(androidx.plugins.application)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
-    alias(libs.plugins.android.application)
     alias(libs.plugins.buildconfig)
     alias(libs.plugins.sqldelight)
 }
