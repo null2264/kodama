@@ -33,12 +33,12 @@ subprojects {
 
     plugins.withType<BasePlugin> {
         configure<BaseExtension> {
-            compileSdkVersion(35)
-            ndkVersion = "23.1.7779620"
+            compileSdkVersion(AndroidConfig.compileSdk)
+            ndkVersion = AndroidConfig.ndk
 
             defaultConfig {
-                minSdk = 23
-                targetSdk = 35
+                minSdk = AndroidConfig.minSdk
+                targetSdk = AndroidConfig.targetSdk
             }
 
             compileOptions {
