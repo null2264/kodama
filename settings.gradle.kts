@@ -16,5 +16,7 @@ dependencyResolutionManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     }
 }
-include(":app")
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+include(":app")
