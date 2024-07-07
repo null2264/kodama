@@ -40,7 +40,7 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
-object HomeScreen : Screen() {
+internal object HomeScreen : Screen() {
     @Composable
     override fun Content() {
         Column(
