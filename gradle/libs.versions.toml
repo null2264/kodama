@@ -27,6 +27,9 @@ supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui" }
 
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 
+[bundles]
+supabase = [ "supabase-auth", "supabase-auth-ui" ]
+
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

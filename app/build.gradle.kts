@@ -52,6 +52,9 @@ kotlin {
             implementation(kotlinx.serialization.json)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+
+            implementation(project.dependencies.platform(libs.supabase.bom))
+            implementation(libs.bundles.supabase)
         }
 
         commonTest.dependencies {
