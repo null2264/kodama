@@ -9,3 +9,4 @@ compose-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.r
 
 [plugins]
 application = { id = "com.android.application", version.ref = "agp" }
+library = { id = "com.android.library", version.ref = "agp" }

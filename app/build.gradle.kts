@@ -39,10 +39,12 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.core)
+            implementation(projects.resources)
+
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
-            implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.voyager.navigator)
             implementation(libs.coil)
@@ -102,12 +104,6 @@ android {
 buildConfig {
     // BuildConfig configuration here.
     // https://github.com/gmazzo/gradle-buildconfig-plugin#usage-in-kts
-}
-
-compose {
-    resources {
-        packageOfResClass = "io.github.null2264.resources"
-    }
 }
 
 sqldelight {

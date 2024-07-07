@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(androidx.plugins.application) apply false
+    alias(androidx.plugins.library) apply false
     alias(kotlinx.plugins.multiplatform) apply false
     alias(kotlinx.plugins.compose) apply false
     alias(kotlinx.plugins.compose.compiler) apply false

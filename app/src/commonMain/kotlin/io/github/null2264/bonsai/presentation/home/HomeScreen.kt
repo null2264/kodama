@@ -33,9 +33,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import bonsai.resources.*
 import io.github.null2264.bonsai.presentation.util.Screen
 import io.github.null2264.bonsai.theme.LocalThemeIsDark
-import io.github.null2264.resources.*
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
