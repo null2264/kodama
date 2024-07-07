@@ -15,6 +15,7 @@ kotlin {
     iosSimulatorArm64()
     sourceSets {
         commonMain.dependencies {
+            api(compose.runtime)
             api(compose.components.resources)
         }
         androidMain.dependencies {
