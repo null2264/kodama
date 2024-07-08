@@ -1,11 +1,13 @@
 package io.github.null2264.bonsai.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
+import io.github.null2264.bonsai.domain.ui.UiPreferences
+import io.github.null2264.bonsai.presentation.utils.collectAsState
+import org.koin.compose.koinInject
 
 private val LightColorScheme = lightColorScheme(
     primary = md_theme_light_primary,
@@ -71,24 +73,17 @@ private val DarkColorScheme = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
-internal val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
-
 @Composable
 internal fun AppTheme(
     content: @Composable () -> Unit
 ) {
-    val systemIsDark = isSystemInDarkTheme()
-    val isDarkState = remember { mutableStateOf(systemIsDark) }
-    CompositionLocalProvider(
-        LocalThemeIsDark provides isDarkState
-    ) {
-        val isDark by isDarkState
-        SystemAppearance(!isDark)
-        MaterialTheme(
-            colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-            content = { Surface(content = content) }
-        )
-    }
+    val uiPreferences: UiPreferences = koinInject()
+    val isDark by uiPreferences.nightMode().collectAsState()
+    SystemAppearance(!isDark)
+    MaterialTheme(
+        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
+        content = { Surface(content = content) }
+    )
 }
 
 @Composable

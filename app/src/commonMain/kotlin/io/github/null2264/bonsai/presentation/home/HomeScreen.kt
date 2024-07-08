@@ -34,15 +34,18 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import bonsai.resources.*
-import io.github.null2264.bonsai.presentation.util.Screen
-import io.github.null2264.bonsai.theme.LocalThemeIsDark
+import io.github.null2264.bonsai.domain.ui.UiPreferences
+import io.github.null2264.bonsai.presentation.utils.Screen
+import io.github.null2264.bonsai.presentation.utils.collectAsState
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
+import org.koin.compose.koinInject
 
 internal object HomeScreen : Screen() {
     @Composable
     override fun Content() {
+        val uiPreferences: UiPreferences = koinInject()
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -90,7 +93,7 @@ internal object HomeScreen : Screen() {
                 }
             )
 
-            var isDark by LocalThemeIsDark.current
+            val isDark by uiPreferences.nightMode().collectAsState()
             val icon = remember(isDark) {
                 if (isDark) Res.drawable.ic_light_mode
                 else Res.drawable.ic_dark_mode
@@ -98,7 +101,7 @@ internal object HomeScreen : Screen() {
 
             ElevatedButton(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                onClick = { isDark = !isDark },
+                onClick = { uiPreferences.nightMode().set(!isDark) },
                 content = {
                     Icon(vectorResource(icon), contentDescription = null)
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))

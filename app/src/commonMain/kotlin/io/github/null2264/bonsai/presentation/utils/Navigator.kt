@@ -1,4 +1,4 @@
-package io.github.null2264.bonsai.presentation.util
+package io.github.null2264.bonsai.presentation.utils
 
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
