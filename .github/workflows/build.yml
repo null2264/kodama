@@ -40,4 +40,4 @@ jobs:
 
       - name: Build with Xcode
         run: |
-          xcodebuild -workspace iosApp/iosApp.xcodeproj/project.xcworkspace -configuration Debug -scheme iosApp -sdk iphoneos -destination name='iPhone 14' -verbose
+          xcodebuild -workspace iosApp/iosApp.xcodeproj/project.xcworkspace -configuration Debug -scheme iosApp -sdk iphoneos -destination platform='iOS' -verbose
