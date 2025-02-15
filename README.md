@@ -1,6 +1,6 @@
 <div align="center">
 
-# Bonsai
+# Kodama
 
 A companion app for Bonsai contest(s), made for my college's final project.
 

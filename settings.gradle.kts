@@ -1,4 +1,4 @@
-rootProject.name = "Bonsai"
+rootProject.name = "Kodama"
 
 pluginManagement {
     repositories {

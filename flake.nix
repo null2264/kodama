@@ -1,6 +1,6 @@
 {
   # REF: https://github.com/tailscale/tailscale-android/blob/0ec9167cd21f18812d0bb4653bfb3459bcb0f205/flake.nix
-  description = "Bonsai build environment";
+  description = "Kodama build environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
