@@ -26,16 +26,16 @@ kotlin {
         }
     }
 
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "BonsaiKt"
-            isStatic = true
-        }
-    }
+    // listOf(
+    //     iosX64(),
+    //     iosArm64(),
+    //     iosSimulatorArm64()
+    // ).forEach {
+    //     it.binaries.framework {
+    //         baseName = "BonsaiKt"
+    //         isStatic = true
+    //     }
+    // }
 
     sourceSets {
         commonMain.dependencies {
@@ -72,9 +72,9 @@ kotlin {
             implementation(libs.sqldelight.driver.android)
         }
 
-        iosMain.dependencies {
-            implementation(libs.sqldelight.driver.native)
-        }
+        // iosMain.dependencies {
+        //     implementation(libs.sqldelight.driver.native)
+        // }
     }
 }
 

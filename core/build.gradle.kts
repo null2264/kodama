@@ -8,9 +8,9 @@ plugins {
 
 kotlin {
     androidTarget()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    // iosX64()
+    // iosArm64()
+    // iosSimulatorArm64()
     sourceSets {
         commonMain.dependencies {
             api(libs.koin.core)
@@ -22,8 +22,8 @@ kotlin {
             implementation(androidx.core)
             implementation(androidx.preference)
         }
-        iosMain.dependencies {
-        }
+        // iosMain.dependencies {
+        // }
     }
 }
 
