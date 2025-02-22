@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.0.0"
+kotlin = "2.1.10"
 compose = "1.7.0-alpha01"
 coroutines = "1.9.0-RC"
 serialization = "1.7.1"
