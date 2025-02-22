@@ -35,11 +35,11 @@
               name = "bonsai";
               profile = ''
                 export ANDROID_SDK_ROOT="${android-sdk}/share/android-sdk"
-                export JAVA_HOME="${jdk11.home}"
+                export JAVA_HOME="${jdk17.home}"
               '';
               targetPkgs = pkgs: with pkgs; [
                 android-sdk
-                jdk11  # Android's current supported Java version
+                jdk17  # Android's current supported Java version
                 clang
               ] ++ (if stdenv.isLinux then [
                 vulkan-headers
