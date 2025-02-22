@@ -14,7 +14,7 @@ desugar = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.4" }
 
 icons-feather = { module = "br.com.devsrsouza.compose.icons:feather", version = "1.1.0" }
 
-kermit = { module = "co.touchlab:kermit", version = "2.0.4" }
+kermit = { module = "co.touchlab:kermit", version = "2.0.5" }
 
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-compose" }
