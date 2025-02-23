@@ -26,12 +26,12 @@ kotlin {
 }
 
 android {
-    namespace = "bonsai.resources"
+    namespace = "kodama.resources"
 }
 
 compose.resources {
     publicResClass = true
-    packageOfResClass = "bonsai.resources"
+    packageOfResClass = "kodama.resources"
 }
 
 tasks {

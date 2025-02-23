@@ -28,7 +28,7 @@ kotlin {
 }
 
 android {
-    namespace = "bonsai.core"
+    namespace = "kodama.core"
 }
 
 tasks {
