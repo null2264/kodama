@@ -13,18 +13,22 @@ kotlin {
     iosSimulatorArm64()
     sourceSets {
         commonMain.dependencies {
-            api(libs.koin.core)
+            implementation(libs.koin.core)
+            implementation(libs.kermit)
+
+            implementation(kotlinx.coroutines.core)
         }
         androidMain.dependencies {
+            implementation(androidx.core)
+            implementation(androidx.preference)
         }
         appleMain.dependencies {
-            implementation(projects.core.preference)
         }
     }
 }
 
 android {
-    namespace = "kodama.core"
+    namespace = "kodama.preference"
 }
 
 tasks {

@@ -29,5 +29,6 @@ rootProject.name = "Kodama"
 include(":app:android")
 
 include(":core:main")
+include(":core:preference")
 include(":core:ui")
 include(":resources")

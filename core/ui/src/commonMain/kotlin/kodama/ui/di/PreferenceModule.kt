@@ -1,8 +1,8 @@
 package kodama.ui.di
 
-import kodama.core.utils.setupPreferenceStore
+import kodama.ui.UiPreferences
 import org.koin.dsl.module
 
 val preferenceModule = module {
-    setupPreferenceStore()
+    single { UiPreferences(get()) }
 }

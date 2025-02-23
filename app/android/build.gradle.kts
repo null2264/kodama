@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "io.github.null2264.bonsai"
+    namespace = "kodama.app"
 
     defaultConfig {
-        applicationId = "io.github.null2264.bonsai.androidApp"
+        applicationId = "io.github.null2264.kodama"
         versionCode = 1
         versionName = "0.0.1"
 
@@ -25,6 +25,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.main)
+    implementation(projects.core.preference)
     implementation(projects.core.ui)
 
     implementation(compose.foundation)
@@ -32,4 +34,5 @@ dependencies {
 
     implementation(androidx.activity.compose)
     implementation(libs.koin.core)
+    implementation(libs.koin.android)
 }

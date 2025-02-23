@@ -1,15 +1,22 @@
 package kodama.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import cafe.adriel.voyager.navigator.Navigator
-import kodama.ui.di.appModule
-import kodama.ui.di.preferenceModule
-import kodama.ui.presentation.home.HomeScreen
-import org.koin.compose.KoinApplication
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
 @Composable
-fun App() = KoinApplication(application = {
-    modules(appModule, preferenceModule)
-}) {
-    Navigator(HomeScreen)
+fun App() {
+    //Navigator(HomeScreen)
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Hello World")
+        }
+    }
 }
