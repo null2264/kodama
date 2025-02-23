@@ -8,6 +8,6 @@ import bonsai.core.preference.Preference
 
 @Composable
 fun <T> Preference<T>.collectAsState(): State<T> {
-    val flow = remember(this) { changes() }
+    val flow = remember(this) { getFlow() }
     return flow.collectAsState(initial = get())
 }

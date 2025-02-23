@@ -19,27 +19,32 @@
 
 package bonsai.core.preference
 
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Preference interface from Tachiyomi with modified function name.
+ */
 interface Preference<T> {
 
     fun key(): String
 
     fun get(): T
 
+    fun getFlow(): Flow<T>
+
+    fun getStateFlow(scope: CoroutineScope, started: SharingStarted = defaultStarted): StateFlow<T>
+
+    fun default(): T
+
     fun set(value: T)
 
     fun isSet(): Boolean
 
     fun delete()
-
-    fun defaultValue(): T
-
-    fun changes(): Flow<T>
-
-    fun stateIn(scope: CoroutineScope): StateFlow<T>
 
     companion object {
         /**
@@ -92,3 +97,5 @@ fun Preference<Boolean>.toggle(): Boolean {
     set(!get())
     return get()
 }
+
+private val defaultStarted = SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds)

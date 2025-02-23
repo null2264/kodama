@@ -72,11 +72,11 @@ sealed class AndroidPreference<T>(
         }
     }
 
-    override fun defaultValue(): T {
+    override fun default(): T {
         return defaultValue
     }
 
-    override fun changes(): Flow<T> {
+    override fun getFlow(): Flow<T> {
         return keyFlow
             .filter { it == key || it == null }
             .onStart { emit("ignition") }
@@ -84,8 +84,8 @@ sealed class AndroidPreference<T>(
             .conflate()
     }
 
-    override fun stateIn(scope: CoroutineScope): StateFlow<T> {
-        return changes().stateIn(scope, SharingStarted.Eagerly, get())
+    override fun getStateFlow(scope: CoroutineScope, started: SharingStarted): StateFlow<T> {
+        return getFlow().stateIn(scope, started, get())
     }
 
     class StringPrimitive(
