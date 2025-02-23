@@ -1,6 +1,6 @@
 [versions]
 voyager = "1.1.0-beta03"
-coil = "3.0.0-alpha07"
+coil = "3.1.0"
 buildconfig = "5.3.5"
 koin = "4.1.0-Beta5"
 sqldelight = "2.0.2"
