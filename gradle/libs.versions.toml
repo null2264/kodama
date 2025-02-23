@@ -7,7 +7,7 @@ sqldelight = "2.0.2"
 
 [libraries]
 coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
-coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 desugar = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.4" }
 
