@@ -1,5 +1,4 @@
-rootProject.name = "Kodama"
-
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 pluginManagement {
     repositories {
         google()
@@ -25,8 +24,7 @@ dependencyResolutionManagement {
     }
 }
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
+rootProject.name = "Kodama"
 include(":app")
-include(":core")
+include(":core:main")
 include(":resources")

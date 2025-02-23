@@ -39,7 +39,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core)
+            implementation(projects.core.main)
             implementation(projects.resources)
 
             implementation(compose.foundation)
