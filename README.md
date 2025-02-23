@@ -6,6 +6,8 @@ A companion app for Bonsai contest(s), made for my college's final project.
 
 ### License
 
+Unless stated otherwise, this project is licensed under the Mozilla Public License, v. 2.0:
+
 <pre>
 Copyright © 2024 null2264
 
