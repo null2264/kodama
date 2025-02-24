@@ -21,7 +21,7 @@ kotlin {
     //iosSimulatorArm64()
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core.preference)
+            implementation(projects.core.preferences)
             implementation(projects.resources)
 
             implementation(compose.foundation)

@@ -18,7 +18,7 @@ kotlin {
         androidMain.dependencies {
         }
         appleMain.dependencies {
-            implementation(projects.core.preference)
+            implementation(projects.core.preferences)
         }
     }
 }
