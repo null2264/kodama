@@ -15,6 +15,7 @@ import com.russhwolf.settings.coroutines.getStringOrNullFlow
 import com.russhwolf.settings.coroutines.getStringOrNullStateFlow
 import com.russhwolf.settings.coroutines.getStringStateFlow
 import com.russhwolf.settings.set
+import kodama.preferences.util.mapState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 
@@ -125,13 +126,13 @@ internal class ObjectPreferences<T>(
         }
     },
     internalGetStateFlow = { scope, started ->
-        settings.getStringOrNullStateFlow(scope, key, started).map {
+        settings.getStringOrNullStateFlow(scope, key, started).mapState {
             try {
                 it?.let(deserializer) ?: default
             } catch (e: Exception) {
                 default
             }
-        } as StateFlow<T>
+        }
     },
     internalSet = { value -> settings[key] = serializer(value) },
     internalIsSet = { settings.hasKey(key) },
