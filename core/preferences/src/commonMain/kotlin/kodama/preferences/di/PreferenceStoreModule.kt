@@ -6,6 +6,7 @@ import org.koin.dsl.module
 
 val preferenceStoreModule = module {
     single<PreferenceStore.Factory> { setupPreferenceStoreFactory() }
+    single<PreferenceStore> { get<PreferenceStore.Factory>().default() }
 }
 
 expect fun Scope.setupPreferenceStoreFactory(): PreferenceStore.Factory
