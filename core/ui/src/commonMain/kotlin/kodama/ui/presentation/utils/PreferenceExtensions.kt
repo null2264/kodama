@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import kodama.preference.Preference
+import kodama.preferences.Preference
 
 @Composable
 fun <T> Preference<T>.collectAsState(): State<T> {

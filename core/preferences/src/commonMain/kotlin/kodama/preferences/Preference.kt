@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package kodama.preference
+package kodama.preferences
 
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope

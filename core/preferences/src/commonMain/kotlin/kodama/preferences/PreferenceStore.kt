@@ -17,45 +17,53 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package kodama.preference
+package kodama.preferences
 
 interface PreferenceStore {
 
-    fun getString(key: String, defaultValue: String = ""): Preference<String>
+    interface Factory {
+        fun default(): PreferenceStore
 
-    fun getLong(key: String, defaultValue: Long = 0): Preference<Long>
+        fun get(name: String): PreferenceStore
 
-    fun getInt(key: String, defaultValue: Int = 0): Preference<Int>
+        fun create(name: String? = null): PreferenceStore
 
-    fun getFloat(key: String, defaultValue: Float = 0f): Preference<Float>
+        companion object {
+            const val DEFAULT_PREFERENCE_NAME = "kodama"
+        }
+    }
 
-    fun getBoolean(key: String, defaultValue: Boolean = false): Preference<Boolean>
+    fun getString(key: String, default: String = ""): Preference<String>
 
-    fun getStringSet(key: String, defaultValue: Set<String> = emptySet()): Preference<Set<String>>
+    fun getLong(key: String, default: Long = 0): Preference<Long>
+
+    fun getInt(key: String, default: Int = 0): Preference<Int>
+
+    fun getFloat(key: String, default: Float = 0f): Preference<Float>
+
+    fun getBoolean(key: String, default: Boolean = false): Preference<Boolean>
 
     fun <T> getObject(
         key: String,
-        defaultValue: T,
+        default: T,
         serializer: (T) -> String,
         deserializer: (String) -> T,
     ): Preference<T>
-
-    fun getAll(): Map<String, *>
 }
 
 inline fun <reified T : Enum<T>> PreferenceStore.getEnum(
     key: String,
-    defaultValue: T,
+    default: T,
 ): Preference<T> {
     return getObject(
         key = key,
-        defaultValue = defaultValue,
+        default = default,
         serializer = { it.name },
         deserializer = {
             try {
                 enumValueOf(it)
             } catch (e: IllegalArgumentException) {
-                defaultValue
+                default
             }
         },
     )

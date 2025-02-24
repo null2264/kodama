@@ -17,6 +17,9 @@ kotlin {
             implementation(libs.kermit)
 
             implementation(kotlinx.coroutines.core)
+
+            implementation(libs.settings)
+            implementation(libs.settings.coroutines)
         }
         androidMain.dependencies {
             implementation(androidx.core)
@@ -28,7 +31,7 @@ kotlin {
 }
 
 android {
-    namespace = "kodama.preference"
+    namespace = "kodama.preferences"
 }
 
 tasks {

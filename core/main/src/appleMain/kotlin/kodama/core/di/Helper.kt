@@ -1,6 +1,6 @@
 package kodama.core.di
 
-import kodama.preference.di.preferenceStoreModule
+import kodama.preferences.di.preferenceStoreModule
 import org.koin.core.context.startKoin
 
 fun initKoin() {

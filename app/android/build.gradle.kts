@@ -26,7 +26,7 @@ android {
 
 dependencies {
     implementation(projects.core.main)
-    implementation(projects.core.preference)
+    implementation(projects.core.preferences)
     implementation(projects.core.ui)
 
     implementation(compose.foundation)
