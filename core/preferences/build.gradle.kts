@@ -20,6 +20,7 @@ kotlin {
 
             implementation(libs.settings)
             implementation(libs.settings.coroutines)
+            implementation(libs.settings.make.observable)
         }
         androidMain.dependencies {
             implementation(androidx.core)

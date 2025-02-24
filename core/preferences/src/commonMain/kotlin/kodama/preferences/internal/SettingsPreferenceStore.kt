@@ -2,6 +2,7 @@ package kodama.preferences.internal
 
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
+import com.russhwolf.settings.observable.makeObservable
 import kodama.preferences.Preference
 import kodama.preferences.PreferenceStore
 
@@ -16,7 +17,7 @@ class SettingsPreferenceStore(
 
         override fun create(name: String?): PreferenceStore {
             val settings = delegate.create(name ?: PreferenceStore.Factory.DEFAULT_PREFERENCE_NAME)
-            return SettingsPreferenceStore(settings as ObservableSettings)
+            return SettingsPreferenceStore(if (settings is ObservableSettings) settings else settings.makeObservable())
         }
     }
 
