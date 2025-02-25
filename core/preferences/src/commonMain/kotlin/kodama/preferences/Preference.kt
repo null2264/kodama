@@ -19,6 +19,10 @@
 
 package kodama.preferences
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -96,6 +100,12 @@ operator fun <T> Preference<Set<T>>.minusAssign(item: T) {
 fun Preference<Boolean>.toggle(): Boolean {
     set(!get())
     return get()
+}
+
+@Composable
+fun <T> Preference<T>.collectAsState(): State<T> {
+    val flow = remember(this) { getFlow() }
+    return flow.collectAsState(initial = get())
 }
 
 private val defaultStarted = SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds)

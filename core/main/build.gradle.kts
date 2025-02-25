@@ -11,14 +11,16 @@ kotlin {
     iosX64()
     iosArm64()
     iosSimulatorArm64()
+    jvm("desktop")
     sourceSets {
         commonMain.dependencies {
+            api(libs.kermit)
             api(libs.koin.core)
+            implementation(projects.core.preferences)
         }
         androidMain.dependencies {
         }
         appleMain.dependencies {
-            implementation(projects.core.preferences)
         }
     }
 }

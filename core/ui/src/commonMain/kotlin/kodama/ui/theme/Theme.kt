@@ -1,11 +1,13 @@
 package kodama.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
+import kodama.preferences.collectAsState
+import kodama.ui.UiPreferences
+import org.koin.compose.koinInject
 
 private val LightColorScheme = lightColorScheme(
     primary = md_theme_light_primary,
@@ -73,11 +75,12 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun KodamaTheme(
-    isDark: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    preference: UiPreferences = koinInject(),
+    content: @Composable (Boolean) -> Unit
 ) {
+    val isDark by preference.nightMode().collectAsState()
     MaterialTheme(
         colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-        content = { Surface(content = content) }
+        content = { Surface(content = { content(isDark) }) }
     )
 }

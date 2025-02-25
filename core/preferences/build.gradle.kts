@@ -2,6 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(androidx.plugins.library)
+    alias(kotlinx.plugins.compose)
+    alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
 }
@@ -11,10 +13,13 @@ kotlin {
     iosX64()
     iosArm64()
     iosSimulatorArm64()
+    jvm("desktop")
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
             implementation(libs.kermit)
+
+            implementation(compose.foundation)
 
             implementation(kotlinx.coroutines.core)
 

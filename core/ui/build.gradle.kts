@@ -16,9 +16,10 @@ plugins {
 
 kotlin {
     androidTarget()
-    //iosX64()
-    //iosArm64()
-    //iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+    jvm("desktop")
     sourceSets {
         commonMain.dependencies {
             implementation(projects.core.preferences)

@@ -14,11 +14,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val isSystemInDarkTheme = isSystemInDarkTheme()
-            KodamaTheme(isDark = isSystemInDarkTheme) {
+            KodamaTheme { isDark ->
                 val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
                 val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                enableEdgeToEdge(navigationBarStyle = if (isSystemInDarkTheme) darkStyle else lightStyle)
+                enableEdgeToEdge(navigationBarStyle = if (isDark) darkStyle else lightStyle)
                 App()
             }
         }

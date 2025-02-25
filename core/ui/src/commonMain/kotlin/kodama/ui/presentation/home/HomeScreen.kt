@@ -33,9 +33,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import kodama.preferences.collectAsState
 import kodama.resources.*
 import kodama.ui.UiPreferences
-import kodama.ui.presentation.utils.collectAsState
 import kodama.ui.presentation.utils.Screen
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource

@@ -27,6 +27,7 @@ dependencyResolutionManagement {
 rootProject.name = "Kodama"
 
 include(":app:android")
+include(":app:desktop")
 
 include(":core:main")
 include(":core:preferences")

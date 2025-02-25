@@ -7,16 +7,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cafe.adriel.voyager.navigator.Navigator
+import kodama.ui.presentation.home.HomeScreen
 
 @Composable
 fun App() {
-    //Navigator(HomeScreen)
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("Hello World")
-        }
-    }
+    Navigator(HomeScreen)
 }

@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "io.github.null2264.kodama"
         versionCode = 1
-        versionName = "0.0.1"
+        versionName = AppBuildConfig.VERSION
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +33,5 @@ dependencies {
     implementation(compose.material3)
 
     implementation(androidx.activity.compose)
-    implementation(libs.koin.core)
     implementation(libs.koin.android)
 }
