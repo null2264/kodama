@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,6 +20,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -93,21 +97,24 @@ internal object HomeScreen : Screen() {
                 }
             )
 
-            val isDark by uiPreferences.nightMode().collectAsState()
-            val icon = remember(isDark) {
-                if (isDark) Res.drawable.ic_light_mode
-                else Res.drawable.ic_dark_mode
-            }
+            val currentTheme by uiPreferences.theme().collectAsState()
 
-            ElevatedButton(
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                onClick = { uiPreferences.nightMode().set(!isDark) },
-                content = {
-                    Icon(vectorResource(icon), contentDescription = null)
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(stringResource(Res.string.theme))
+            ) {
+                val themes = UiPreferences.Theme.entries
+                themes.forEachIndexed { index, entry ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = themes.size,
+                        ),
+                        onClick = { uiPreferences.theme().set(entry) },
+                        selected = currentTheme == entry,
+                        label = { Text(entry.localizedString) }
+                    )
                 }
-            )
+            }
 
             val uriHandler = LocalUriHandler.current
             TextButton(

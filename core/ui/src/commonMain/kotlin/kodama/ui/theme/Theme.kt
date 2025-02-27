@@ -78,9 +78,9 @@ fun KodamaTheme(
     preference: UiPreferences = koinInject(),
     content: @Composable (Boolean) -> Unit
 ) {
-    val isDark by preference.nightMode().collectAsState()
+    val theme by preference.theme().collectAsState()
     MaterialTheme(
-        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
-        content = { Surface(content = { content(isDark) }) }
+        colorScheme = if (theme.isDark()) DarkColorScheme else LightColorScheme,
+        content = { Surface(content = { content(theme.isDark()) }) }
     )
 }

@@ -10,7 +10,7 @@ fun initKoin(
 ) {
     startKoin {
         appDeclaration()
-        modules(preferenceStoreModule)
+        modules(supabaseModule, preferenceStoreModule)
         additionalDeclaration()
     }
 }
