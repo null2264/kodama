@@ -1,7 +1,10 @@
 <resources>
     <string name="cyclone">Cyclone</string>
-    <string name="open_github">Open github</string>
+    <string name="logout">Log out</string>
     <string name="run">Run</string>
     <string name="stop">Stop</string>
     <string name="theme">Theme</string>
+    <string name="pref_dark_theme">Dark</string>
+    <string name="pref_light_theme">Dark</string>
+    <string name="pref_system_theme">System</string>
 </resources>

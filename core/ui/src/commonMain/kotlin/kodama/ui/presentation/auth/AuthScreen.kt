@@ -18,9 +18,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -33,13 +31,11 @@ import io.github.jan.supabase.compose.auth.ui.password.PasswordField
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 
-internal object LoginScreen : Screen() {
+internal object AuthScreen : Screen() {
     @OptIn(AuthUiExperimental::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        var email by remember { mutableStateOf("") }
-
-        val screenModel = rememberScreenModel<LoginScreenModel>()
+        val screenModel = rememberScreenModel<AuthScreenModel>()
 
         val state by screenModel.state.collectAsState()
 
@@ -48,11 +44,10 @@ internal object LoginScreen : Screen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var password by remember { mutableStateOf("") }
             val passwordFocus = remember { FocusRequester() }
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = state.email,
+                onValueChange = screenModel::onEmailFieldChanged,
                 singleLine = true,
                 label = { Text("E-Mail") },
                 keyboardOptions = KeyboardOptions(
@@ -63,8 +58,8 @@ internal object LoginScreen : Screen() {
                 leadingIcon = { Icon(Icons.Filled.Email, "Email") },
             )
             PasswordField(
-                value = password,
-                onValueChange = { password = it },
+                value = state.password,
+                onValueChange = screenModel::onPasswordFieldChanged,
                 modifier = Modifier.focusRequester(passwordFocus)
                     .padding(top = 10.dp),
                 keyboardOptions = KeyboardOptions(
@@ -72,13 +67,13 @@ internal object LoginScreen : Screen() {
                     imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(onDone = {
-                    screenModel.authenticate(email, password)
+                    screenModel.authenticate()
                 }),
             )
             Button(
-                onClick = { screenModel.authenticate(email, password) },
+                onClick = { screenModel.authenticate() },
                 modifier = Modifier.padding(top = 10.dp),
-                enabled = email.isNotBlank() && password.isNotBlank()
+                enabled = state.email.isNotBlank() && state.password.isNotBlank()
             ) {
                 Text(if (state.signUp) "Register" else "Login")
             }
