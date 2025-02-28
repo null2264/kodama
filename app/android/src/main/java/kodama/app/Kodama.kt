@@ -2,7 +2,7 @@ package kodama.app
 
 import android.app.Application
 import kodama.core.di.initKoin
-import kodama.ui.di.preferenceModule
+import kodama.ui.di.uiModule
 import org.koin.android.ext.koin.androidContext
 
 class Kodama : Application() {
@@ -13,7 +13,7 @@ class Kodama : Application() {
                 androidContext(this@Kodama)
             },
             additionalDeclaration = {
-                modules(preferenceModule)
+                modules(uiModule)
             },
         )
     }

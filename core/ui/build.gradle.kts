@@ -10,7 +10,6 @@ plugins {
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
-    alias(libs.plugins.buildconfig)
     alias(libs.plugins.sqldelight)
 }
 
@@ -28,7 +27,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.components.uiToolingPreview)
-            implementation(libs.voyager.navigator)
+            implementation(libs.bundles.voyager)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
             implementation(kotlinx.coroutines.core)
@@ -51,7 +50,6 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.uiTooling)
             implementation(androidx.activity.compose)
-            implementation(kotlinx.coroutines.android)
             implementation(libs.sqldelight.driver.android)
         }
 

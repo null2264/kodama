@@ -4,6 +4,7 @@ plugins {
     alias(androidx.plugins.library)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
+    alias(libs.plugins.buildconfig)
 }
 
 kotlin {
@@ -61,4 +62,9 @@ tasks {
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
         )
     }
+}
+
+buildConfig {
+    buildConfigField("String", "SUPABASE_URL", getLocalProperty("SUPABASE_URL"))
+    buildConfigField("String", "SUPABASE_KEY", getLocalProperty("SUPABASE_KEY"))
 }

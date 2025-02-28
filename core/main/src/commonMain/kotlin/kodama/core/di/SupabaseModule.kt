@@ -1,5 +1,6 @@
 package kodama.core.di
 
+import Kodama.core.main.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
@@ -10,8 +11,8 @@ import org.koin.dsl.module
 val supabaseModule = module {
     single<SupabaseClient> {
         createSupabaseClient(
-            supabaseUrl = "",
-            supabaseKey = "",
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY,
         ) {
             install(Auth) {
                 flowType = FlowType.PKCE

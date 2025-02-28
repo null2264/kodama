@@ -14,6 +14,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
+import kodama.ui.presentation.auth.LoginScreen
 import kodama.ui.presentation.home.HomeScreen
 import org.koin.compose.koinInject
 
@@ -25,15 +26,6 @@ fun App(
 
     when (status) {
         is SessionStatus.Authenticated -> Navigator(HomeScreen)
-        else -> {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("Hello World")
-                }
-            }
-        }
+        else -> Navigator(LoginScreen)
     }
 }

@@ -16,6 +16,7 @@ kotlin {
             implementation(projects.core.ui)
 
             implementation(compose.desktop.currentOs)
+            implementation(kotlinx.coroutines.swing)
         }
     }
 }

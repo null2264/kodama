@@ -2,6 +2,7 @@ plugins {
     alias(androidx.plugins.application)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
+    alias(kotlinx.plugins.android)
 }
 
 android {
@@ -22,6 +23,9 @@ android {
             keepDebugSymbols += "**/libandroidx.graphics.path.so"
         }
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -32,6 +36,8 @@ dependencies {
     implementation(compose.foundation)
     implementation(compose.material3)
 
+    implementation(androidx.core)
     implementation(androidx.activity.compose)
     implementation(libs.koin.android)
+    implementation(kotlinx.coroutines.android)
 }

@@ -1,17 +1,16 @@
 package kodama.app
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import kodama.core.di.initKoin
 import kodama.ui.App
-import kodama.ui.di.preferenceModule
+import kodama.ui.di.uiModule
 import kodama.ui.theme.KodamaTheme
 
 fun main() {
     initKoin(
         additionalDeclaration = {
-            modules(preferenceModule)
+            modules(uiModule)
         },
     )
     application {
