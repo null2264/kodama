@@ -37,7 +37,7 @@ internal object LoginScreen : Screen() {
     @OptIn(AuthUiExperimental::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        var email by mutableStateOf("")
+        var email by remember { mutableStateOf("") }
 
         val screenModel = rememberScreenModel<LoginScreenModel>()
 
@@ -48,7 +48,7 @@ internal object LoginScreen : Screen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var password by mutableStateOf("")
+            var password by remember { mutableStateOf("") }
             val passwordFocus = remember { FocusRequester() }
             OutlinedTextField(
                 value = email,

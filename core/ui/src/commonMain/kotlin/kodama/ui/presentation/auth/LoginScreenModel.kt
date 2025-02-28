@@ -24,6 +24,11 @@ class LoginScreenModel(private val auth: Auth) : StateScreenModel<LoginScreenMod
                     this.email = email
                     this.password = password
                 }
+            } else {
+                auth.signInWith(Email) {
+                    this.email = email
+                    this.password = password
+                }
             }
         }
     }
