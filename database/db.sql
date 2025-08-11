@@ -45,22 +45,26 @@ CREATE TABLE kodama.profiles (
 ALTER TABLE kodama.profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE OR REPLACE FUNCTION kodama.is_admin()
-RETURNS boolean AS $$
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
-  RETURN (
-    SELECT role = 'admin' FROM kodama.profiles WHERE id = auth.uid()
-  );
+    RETURN (
+        SELECT role = 'admin' FROM kodama.profiles WHERE id = auth.uid()
+    );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 
 CREATE TABLE kodama.bonsai_classes (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     name text NOT NULL UNIQUE, -- "Shohin", "Chuhin", etc. must be unique
-    description text,
-    -- Official rules, guidelines, etc., for the class go here.
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
+    description text
+    -- TODO: Maybe later?
+    -- created_at timestamptz NOT NULL DEFAULT now(),
+    -- updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 ALTER TABLE kodama.bonsai_classes ENABLE ROW LEVEL SECURITY;
@@ -158,7 +162,6 @@ CREATE TABLE kodama.contest_participants (
     created_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE(user_id, contest_id, role, contest_class_id),
 
-    -- The CHECK constraint still works, just with the new column name.
     CONSTRAINT role_requires_class_id
     CHECK (
         (role <> 'judge') OR (contest_class_id IS NOT NULL)
@@ -181,27 +184,44 @@ USING (
 );
 
 CREATE OR REPLACE FUNCTION kodama.handle_bonsai_verification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
-  -- This function is called after an update on the bonsai table.
-  -- NEW refers to the row's data *after* the update.
-  -- OLD refers to the row's data *before* the update.
+    -- This function is called after an update on the bonsai table.
+    -- NEW refers to the row's data *after* the update.
+    -- OLD refers to the row's data *before* the update.
 
-  -- We only care about the moment it becomes 'verified'.
-  -- We also check OLD.state to ensure this only fires once per bonsai.
-  IF NEW.state = 'verified' AND OLD.state <> 'verified' THEN
+    -- We only care about the moment it becomes 'verified'.
+    -- We also check OLD.state to ensure this only fires once per bonsai.
+    IF NEW.state = 'verified' AND OLD.state <> 'verified' THEN
 
-    -- Insert the owner as a 'contestant' for that contest.
-    -- This runs with the permissions of the user who triggered it (the admin).
-    INSERT INTO kodama.contest_participants (user_id, contest_id, role)
-    VALUES (NEW.owner_id, NEW.contest_id, 'contestant')
-    -- If the user already submitted another bonsai and is already a contestant,
-    -- this clause gracefully does nothing instead of causing an error.
-    ON CONFLICT (user_id, contest_id, role) DO NOTHING;
+        -- Insert the owner as a 'contestant' for that contest.
+        -- This runs with the permissions of the user who triggered it (the admin).
+        INSERT INTO kodama.contest_participants (user_id, contest_id, role)
+        VALUES (NEW.owner_id, NEW.contest_id, 'contestant')
+        -- If the user already submitted another bonsai and is already a contestant,
+        -- this clause gracefully does nothing instead of causing an error.
+        ON CONFLICT (user_id, contest_id, role) DO NOTHING;
 
-  END IF;
+    END IF;
 
-  -- The trigger function must return NEW for an AFTER trigger.
-  RETURN NEW;
+    -- The trigger function must return NEW for an AFTER trigger.
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+DROP TRIGGER IF EXISTS on_bonsai_verified ON kodama.bonsai; -- TODO: Remove once prod is deployed
+
+-- Create the new trigger
+CREATE TRIGGER on_bonsai_verified
+-- It should run AFTER the update is successfully committed to the table.
+AFTER UPDATE ON kodama.bonsai
+FOR EACH ROW
+-- This is the condition for when the trigger function should even be called.
+-- It's a performance optimization.
+WHEN (OLD.state IS DISTINCT FROM NEW.state)
+-- This is the function to execute.
+EXECUTE FUNCTION kodama.handle_bonsai_verification();
