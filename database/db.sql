@@ -42,6 +42,8 @@ CREATE TABLE kodama.profiles (
     role kodama.role NOT NULL DEFAULT 'user'
 );
 
+ALTER TABLE kodama.profiles ENABLE ROW LEVEL SECURITY;
+
 CREATE OR REPLACE FUNCTION kodama.is_admin()
 RETURNS boolean AS $$
 BEGIN
@@ -61,6 +63,8 @@ CREATE TABLE kodama.bonsai_classes (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE kodama.bonsai_classes ENABLE ROW LEVEL SECURITY;
+
 -- RLS: Only admins should manage the master list of classes.
 CREATE POLICY "Admins can manage master bonsai classes." ON kodama.bonsai_classes
 FOR ALL USING (kodama.is_admin()) WITH CHECK (kodama.is_admin());
@@ -76,6 +80,8 @@ CREATE TABLE kodama.contests (
     description text,
     state kodama.contest_state NOT NULL
 );
+
+ALTER TABLE kodama.contests ENABLE ROW LEVEL SECURITY;
 
 -- Admins can do anything on contests.
 CREATE POLICY "Admins can manage contests." ON kodama.contests
@@ -93,6 +99,8 @@ CREATE TABLE kodama.contest_classes (
     class_id uuid NOT NULL REFERENCES kodama.bonsai_classes(id) ON DELETE RESTRICT,
     UNIQUE(contest_id, class_id)
 );
+
+ALTER TABLE kodama.contest_classes ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for the junction table
 -- Admins can link classes to contests.
@@ -118,6 +126,8 @@ CREATE TABLE kodama.bonsai (
     contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT,
     state kodama.bonsai_state NOT NULL DEFAULT 'draft'
 );
+
+ALTER TABLE kodama.bonsai ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can create their own bonsai." ON kodama.bonsai
 FOR INSERT TO authenticated
@@ -154,6 +164,8 @@ CREATE TABLE kodama.contest_participants (
         (role <> 'judge') OR (contest_class_id IS NOT NULL)
     )
 );
+
+ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Judges can view verified bonsai in their contests." ON kodama.bonsai
 FOR SELECT TO authenticated
