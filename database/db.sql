@@ -31,10 +31,23 @@ CREATE TYPE kodama.bonsai_state AS ENUM (
 CREATE TYPE kodama.contest_state AS ENUM (
     'draft',
     'accepting',
-    'reviewing',
+    'reviewing_phase_1',
+    'reviewing_phase_2',
     'finished'
 );
+
+CREATE TYPE kodama.review_phase AS ENUM ('phase_1', 'phase_2');
 --#endregion
+
+CREATE OR REPLACE FUNCTION kodama.set_current_timestamp_updated_at()
+RETURNS TRIGGER
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE kodama.profiles (
     id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -128,7 +141,8 @@ CREATE TABLE kodama.bonsai (
     owner_id uuid NOT NULL REFERENCES auth.users(id),
     contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
     contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT,
-    state kodama.bonsai_state NOT NULL DEFAULT 'draft'
+    state kodama.bonsai_state NOT NULL DEFAULT 'draft',
+    is_phase_2_candidate boolean NOT NULL DEFAULT false
 );
 
 ALTER TABLE kodama.bonsai ENABLE ROW LEVEL SECURITY;
@@ -225,3 +239,162 @@ FOR EACH ROW
 WHEN (OLD.state IS DISTINCT FROM NEW.state)
 -- This is the function to execute.
 EXECUTE FUNCTION kodama.handle_bonsai_verification();
+
+
+--#region Review stuff
+CREATE TABLE kodama.reviews (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
+    judge_id uuid NOT NULL REFERENCES auth.users(id),
+    -- What phase is this review for?
+    phase kodama.review_phase NOT NULL,
+    -- The score given by the judge
+    score integer NOT NULL CHECK (score >= 0 AND score <= 100), -- Example score range
+    comments text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+
+    -- A judge can only review a specific bonsai once per phase.
+    UNIQUE(bonsai_id, judge_id, phase)
+);
+
+-- Add the updated_at trigger
+CREATE TRIGGER set_reviews_updated_at
+BEFORE UPDATE ON kodama.reviews
+FOR EACH ROW
+EXECUTE FUNCTION kodama.set_current_timestamp_updated_at();
+
+-- Let's define a helper function to check if the current user is a judge/head-judge for a contest
+CREATE OR REPLACE FUNCTION kodama.is_contest_judge(p_contest_id uuid)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM kodama.contest_participants
+    WHERE contest_id = p_contest_id
+      AND user_id = auth.uid()
+      AND role IN ('judge', 'head_judge')
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+ALTER TABLE kodama.reviews ENABLE ROW LEVEL SECURITY;
+
+-- POLICY 1: Allow judges to submit reviews during Phase 1
+CREATE POLICY "Judges can submit reviews in Phase 1 for their assigned class" ON kodama.reviews
+FOR INSERT TO authenticated
+WITH CHECK (
+    -- The review being submitted must be for phase_1
+    phase = 'phase_1'
+    AND
+    -- The user must be a designated judge or head judge for the contest
+    (
+        SELECT EXISTS (
+            SELECT 1
+            FROM kodama.bonsai b
+            JOIN kodama.contest_participants p ON b.contest_id = p.contest_id
+            WHERE
+                b.id = reviews.bonsai_id
+                AND p.user_id = auth.uid()
+                AND b.state = 'verified' -- Can only review verified bonsai
+                AND (
+                    -- Head Judges can review any class in Phase 1
+                    p.role = 'head_judge'
+                    OR
+                    -- Regular judges are restricted to their assigned class
+                    (p.role = 'judge' AND p.contest_class_id = b.contest_class_id)
+                )
+        )
+    )
+);
+
+-- POLICY 2: Allow judges to submit reviews during Phase 2
+CREATE POLICY "Judges can submit reviews in Phase 2 for candidate bonsai" ON kodama.reviews
+FOR INSERT TO authenticated
+WITH CHECK (
+    -- The review being submitted must be for phase_2
+    phase = 'phase_2'
+    AND
+    -- Check that the bonsai is a phase 2 candidate and the user is a judge for the contest
+    (
+        SELECT EXISTS (
+            SELECT 1
+            FROM kodama.bonsai b
+            WHERE b.id = reviews.bonsai_id
+            AND b.is_phase_2_candidate = true -- The bonsai MUST be a P2 candidate
+            AND kodama.is_contest_judge(b.contest_id) -- Any judge for the contest can review in P2
+        )
+    )
+);
+
+-- POLICY 3: Users can see their own reviews.
+CREATE POLICY "Judges can see their own reviews." ON kodama.reviews
+FOR SELECT TO authenticated
+USING (judge_id = auth.uid());
+
+-- POLICY 4: Admins/Head Judges can see all reviews.
+CREATE POLICY "Admins and Head Judges can see all reviews for a contest." ON kodama.reviews
+FOR SELECT TO authenticated
+USING (
+    kodama.is_admin() OR
+    (
+        SELECT EXISTS (
+            SELECT 1
+            FROM kodama.bonsai b
+            JOIN kodama.contest_participants p ON b.contest_id = p.contest_id
+            WHERE b.id = reviews.bonsai_id
+              AND p.user_id = auth.uid()
+              AND p.role = 'head_judge'
+        )
+    )
+);
+
+CREATE OR REPLACE FUNCTION kodama.advance_to_phase_2(p_contest_id uuid)
+RETURNS void -- It doesn't need to return anything
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_is_privileged boolean;
+BEGIN
+  -- 1. Security Check: Ensure the user is an Admin or the Head Judge for this contest.
+  SELECT (
+    kodama.is_admin() OR
+    EXISTS (
+        SELECT 1 FROM kodama.contest_participants
+        WHERE user_id = auth.uid()
+          AND contest_id = p_contest_id
+          AND role = 'head_judge'
+    )
+  ) INTO v_is_privileged;
+
+  IF NOT v_is_privileged THEN
+    RAISE EXCEPTION 'User does not have permission to advance this contest.';
+  END IF;
+
+  -- 2. Logic: Find the top 10 bonsai in each class based on Phase 1 scores
+  --    and mark them as phase 2 candidates.
+  WITH ranked_bonsai AS (
+    SELECT
+      b.id as bonsai_id,
+      -- Rank bonsai within each class based on the average score
+      ROW_NUMBER() OVER(
+        PARTITION BY b.contest_class_id
+        ORDER BY AVG(r.score) DESC, b.created_at ASC -- Tie-break with submission time
+      ) as rank
+    FROM kodama.bonsai b
+    JOIN kodama.reviews r ON b.id = r.bonsai_id
+    WHERE b.contest_id = p_contest_id AND r.phase = 'phase_1'
+    GROUP BY b.id, b.contest_class_id
+  )
+  UPDATE kodama.bonsai
+  SET is_phase_2_candidate = true
+  WHERE id IN (
+    SELECT bonsai_id FROM ranked_bonsai WHERE rank <= 10
+  );
+
+  -- 3. State Change: Update the contest's overall state to Phase 2.
+  UPDATE kodama.contests
+  SET state = 'reviewing_phase_2'
+  WHERE id = p_contest_id;
+
+END;
+$$;
+--#endregion
