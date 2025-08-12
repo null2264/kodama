@@ -103,9 +103,6 @@ END;
 $$;
 
 -- TODO: Already handled by supabase's dashboard but maybe we can add "super admin" later that can promote normal user to admin
--- CREATE POLICY "Admin can create a user's metadata." ON kodama.user_metadata
--- FOR INSERT TO authenticated
--- WITH CHECK (kodama.is_admin());
 -- CREATE POLICY "Admin can update a user's metadata." ON kodama.user_metadata
 -- FOR UPDATE TO authenticated
 -- USING (kodama.is_admin());
@@ -125,6 +122,12 @@ CREATE TABLE kodama.bonsai_classes (
 
 ALTER TABLE kodama.bonsai_classes ENABLE ROW LEVEL SECURITY;
 
+INSERT INTO kodama.bonsai_classes (id, name)
+VALUES
+('8f8e46fd-75e9-443e-a1f2-7ffab68ece31', 'Prospek'),
+('fb85ea10-0fc5-40b9-9e27-f236962c8271', 'Pratama'),
+('11943061-aa9d-4cc0-90f6-2ca7b70bc1b5', 'Madya');
+
 -- RLS: Only admins should manage the master list of classes.
 CREATE POLICY "Admins can manage master bonsai classes." ON kodama.bonsai_classes
 FOR ALL USING (kodama.is_admin()) WITH CHECK (kodama.is_admin());
@@ -138,7 +141,7 @@ CREATE TABLE kodama.contests (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     name text NOT NULL,
     description text,
-    state kodama.contest_state NOT NULL
+    state kodama.contest_state NOT NULL DEFAULT 'draft'
 );
 
 ALTER TABLE kodama.contests ENABLE ROW LEVEL SECURITY;
