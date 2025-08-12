@@ -23,11 +23,16 @@ def login(supabase: Client, user: Literal["demo"] | Literal["admin"]) -> User:
     return resp.user
 
 def create_contest(supabase: Client):
-    resp = supabase.schema("kodama").table("contests").insert({ "name": "Test", "description": "Lorem ipsum" }).execute()
+    resp = (
+        supabase.schema("kodama")
+        .table("contests")
+        .insert({ "name": "Test", "description": "Lorem ipsum" })
+        .execute()
+    )
     id: str = resp.data[0]["id"]
 
     # Adding classes to the contest
-    (
+    _ = (
         supabase.schema("kodama")
         .table("contest_classes")
         .insert([
@@ -35,6 +40,30 @@ def create_contest(supabase: Client):
             { "contest_id": id, "class_id": "fb85ea10-0fc5-40b9-9e27-f236962c8271" },
             { "contest_id": id, "class_id": "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5" },
         ])
+        .execute()
+    )
+
+def finalize_contest(supabase: Client):
+    _ = (
+        supabase.schema("kodama")
+        .table("contests")
+        .update({ "state": "accepting" })
+        .execute()
+    )
+
+def review_contest(supabase: Client):
+    _ = (
+        supabase.schema("kodama")
+        .table("contests")
+        .update({ "state": "reviewing_phase_1" })
+        .execute()
+    )
+
+def vote_contest(supabase: Client):
+    _ = (
+        supabase.schema("kodama")
+        .table("contests")
+        .update({ "state": "reviewing_phase_2" })
         .execute()
     )
 
@@ -48,6 +77,7 @@ def main():
 
     user = login(supabase, "admin")
     create_contest(supabase)
+    finalize_contest(supabase)
 
 
 if __name__ == "__main__":
