@@ -1,6 +1,17 @@
+-- NOTE: To self -> UPSERT requires policy for SELECT, UPDATE, and INSERT
+
 DROP SCHEMA IF EXISTS kodama CASCADE;  -- TODO: Remove this after prod is deployed
 
 CREATE SCHEMA kodama;
+
+--#region Grants bs so supabase/postgrest can stop crying
+-- We need to do this otherwise supabase (or rather postgrest) would cry about not having permission
+-- REF: https://github.com/supabase/supabase/blob/a2fc6d592cb4ea50fd518b99db199a31912040b9/docker/volumes/db/init/00-initial-schema.sql#L26-L29
+grant usage              on schema kodama to postgres, anon, authenticated, service_role;
+alter default privileges in schema kodama grant all on tables to postgres, anon, authenticated, service_role;
+alter default privileges in schema kodama grant all on functions to postgres, anon, authenticated, service_role;
+alter default privileges in schema kodama grant all on sequences to postgres, anon, authenticated, service_role;
+--#endregion
 
 --#region Enums / Custom Types
 CREATE TYPE kodama.role AS ENUM (
@@ -49,26 +60,58 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TABLE kodama.profiles (
+CREATE TABLE kodama.user_metadata (
     id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    username text UNIQUE,
     role kodama.role NOT NULL DEFAULT 'user'
 );
 
-ALTER TABLE kodama.profiles ENABLE ROW LEVEL SECURITY;
+-- Insert existing users' metadata
+INSERT INTO kodama.user_metadata (id, role)
+SELECT id, 'user'
+FROM auth.users;
 
-CREATE OR REPLACE FUNCTION kodama.is_admin()
-RETURNS boolean
+-- Create new metadata when there's a new user
+CREATE OR REPLACE FUNCTION kodama.handle_new_user()
+RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
+  INSERT INTO kodama.user_metadata (id, role)
+  VALUES (new.id, 'user');
+  RETURN new;
+END;
+$$;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE PROCEDURE kodama.handle_new_user();
+
+ALTER TABLE kodama.user_metadata ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION kodama.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
     RETURN (
-        SELECT role = 'admin' FROM kodama.profiles WHERE id = auth.uid()
+        SELECT role = 'admin' FROM kodama.user_metadata WHERE id = auth.uid()
     );
 END;
 $$;
+
+-- TODO: Already handled by supabase's dashboard but maybe we can add "super admin" later that can promote normal user to admin
+-- CREATE POLICY "Admin can create a user's metadata." ON kodama.user_metadata
+-- FOR INSERT TO authenticated
+-- WITH CHECK (kodama.is_admin());
+-- CREATE POLICY "Admin can update a user's metadata." ON kodama.user_metadata
+-- FOR UPDATE TO authenticated
+-- USING (kodama.is_admin());
+-- CREATE POLICY "Admin can see a user's metadata." ON kodama.user_metadata
+-- FOR SELECT TO authenticated
+-- USING (kodama.is_admin());
 
 
 CREATE TABLE kodama.bonsai_classes (
@@ -227,8 +270,6 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS on_bonsai_verified ON kodama.bonsai; -- TODO: Remove once prod is deployed
-
 -- Create the new trigger
 CREATE TRIGGER on_bonsai_verified
 -- It should run AFTER the update is successfully committed to the table.
@@ -246,16 +287,18 @@ CREATE TABLE kodama.reviews (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
     judge_id uuid NOT NULL REFERENCES auth.users(id),
-    -- What phase is this review for?
-    phase kodama.review_phase NOT NULL,
-    -- The score given by the judge
-    score integer NOT NULL CHECK (score >= 0 AND score <= 100), -- Example score range
+
+    -- The structured scores for Phase 1
+    -- {"penampilan": 100, "gerak_dasar": 100, "keserasian": 100, "kematangan": 100}
+    scores jsonb NOT NULL,
+    total_score integer NOT NULL,
+
     comments text,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
 
-    -- A judge can only review a specific bonsai once per phase.
-    UNIQUE(bonsai_id, judge_id, phase)
+    -- A judge can only review a bonsai once.
+    UNIQUE(bonsai_id, judge_id)
 );
 
 -- Add the updated_at trigger
@@ -275,17 +318,53 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION kodama.validate_phase1_score()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_required_keys text[] := array['penampilan', 'gerak_dasar', 'keserasian', 'kematangan'];
+  v_submitted_keys text[];
+BEGIN
+  -- Check for correct keys
+  v_submitted_keys := array(SELECT jsonb_object_keys(NEW.scores));
+  IF NOT (v_submitted_keys @> v_required_keys AND v_submitted_keys <@ v_required_keys) THEN
+    RAISE EXCEPTION 'Submitted scores have mismatched criteria. Expected: %, Got: %', v_required_keys, v_submitted_keys;
+  END IF;
+
+  -- Calculate total score
+  NEW.total_score := (
+    SELECT sum(value::numeric)
+    FROM jsonb_each_text(NEW.scores)
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_review_submit
+BEFORE INSERT OR UPDATE ON kodama.reviews
+FOR EACH ROW
+EXECUTE FUNCTION kodama.validate_phase1_score();
+
 ALTER TABLE kodama.reviews ENABLE ROW LEVEL SECURITY;
 
 -- POLICY 1: Allow judges to submit reviews during Phase 1
 CREATE POLICY "Judges can submit reviews in Phase 1 for their assigned class" ON kodama.reviews
 FOR INSERT TO authenticated
 WITH CHECK (
-    -- The review being submitted must be for phase_1
-    phase = 'phase_1'
-    AND
-    -- The user must be a designated judge or head judge for the contest
     (
+        -- The user must be a designated judge or head judge for the contest
+        SELECT EXISTS (
+            SELECT 1
+            FROM kodama.contests c
+            JOIN kodama.bonsai b ON c.id = b.contest_id
+            WHERE
+                b.id = reviews.bonsai_id
+                AND c.state = 'reviewing_phase_1'
+        )
+    )
+    AND
+    (
+        -- The user must be a designated judge or head judge for the contest
         SELECT EXISTS (
             SELECT 1
             FROM kodama.bonsai b
@@ -301,25 +380,6 @@ WITH CHECK (
                     -- Regular judges are restricted to their assigned class
                     (p.role = 'judge' AND p.contest_class_id = b.contest_class_id)
                 )
-        )
-    )
-);
-
--- POLICY 2: Allow judges to submit reviews during Phase 2
-CREATE POLICY "Judges can submit reviews in Phase 2 for candidate bonsai" ON kodama.reviews
-FOR INSERT TO authenticated
-WITH CHECK (
-    -- The review being submitted must be for phase_2
-    phase = 'phase_2'
-    AND
-    -- Check that the bonsai is a phase 2 candidate and the user is a judge for the contest
-    (
-        SELECT EXISTS (
-            SELECT 1
-            FROM kodama.bonsai b
-            WHERE b.id = reviews.bonsai_id
-            AND b.is_phase_2_candidate = true -- The bonsai MUST be a P2 candidate
-            AND kodama.is_contest_judge(b.contest_id) -- Any judge for the contest can review in P2
         )
     )
 );
@@ -397,4 +457,50 @@ BEGIN
 
 END;
 $$;
+
+CREATE TABLE kodama.phase_2_votes (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
+    judge_id uuid NOT NULL REFERENCES auth.users(id),
+    -- The specific bonsai the judge voted for.
+    bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+
+    -- THE MOST IMPORTANT RULE: A judge can only vote ONCE per contest.
+    UNIQUE(contest_id, judge_id)
+);
+
+ALTER TABLE kodama.phase_2_votes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Judges can cast their Best in Show vote." ON kodama.phase_2_votes
+FOR INSERT TO authenticated
+WITH CHECK (
+  -- The user must be a judge for this contest.
+  kodama.is_contest_judge(contest_id)
+  AND
+  -- The contest must be in the correct phase.
+  (SELECT state FROM kodama.contests WHERE id = contest_id) = 'reviewing_phase_2'
+  AND
+  -- The bonsai being voted for MUST be a Phase 2 candidate.
+  (SELECT is_phase_2_candidate FROM kodama.bonsai WHERE id = bonsai_id) = true
+);
+
+-- Policy for viewing votes. To prevent influencing other judges,
+-- let's say only Admins and Head Judges can see the vote counts.
+CREATE POLICY "Admins and Head Judges can see all votes." ON kodama.phase_2_votes
+FOR SELECT TO authenticated
+USING (
+    kodama.is_admin() OR
+    EXISTS (
+        SELECT 1 FROM kodama.contest_participants p
+        WHERE p.contest_id = phase_2_votes.contest_id
+          AND p.user_id = auth.uid()
+          AND p.role = 'head_judge'
+    )
+);
+
+-- Optional: Allow a judge to see their own vote after casting it.
+CREATE POLICY "Judges can see their own vote." ON kodama.phase_2_votes
+FOR SELECT TO authenticated
+USING (judge_id = auth.uid());
 --#endregion
