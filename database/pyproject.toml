@@ -1,0 +1,10 @@
+[project]
+name = "database-test"
+version = "0.1.0"
+description = "Project to test the database"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "load-dotenv>=0.1.0",
+    "supabase>=2.18.0",
+]
