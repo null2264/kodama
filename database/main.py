@@ -67,6 +67,13 @@ def finalize_contest(supabase: Client, contest_id: str):
         .execute()
     )
 
+def verify_bonsai(supabase: Client, bonsai_id: str):
+    _ = (
+        supabase.schema("kodama")
+        .rpc("verify_bonsai", { "bonsai_id": bonsai_id })
+        .execute()
+    )
+
 def close_contest_registration(supabase: Client, contest_id: str):
     _ = (
         supabase.schema("kodama")
@@ -107,8 +114,8 @@ def _choose_class(supabase: Client, contest_id: str, class_id: str) -> str:
     )
     return response.data[0]["id"]
 
-def register_bonsai(supabase: Client, contest_id: str):
-    _ = (
+def register_bonsai(supabase: Client, contest_id: str) -> str:
+    response = (
         supabase.schema("kodama")
         .table("bonsai")
         .insert({
@@ -116,6 +123,14 @@ def register_bonsai(supabase: Client, contest_id: str):
             "contest_id": contest_id,
             "contest_class_id": _choose_class(supabase, contest_id, Class.Pratama),
         })
+        .execute()
+    )
+    return response.data[0]["id"]
+
+def finalize_bonsai(supabase: Client, bonsai_id: str):
+    _ = (
+        supabase.schema("kodama")
+        .rpc("finalize_bonsai", { "bonsai_id": bonsai_id })
         .execute()
     )
 #endregion
@@ -135,16 +150,21 @@ def main():
 
     # --- Contestants registering their bonsai
     _ = login(supabase, "demo")
-    register_bonsai(supabase, contest_id)
+    bonsai_id_1 = register_bonsai(supabase, contest_id)
+    finalize_bonsai(supabase, bonsai_id_1)
+    bonsai_id_2 = register_bonsai(supabase, contest_id)
+    finalize_bonsai(supabase, bonsai_id_2)
 
     # --- Admin closes the registration
     _ = login(supabase, "admin")
+    verify_bonsai(supabase, bonsai_id_1)
+    verify_bonsai(supabase, bonsai_id_2)
     close_contest_registration(supabase, contest_id)
 
     # --- A contestant try to register their bonsai when the contest is already closing its registration
     _ = login(supabase, "demo")
     try:
-        register_bonsai(supabase, contest_id)
+        _ = register_bonsai(supabase, contest_id)
     except:
         print("Failed to register as it should be")
 

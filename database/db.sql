@@ -252,7 +252,7 @@ SET search_path = 'kodama'
 AS $$
 BEGIN
     RETURN (
-        SELECT state = 'draft' FROM kodama.bonsai_metadata WHERE id = bonsai_id 
+        SELECT state = 'draft' FROM kodama.bonsai_metadata WHERE id = is_bonsai_in_draft.bonsai_id
     );
 END;
 $$;
@@ -265,7 +265,49 @@ SET search_path = 'kodama'
 AS $$
 BEGIN
     RETURN (
-        SELECT bonsai.owner_id = owner_id FROM kodama.bonsai WHERE id = bonsai_id 
+        SELECT bonsai.owner_id = is_bonsai_owner.owner_id FROM kodama.bonsai WHERE id = is_bonsai_owner.bonsai_id
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION kodama.finalize_bonsai(bonsai_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    IF NOT kodama.is_bonsai_owner(bonsai_id, auth.uid()) THEN
+        RAISE EXCEPTION 'User does not own this bonsai.';
+    END IF;
+
+    UPDATE kodama.bonsai_metadata
+    SET state = 'waiting_verify'
+    WHERE id = finalize_bonsai.bonsai_id;
+
+    RETURN (
+        SELECT state = 'waiting_verify' FROM kodama.bonsai_metadata WHERE id = finalize_bonsai.bonsai_id
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION kodama.verify_bonsai(bonsai_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    IF NOT kodama.is_admin() THEN
+        RAISE EXCEPTION 'User is not an admin.';
+    END IF;
+
+    UPDATE kodama.bonsai_metadata
+    SET state = 'verified'
+    WHERE id = verify_bonsai.bonsai_id;
+
+    RETURN (
+        SELECT state = 'verified' FROM kodama.bonsai_metadata WHERE id = verify_bonsai.bonsai_id
     );
 END;
 $$;
@@ -290,13 +332,15 @@ CREATE TABLE kodama.contest_participants (
     contest_class_id uuid NULL REFERENCES kodama.contest_classes(id) ON DELETE SET NULL,
 
     created_at timestamptz NOT NULL DEFAULT now(),
-    UNIQUE(user_id, contest_id, role, contest_class_id),
 
     CONSTRAINT role_requires_class_id
     CHECK (
         (role <> 'judge') OR (contest_class_id IS NOT NULL)
     )
 );
+
+CREATE UNIQUE INDEX contest_participants_idx
+ON kodama.contest_participants (user_id, contest_id, role, contest_class_id) NULLS NOT DISTINCT;
 
 ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
 
@@ -325,6 +369,9 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
+DECLARE
+    bonsai_owner_id uuid;
+    bonsai_contest_id uuid;
 BEGIN
     -- This function is called after an update on the bonsai table.
     -- NEW refers to the row's data *after* the update.
@@ -333,14 +380,15 @@ BEGIN
     -- We only care about the moment it becomes 'verified'.
     -- We also check OLD.state to ensure this only fires once per bonsai.
     IF NEW.state = 'verified' AND OLD.state <> 'verified' THEN
+        SELECT owner_id, contest_id INTO bonsai_owner_id, bonsai_contest_id FROM kodama.bonsai WHERE id = NEW.id;
 
         -- Insert the owner as a 'contestant' for that contest.
         -- This runs with the permissions of the user who triggered it (the admin).
-        INSERT INTO kodama.contest_participants (user_id, contest_id, role)
-        VALUES (NEW.owner_id, NEW.contest_id, 'contestant')
+        INSERT INTO kodama.contest_participants (user_id, contest_id, role, contest_class_id)
+        VALUES (bonsai_owner_id, bonsai_contest_id, 'contestant', NULL)  -- contest_class_id is always NULL for contestant
         -- If the user already submitted another bonsai and is already a contestant,
         -- this clause gracefully does nothing instead of causing an error.
-        ON CONFLICT (user_id, contest_id, role) DO NOTHING;
+        ON CONFLICT (user_id, contest_id, role, contest_class_id) DO NOTHING;
 
     END IF;
 
