@@ -41,10 +41,12 @@ CREATE TYPE kodama.bonsai_state AS ENUM (
 
 CREATE TYPE kodama.contest_state AS ENUM (
     'draft',
-    'accepting',
-    'reviewing_phase_1',
-    'reviewing_phase_2',
-    'finished'
+    'accepting',  -- Draft is finalized and is now accepting registration
+    'closed',  -- Registration is closed
+    'reviewing_phase_1',  -- Phase 1 start, scoring in progress, scores are locked upon being submitted but can still be edited if head judge permits it
+    'discuss_phase_2',  -- Phase 1 end, scores are fully locked, in this state judges (and head judge) can discuss about which bonsai to be crowned as "Best in Show"
+    'reviewing_phase_2',  -- Phase 2 start, voting start, judges are now able to vote which bonsai to be crowned as "Best in Show"
+    'finished'  -- Phase 2 end, contest is over, show the result
 );
 
 CREATE TYPE kodama.review_phase AS ENUM ('phase_1', 'phase_2');
@@ -70,6 +72,8 @@ INSERT INTO kodama.user_metadata (id, role)
 SELECT id, 'user'
 FROM auth.users;
 
+ALTER TABLE kodama.user_metadata ENABLE ROW LEVEL SECURITY;
+
 -- Create new metadata when there's a new user
 CREATE OR REPLACE FUNCTION kodama.handle_new_user()
 RETURNS TRIGGER
@@ -86,8 +90,6 @@ $$;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE PROCEDURE kodama.handle_new_user();
-
-ALTER TABLE kodama.user_metadata ENABLE ROW LEVEL SECURITY;
 
 CREATE OR REPLACE FUNCTION kodama.is_admin()
 RETURNS boolean
@@ -155,6 +157,19 @@ CREATE POLICY "Authenticated users can view active contests." ON kodama.contests
 FOR SELECT TO authenticated
 USING (state <> 'draft');
 
+CREATE OR REPLACE FUNCTION kodama.is_registration_open(contest_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    RETURN (
+        SELECT state = 'accepting' FROM kodama.contests WHERE id = contest_id
+    );
+END;
+$$;
+
 -- This helps us archive contest classes in case a class is added/removed in the future without affecting old contests.
 CREATE TABLE kodama.contest_classes (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -184,18 +199,16 @@ USING (
 CREATE TABLE kodama.bonsai (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     name text NOT NULL,
-    owner_id uuid NOT NULL REFERENCES auth.users(id),
+    owner_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id),
     contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
-    contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT,
-    state kodama.bonsai_state NOT NULL DEFAULT 'draft',
-    is_phase_2_candidate boolean NOT NULL DEFAULT false
+    contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT
 );
 
 ALTER TABLE kodama.bonsai ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can create their own bonsai." ON kodama.bonsai
 FOR INSERT TO authenticated
-WITH CHECK (auth.uid() = owner_id);
+WITH CHECK (auth.uid() = owner_id AND kodama.is_registration_open(contest_id));
 
 CREATE POLICY "Users can view their own bonsai." ON kodama.bonsai
 FOR SELECT
@@ -203,11 +216,68 @@ USING (auth.uid() = owner_id);
 
 CREATE POLICY "Users can update their own bonsai." ON kodama.bonsai
 FOR UPDATE TO authenticated
-USING (auth.uid() = owner_id);
+USING (auth.uid() = owner_id AND kodama.is_registration_open(contest_id));
+
+-- Metadata for kodama.bonsai table for columns that should only be able to be modified by the user in a special way, like RPC or SQL Function
+CREATE TABLE kodama.bonsai_metadata (
+    id uuid PRIMARY KEY REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
+    state kodama.bonsai_state NOT NULL DEFAULT 'draft',
+    is_phase_2_candidate boolean NOT NULL DEFAULT false
+);
+
+ALTER TABLE kodama.bonsai_metadata ENABLE ROW LEVEL SECURITY;
+
+-- Create new metadata when there's a new bonsai
+CREATE OR REPLACE FUNCTION kodama.handle_new_bonsai()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+  INSERT INTO kodama.bonsai_metadata (id)
+  VALUES (new.id);
+  RETURN new;
+END;
+$$;
+CREATE TRIGGER on_bonsai_created
+AFTER INSERT ON kodama.bonsai
+FOR EACH ROW EXECUTE PROCEDURE kodama.handle_new_bonsai();
+
+CREATE OR REPLACE FUNCTION kodama.is_bonsai_in_draft(bonsai_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    RETURN (
+        SELECT state = 'draft' FROM kodama.bonsai_metadata WHERE id = bonsai_id 
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION kodama.is_bonsai_owner(bonsai_id uuid, owner_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    RETURN (
+        SELECT bonsai.owner_id = owner_id FROM kodama.bonsai WHERE id = bonsai_id 
+    );
+END;
+$$;
+
+CREATE POLICY "Users can view their own bonsai metadata." ON kodama.bonsai_metadata
+FOR SELECT
+USING (kodama.is_bonsai_owner(id, auth.uid()));
+
 
 CREATE POLICY "Users can delete their own DRAFT bonsai." ON kodama.bonsai
 FOR DELETE TO authenticated
-USING (auth.uid() = owner_id AND state = 'draft');
+USING (auth.uid() = owner_id AND kodama.is_bonsai_in_draft(id));
 
 CREATE TABLE kodama.contest_participants (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -233,7 +303,13 @@ ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Judges can view verified bonsai in their contests." ON kodama.bonsai
 FOR SELECT TO authenticated
 USING (
-    state = 'verified' AND
+    EXISTS (
+        SELECT 1
+        FROM kodama.bonsai_metadata
+        WHERE bonsai_metadata.id = bonsai.id
+            AND bonsai_metadata.state = 'verified'
+    )
+    AND
     EXISTS (
         SELECT 1
         FROM kodama.contest_participants
@@ -276,7 +352,7 @@ $$;
 -- Create the new trigger
 CREATE TRIGGER on_bonsai_verified
 -- It should run AFTER the update is successfully committed to the table.
-AFTER UPDATE ON kodama.bonsai
+AFTER UPDATE ON kodama.bonsai_metadata
 FOR EACH ROW
 -- This is the condition for when the trigger function should even be called.
 -- It's a performance optimization.
@@ -372,10 +448,11 @@ WITH CHECK (
             SELECT 1
             FROM kodama.bonsai b
             JOIN kodama.contest_participants p ON b.contest_id = p.contest_id
+            JOIN kodama.bonsai_metadata m ON b.id = m.id
             WHERE
                 b.id = reviews.bonsai_id
                 AND p.user_id = auth.uid()
-                AND b.state = 'verified' -- Can only review verified bonsai
+                AND m.state = 'verified' -- Can only review verified bonsai
                 AND (
                     -- Head Judges can review any class in Phase 1
                     p.role = 'head_judge'
@@ -447,7 +524,7 @@ BEGIN
     WHERE b.contest_id = p_contest_id AND r.phase = 'phase_1'
     GROUP BY b.id, b.contest_class_id
   )
-  UPDATE kodama.bonsai
+  UPDATE kodama.bonsai_metadata
   SET is_phase_2_candidate = true
   WHERE id IN (
     SELECT bonsai_id FROM ranked_bonsai WHERE rank <= 10
@@ -485,7 +562,7 @@ WITH CHECK (
   (SELECT state FROM kodama.contests WHERE id = contest_id) = 'reviewing_phase_2'
   AND
   -- The bonsai being voted for MUST be a Phase 2 candidate.
-  (SELECT is_phase_2_candidate FROM kodama.bonsai WHERE id = bonsai_id) = true
+  (SELECT is_phase_2_candidate FROM kodama.bonsai_metadata WHERE id = bonsai_id) = true
 );
 
 -- Policy for viewing votes. To prevent influencing other judges,
