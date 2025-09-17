@@ -3,6 +3,7 @@ import asyncpg
 import os
 import click
 
+from colorama import Fore, Style
 from typing import Literal
 from gotrue import User
 from supabase import Client, create_client
@@ -182,6 +183,23 @@ async def reset():
     await conn.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
     await conn.execute("DELETE FROM schema_migrations")
 
+class TestLogger():
+    @staticmethod
+    def log(message: str) -> None:
+        print(f"[{Fore.BLUE}INFO{Style.RESET_ALL}] {message}")
+
+    @staticmethod
+    def init(message: str) -> None:
+        print(f"[{Style.DIM}TESTING{Style.RESET_ALL}] {message}", end="\x1b[1K\r")
+
+    @staticmethod
+    def success(message: str) -> None:
+        print(f"[{Fore.GREEN}SUCCESS{Style.RESET_ALL}] {message}")
+
+    @staticmethod
+    def fail(message: str) -> None:
+        print(f"[{Fore.RED}FAIL{Style.RESET_ALL}] {message}")
+
 @db.command()
 def test():
     """
@@ -192,29 +210,53 @@ def test():
     supabase: Client = create_client(url, key)
 
     # --- Admin creates a contest and finalizing it
+    TestLogger.log("Logging in as Admin...")
     _ = login(supabase, "admin")
+    TestLogger.init("Creating contest...")
     contest_id = create_contest(supabase)
+    TestLogger.success("Contest has been created")
+    TestLogger.init("Finalizing contest...")
     finalize_contest(supabase, contest_id)
+    TestLogger.success("Contest has been finalized")
 
     # --- Contestants registering their bonsai
+    TestLogger.log("Logging in as Demo...")
     _ = login(supabase, "demo")
+    TestLogger.init("Registering bonsai to a contest as a contestant...")
     bonsai_id_1 = register_bonsai(supabase, contest_id)
+    TestLogger.success(f"Bonsai registered with ID {bonsai_id_1}")
+    TestLogger.init("Finalizing bonsai...")
     finalize_bonsai(supabase, bonsai_id_1)
+    TestLogger.success(f"Bonsai with ID {bonsai_id_1} has been finalized")
+    TestLogger.init("Registering bonsai to a contest as a contestant...")
     bonsai_id_2 = register_bonsai(supabase, contest_id)
+    TestLogger.success(f"Bonsai registered with ID {bonsai_id_2}")
+    TestLogger.init("Finalizing bonsai...")
     finalize_bonsai(supabase, bonsai_id_2)
+    TestLogger.success(f"Bonsai with ID {bonsai_id_2} has been finalized")
 
     # --- Admin closes the registration
+    TestLogger.log("Logging in as Admin...")
     _ = login(supabase, "admin")
+    TestLogger.init(f"Verifying bonsai with ID {bonsai_id_1} as a admin...")
     verify_bonsai(supabase, bonsai_id_1)
+    TestLogger.success(f"Bonsai with ID {bonsai_id_1} has been verified")
+    TestLogger.init(f"Verifying bonsai with ID {bonsai_id_2} as a admin...")
     verify_bonsai(supabase, bonsai_id_2)
+    TestLogger.success(f"Bonsai with ID {bonsai_id_2} has been verified")
+    TestLogger.init("Closing contest as a admin...")
     close_contest_registration(supabase, contest_id)
+    TestLogger.success("Contest has been closed")
 
     # --- A contestant try to register their bonsai when the contest is already closing its registration
+    TestLogger.log("Logging in as Demo...")
     _ = login(supabase, "demo")
     try:
-        _ = register_bonsai(supabase, contest_id)
+        TestLogger.init("Registering bonsai to a CLOSED contest as a contestant...")
+        bonsai_id_3 = register_bonsai(supabase, contest_id)
+        TestLogger.fail(f"Bonsai registered with ID {bonsai_id_3}")
     except:
-        print("Failed to register as it should be")
+        TestLogger.success(f"Bonsai failed to register to a CLOSED contest")
 
 
 if __name__ == "__main__":
