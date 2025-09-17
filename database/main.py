@@ -1,4 +1,8 @@
+import asyncio
+import asyncpg
 import os
+import click
+
 from typing import Literal
 from gotrue import User
 from supabase import Client, create_client
@@ -135,9 +139,41 @@ def finalize_bonsai(supabase: Client, bonsai_id: str):
     )
 #endregion
 
+@click.group()
 def main():
+    pass
+
+@main.group()
+def db():
+    pass
+
+@db.command()
+def upgrade():
+    asyncio.run(run_upgrade())
+
+async def run_upgrade():
+    return
+
+    uri: str = os.environ["PG_URI"]
+    conn: asyncpg.Connection = await asyncpg.connect(uri)
+
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS public.schema_migrations (
+            version TEXT PRIMARY KEY,
+            applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    """)
+
+    # TODO: Grab migration files and execute them
+    migration_file = ""
+    async with conn.transaction():
+        #await conn.execute()
+        await conn.execute(f"INSERT INTO schema_migrations (version) VALUES ('{migration_file}')")
+
+@db.command()
+def test():
     """
-    Mimicing how the app would flow as the user used it
+    Test user flow, mimicing how the user(s) would use the app.
     """
     url: str = os.environ["SUPABASE_URL"]
     key: str = os.environ["SUPABASE_KEY"]
