@@ -6,9 +6,13 @@ import click
 from typing import Literal
 from gotrue import User
 from supabase import Client, create_client
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
-_ = load_dotenv()
+environ: dict[str, str | None] = {
+    **os.environ,
+    **dotenv_values(".env"),
+    **dotenv_values(".env.local"),
+}
 
 demo_pass = "demo12345"
 
@@ -151,11 +155,13 @@ def db():
 def upgrade():
     asyncio.run(run_upgrade())
 
+async def get_conn() -> asyncpg.Connection:
+    uri: str = environ["PG_URI"] or ""
+    return await asyncpg.connect(uri)
+
 async def run_upgrade():
     return
-
-    uri: str = os.environ["PG_URI"]
-    conn: asyncpg.Connection = await asyncpg.connect(uri)
+    conn = await get_conn()
 
     await conn.execute("""
         CREATE TABLE IF NOT EXISTS public.schema_migrations (
@@ -167,16 +173,22 @@ async def run_upgrade():
     # TODO: Grab migration files and execute them
     migration_file = ""
     async with conn.transaction():
-        #await conn.execute()
+        # await conn.execute()
         await conn.execute(f"INSERT INTO schema_migrations (version) VALUES ('{migration_file}')")
+
+async def reset():
+    conn = await get_conn()
+
+    await conn.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
+    await conn.execute("DELETE FROM schema_migrations")
 
 @db.command()
 def test():
     """
     Test user flow, mimicing how the user(s) would use the app.
     """
-    url: str = os.environ["SUPABASE_URL"]
-    key: str = os.environ["SUPABASE_KEY"]
+    url: str = environ["SUPABASE_URL"] or ""
+    key: str = environ["SUPABASE_KEY"] or ""
     supabase: Client = create_client(url, key)
 
     # --- Admin creates a contest and finalizing it
