@@ -1,4 +1,5 @@
 import asyncio
+from functools import wraps
 import asyncpg
 import os
 import click
@@ -45,7 +46,7 @@ def login(supabase: Client, user: Literal["demo"] | Literal["admin"]) -> User:
     return resp.user
 
 
-# region Admin (and Judge)
+# #region Admin (and Judge)
 def create_contest(supabase: Client) -> str:
     resp = (
         supabase.schema("kodama")
@@ -123,10 +124,10 @@ def vote_contest(supabase: Client, contest_id: str):
     )
 
 
-# endregion
+# #endregion
 
 
-# region Normal User
+# #region Normal User
 def _choose_class(supabase: Client, contest_id: str, class_id: str) -> str:
     response = (
         supabase.schema("kodama")
@@ -163,7 +164,26 @@ def finalize_bonsai(supabase: Client, bonsai_id: str):
     )
 
 
-# endregion
+# #endregion
+
+
+# #region Click helpers/utils
+def click_sync(func):
+    """Decorator that wraps coroutine with asyncio.run."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
+
+    return wrapper
+
+
+async def get_conn() -> asyncpg.Connection:
+    uri: str = environ["PG_URI"] or ""
+    return await asyncpg.connect(uri)
+
+
+# #endregion
 
 
 @click.group()
@@ -178,11 +198,8 @@ def db():
 
 @db.command()
 @click.option("--reason", "-r", help="The reason for this revision.", required=True)
-def migrate(reason: str):
-    asyncio.run(run_migrate(reason))
-
-
-async def run_migrate(reason: str):
+@click_sync
+async def migrate(reason: str):
     migration = await Migrations.load(connection=await get_conn())
     revision = migration.create_revision(reason)
     click.echo(f"Created revision '{revision.file}'")
@@ -198,16 +215,13 @@ def upgrade():
     asyncio.run(run_upgrade())
 
 
-async def get_conn() -> asyncpg.Connection:
-    uri: str = environ["PG_URI"] or ""
-    return await asyncpg.connect(uri)
-
-
 async def run_upgrade():
     migration = await Migrations.load(connection=await get_conn())
-    migration.display()
+    await migration.upgrade()
 
 
+@db.command()
+@click_sync
 async def reset():
     await Migrations.reset(connection=await get_conn())
 

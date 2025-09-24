@@ -56,12 +56,12 @@ class Migrations:
     async def _load(self) -> None:
         await self.connection.execute("""
             CREATE TABLE IF NOT EXISTS public.schema_migrations (
-                version TEXT PRIMARY KEY,
+                version NUMBER PRIMARY KEY,
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
         """)
         data = await self.connection.fetch("SELECT * FROM public.schema_migrations")
-        self.executed: list[int] = [i["version"] for i in data]
+        self.executed: list[int] = [int(i["version"]) for i in data]
 
     def is_next_revision_taken(self, revision: int) -> bool:
         return revision in self.revisions
@@ -93,10 +93,11 @@ class Migrations:
         async with self.connection.transaction():
             for revision in ordered:
                 if revision.timestamp not in self.executed:
+                    click.echo(f"Applying '{revision.file}'")
                     sql = revision.file.read_text("utf-8")
                     await self.connection.execute(sql)
                     await self.connection.execute(
-                        f"INSERT INTO schema_migrations (version) VALUES ('{revision.file}')"
+                        f"INSERT INTO schema_migrations (version) VALUES ('{revision.timestamp}')"
                     )
 
                     successes += 1
@@ -113,4 +114,4 @@ class Migrations:
     @staticmethod
     async def reset(*, connection: asyncpg.Connection) -> None:
         await connection.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
-        await connection.execute("DELETE FROM schema_migrations")
+        await connection.execute("DELETE FROM public.schema_migrations")
