@@ -9,6 +9,8 @@ from gotrue import User
 from supabase import Client, create_client
 from dotenv import dotenv_values
 
+from core.migration import Migrations
+
 environ: dict[str, str | None] = {
     **os.environ,
     **dotenv_values(".env"),
@@ -153,6 +155,10 @@ def db():
     pass
 
 @db.command()
+def init():
+    asyncio.run(run_upgrade())
+
+@db.command()
 def upgrade():
     asyncio.run(run_upgrade())
 
@@ -161,27 +167,13 @@ async def get_conn() -> asyncpg.Connection:
     return await asyncpg.connect(uri)
 
 async def run_upgrade():
-    return
-    conn = await get_conn()
-
-    await conn.execute("""
-        CREATE TABLE IF NOT EXISTS public.schema_migrations (
-            version TEXT PRIMARY KEY,
-            applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        )
-    """)
-
-    # TODO: Grab migration files and execute them
-    migration_file = ""
-    async with conn.transaction():
-        # await conn.execute()
-        await conn.execute(f"INSERT INTO schema_migrations (version) VALUES ('{migration_file}')")
+    migration = await Migrations.load(connection = await get_conn())
+    migration.display()
 
 async def reset():
     conn = await get_conn()
+    await Migrations.reset(conn)
 
-    await conn.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
-    await conn.execute("DELETE FROM schema_migrations")
 
 class TestLogger():
     @staticmethod

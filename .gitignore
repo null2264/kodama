@@ -17,3 +17,4 @@ kls_database.db
 .env.local
 .venv/
 .python-version
+*.pyc
