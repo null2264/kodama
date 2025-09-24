@@ -1,3 +1,6 @@
+-- Creation Date: 2025-09-24 11:58:57.768505+00:00 UTC
+-- Reason: init
+
 CREATE SCHEMA kodama;
 
 --#region Grants bs so supabase/postgrest can stop crying

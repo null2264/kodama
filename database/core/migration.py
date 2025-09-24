@@ -7,6 +7,8 @@ import asyncpg
 import datetime
 import re
 
+import click
+
 
 REVISION_FILE = re.compile(r"(?P<timestamp>[0-9]+)__(?P<description>.+).sql")
 
@@ -22,7 +24,9 @@ class Revision:
     @classmethod
     def from_match(cls, match: re.Match[str], file: Path):
         return cls(
-            timestamp=int(match.group("timestamp")), description=match.group("description"), file=file
+            timestamp=int(match.group("timestamp")),
+            description=match.group("description"),
+            file=file,
         )
 
 
@@ -41,7 +45,7 @@ class Migrations:
 
     def get_revisions(self) -> dict[int, Revision]:
         result: dict[int, Revision] = {}
-        for file in self.root.glob('*.sql'):
+        for file in self.root.glob("*.sql"):
             match = REVISION_FILE.match(file.name)
             if match is not None:
                 rev = Revision.from_match(match, file)
@@ -50,7 +54,6 @@ class Migrations:
         return result
 
     async def _load(self) -> None:
-
         await self.connection.execute("""
             CREATE TABLE IF NOT EXISTS public.schema_migrations (
                 version TEXT PRIMARY KEY,
@@ -60,25 +63,29 @@ class Migrations:
         data = await self.connection.fetch("SELECT * FROM public.schema_migrations")
         self.executed: list[int] = [i["version"] for i in data]
 
+    def is_next_revision_taken(self, revision: int) -> bool:
+        return revision in self.revisions
+
     @property
     def ordered_revisions(self) -> list[Revision]:
         return sorted(self.revisions.values(), key=lambda r: r.timestamp)
 
     def create_revision(self, reason: str) -> Revision:
         timestamp = datetime.datetime.now(datetime.timezone.utc)
-        cleaned = re.sub(r'\s', '_', reason)
-        filename = f'{timestamp}__{cleaned}.sql'
+        assert not self.is_next_revision_taken(int(timestamp.timestamp()))
+
+        cleaned = re.sub(r"\s", "_", reason)
+        filename = f"{int(timestamp.timestamp())}__{cleaned}.sql"
         path = self.root / filename
 
-        stub = (
-            f'-- Creation Date: {timestamp} UTC\n'
-            f'-- Reason: {reason}\n\n'
-        )
+        stub = f"-- Creation Date: {timestamp} UTC\n-- Reason: {reason}\n\n"
 
-        with open(path, 'w', encoding='utf-8', newline='\n') as fp:
+        with open(path, "w", encoding="utf-8", newline="\n") as fp:
             fp.write(stub)
 
-        return Revision(description=reason, timestamp=int(timestamp.timestamp()), file=path)
+        return Revision(
+            description=reason, timestamp=int(timestamp.timestamp()), file=path
+        )
 
     async def upgrade(self) -> int:
         ordered = self.ordered_revisions
@@ -86,9 +93,11 @@ class Migrations:
         async with self.connection.transaction():
             for revision in ordered:
                 if revision.timestamp not in self.executed:
-                    sql = revision.file.read_text('utf-8')
+                    sql = revision.file.read_text("utf-8")
                     await self.connection.execute(sql)
-                    await self.connection.execute(f"INSERT INTO schema_migrations (version) VALUES ('{revision.file}')")
+                    await self.connection.execute(
+                        f"INSERT INTO schema_migrations (version) VALUES ('{revision.file}')"
+                    )
 
                     successes += 1
 
@@ -98,11 +107,10 @@ class Migrations:
         ordered = self.ordered_revisions
         for revision in ordered:
             if revision.timestamp not in self.executed:
-                sql = revision.file.read_text('utf-8')
-                print(sql)
-                # click.echo(sql)
+                sql = revision.file.read_text("utf-8")
+                click.echo(sql)
 
     @staticmethod
-    async def reset(conn: asyncpg.Connection) -> None:
-        await conn.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
-        await conn.execute("DELETE FROM schema_migrations")
+    async def reset(*, connection: asyncpg.Connection) -> None:
+        await connection.execute("DROP SCHEMA IF EXISTS kodama CASCADE")
+        await connection.execute("DELETE FROM schema_migrations")

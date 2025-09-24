@@ -19,10 +19,12 @@ environ: dict[str, str | None] = {
 
 demo_pass = "demo12345"
 
+
 class Class:
     Madya: str = "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5"
     Prospek: str = "8f8e46fd-75e9-443e-a1f2-7ffab68ece31"
     Pratama: str = "fb85ea10-0fc5-40b9-9e27-f236962c8271"
+
 
 def login(supabase: Client, user: Literal["demo"] | Literal["admin"]) -> User:
     resp = supabase.auth.get_user()
@@ -42,12 +44,13 @@ def login(supabase: Client, user: Literal["demo"] | Literal["admin"]) -> User:
 
     return resp.user
 
-#region Admin (and Judge)
+
+# region Admin (and Judge)
 def create_contest(supabase: Client) -> str:
     resp = (
         supabase.schema("kodama")
         .table("contests")
-        .insert({ "name": "Test", "description": "Lorem ipsum" })
+        .insert({"name": "Test", "description": "Lorem ipsum"})
         .execute()
     )
     id: str = resp.data[0]["id"]
@@ -56,15 +59,18 @@ def create_contest(supabase: Client) -> str:
     _ = (
         supabase.schema("kodama")
         .table("contest_classes")
-        .insert([
-            { "contest_id": id, "class_id": Class.Prospek },
-            { "contest_id": id, "class_id": Class.Madya },
-            { "contest_id": id, "class_id": Class.Pratama },
-        ])
+        .insert(
+            [
+                {"contest_id": id, "class_id": Class.Prospek},
+                {"contest_id": id, "class_id": Class.Madya},
+                {"contest_id": id, "class_id": Class.Pratama},
+            ]
+        )
         .execute()
     )
 
     return id
+
 
 def finalize_contest(supabase: Client, contest_id: str):
     """
@@ -73,47 +79,54 @@ def finalize_contest(supabase: Client, contest_id: str):
     _ = (
         supabase.schema("kodama")
         .table("contests")
-        .update({ "state": "accepting" })
+        .update({"state": "accepting"})
         .eq("id", contest_id)
         .execute()
     )
 
+
 def verify_bonsai(supabase: Client, bonsai_id: str):
     _ = (
         supabase.schema("kodama")
-        .rpc("verify_bonsai", { "bonsai_id": bonsai_id })
+        .rpc("verify_bonsai", {"bonsai_id": bonsai_id})
         .execute()
     )
+
 
 def close_contest_registration(supabase: Client, contest_id: str):
     _ = (
         supabase.schema("kodama")
         .table("contests")
-        .update({ "state": "closed" })
+        .update({"state": "closed"})
         .eq("id", contest_id)
         .execute()
     )
+
 
 def review_contest(supabase: Client, contest_id: str):
     _ = (
         supabase.schema("kodama")
         .table("contests")
-        .update({ "state": "reviewing_phase_1" })
+        .update({"state": "reviewing_phase_1"})
         .eq("id", contest_id)
         .execute()
     )
+
 
 def vote_contest(supabase: Client, contest_id: str):
     _ = (
         supabase.schema("kodama")
         .table("contests")
-        .update({ "state": "reviewing_phase_2" })
+        .update({"state": "reviewing_phase_2"})
         .eq("id", contest_id)
         .execute()
     )
-#endregion
 
-#region Normal User
+
+# endregion
+
+
+# region Normal User
 def _choose_class(supabase: Client, contest_id: str, class_id: str) -> str:
     response = (
         supabase.schema("kodama")
@@ -125,57 +138,81 @@ def _choose_class(supabase: Client, contest_id: str, class_id: str) -> str:
     )
     return response.data[0]["id"]
 
+
 def register_bonsai(supabase: Client, contest_id: str) -> str:
     response = (
         supabase.schema("kodama")
         .table("bonsai")
-        .insert({
-            "name": "Test",
-            "contest_id": contest_id,
-            "contest_class_id": _choose_class(supabase, contest_id, Class.Pratama),
-        })
+        .insert(
+            {
+                "name": "Test",
+                "contest_id": contest_id,
+                "contest_class_id": _choose_class(supabase, contest_id, Class.Pratama),
+            }
+        )
         .execute()
     )
     return response.data[0]["id"]
 
+
 def finalize_bonsai(supabase: Client, bonsai_id: str):
     _ = (
         supabase.schema("kodama")
-        .rpc("finalize_bonsai", { "bonsai_id": bonsai_id })
+        .rpc("finalize_bonsai", {"bonsai_id": bonsai_id})
         .execute()
     )
-#endregion
+
+
+# endregion
+
 
 @click.group()
 def main():
     pass
 
+
 @main.group()
 def db():
     pass
+
+
+@db.command()
+@click.option("--reason", "-r", help="The reason for this revision.", required=True)
+def migrate(reason: str):
+    asyncio.run(run_migrate(reason))
+
+
+async def run_migrate(reason: str):
+    migration = await Migrations.load(connection=await get_conn())
+    revision = migration.create_revision(reason)
+    click.echo(f"Created revision '{revision.file}'")
+
 
 @db.command()
 def init():
     asyncio.run(run_upgrade())
 
+
 @db.command()
 def upgrade():
     asyncio.run(run_upgrade())
+
 
 async def get_conn() -> asyncpg.Connection:
     uri: str = environ["PG_URI"] or ""
     return await asyncpg.connect(uri)
 
+
 async def run_upgrade():
-    migration = await Migrations.load(connection = await get_conn())
+    migration = await Migrations.load(connection=await get_conn())
     migration.display()
 
+
 async def reset():
-    conn = await get_conn()
-    await Migrations.reset(conn)
+    await Migrations.reset(connection=await get_conn())
 
 
-class TestLogger():
+class TestLogger:
     @staticmethod
     def log(message: str) -> None:
         print(f"[{Fore.BLUE}INFO{Style.RESET_ALL}] {message}")
@@ -191,6 +228,7 @@ class TestLogger():
     @staticmethod
     def fail(message: str) -> None:
         print(f"[{Fore.RED}FAIL{Style.RESET_ALL}] {message}")
+
 
 @db.command()
 def test():
