@@ -34,7 +34,7 @@ def login(supabase: Client, user: Literal["demo"] | Literal["admin"]) -> User:
 
     _ = supabase.auth.sign_in_with_password(
         {
-            "email": f"{user}@example.com",
+            "email": f"{user}@test.example.com",
             "password": demo_pass,
         }
     )
@@ -198,25 +198,28 @@ def db():
 
 @db.command()
 @click.option("--reason", "-r", help="The reason for this revision.", required=True)
+@click.option("--test/--no-test", help="Define this revision as a test revision.", default=False)
 @click_sync
-async def migrate(reason: str):
+async def migrate(reason: str, test: bool):
     migration = await Migrations.load(connection=await get_conn())
-    revision = migration.create_revision(reason)
-    click.echo(f"Created revision '{revision.file}'")
+    revision = migration.create_revision(reason, test)
+    click.echo(f"Created{" test" if test else ""} revision '{revision.file}'")
 
 
 @db.command()
-def init():
-    asyncio.run(run_upgrade())
+@click.option("--test/--no-test", help="Apply test revisions.", default=False)
+def init(test: bool):
+    asyncio.run(run_upgrade(test))
 
 
 @db.command()
-def upgrade():
-    asyncio.run(run_upgrade())
+@click.option("--test/--no-test", help="Apply test revisions.", default=False)
+def upgrade(test: bool):
+    asyncio.run(run_upgrade(test))
 
 
-async def run_upgrade():
-    migration = await Migrations.load(connection=await get_conn())
+async def run_upgrade(test: bool):
+    migration = await Migrations.load(connection=await get_conn(), load_test=test)
     await migration.upgrade()
 
 
