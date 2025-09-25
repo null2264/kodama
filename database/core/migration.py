@@ -62,6 +62,7 @@ class Migrations:
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
         """)
+        await self.connection.execute("ALTER TABLE public.schema_migrations ENABLE ROW LEVEL SECURITY")
         data = await self.connection.fetch("SELECT * FROM public.schema_migrations")
         self.executed = [int(i["version"]) for i in data]
 
