@@ -305,6 +305,8 @@ def test():
     except:
         TestLogger.success(f"Bonsai failed to register to a CLOSED contest")
 
+    # TODO: Test the reviewing phase(s)
+
 
 if __name__ == "__main__":
     main()

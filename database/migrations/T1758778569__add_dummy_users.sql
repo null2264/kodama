@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION public.create_user(
 BEGIN
   user_id := gen_random_uuid();
   encrypted_pw := crypt(password, gen_salt('bf', 12));
-  
+
   INSERT INTO auth.users
     (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
   VALUES

@@ -15,6 +15,7 @@ alter default privileges in schema kodama grant all on sequences to postgres, an
 
 --#region Enums / Custom Types
 CREATE TYPE kodama.role AS ENUM (
+    'superuser',
     'user',
     'admin'
 );
@@ -104,10 +105,22 @@ BEGIN
 END;
 $$;
 
--- TODO: Already handled by supabase's dashboard but maybe we can add "super admin" later that can promote normal user to admin
--- CREATE POLICY "Admin can update a user's metadata." ON kodama.user_metadata
--- FOR UPDATE TO authenticated
--- USING (kodama.is_admin());
--- CREATE POLICY "Admin can see a user's metadata." ON kodama.user_metadata
--- FOR SELECT TO authenticated
--- USING (kodama.is_admin());
+CREATE OR REPLACE FUNCTION kodama.is_superuser()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    RETURN (
+        SELECT role = 'superuser' FROM kodama.user_metadata WHERE id = auth.uid()
+    );
+END;
+$$;
+
+CREATE POLICY "Superuser can update a user's metadata." ON kodama.user_metadata
+FOR UPDATE TO authenticated
+USING (kodama.is_superuser());
+CREATE POLICY "Superuser can see a user's metadata." ON kodama.user_metadata
+FOR SELECT TO authenticated
+USING (kodama.is_superuser());
