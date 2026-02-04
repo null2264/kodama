@@ -18,4 +18,4 @@ kls_database.db
 .venv/
 .python-version
 *.pyc
-/database/database
+/database/kodama-db

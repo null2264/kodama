@@ -1,4 +1,4 @@
-module github.com/null2264/kodama/database
+module github.com/null2264/kodama/kodama-db
 
 go 1.25.6
 

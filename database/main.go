@@ -29,11 +29,24 @@ var testCmd = &cobra.Command{
 	Run:   doTest,
 }
 
-const demoPass string = "demo12345"
+var migrateCmd = &cobra.Command{
+	Use:   "migrate",
+	Short: "Generate new revision",
+	Run:   doMigrate,
+}
 
-const classMadya string = "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5"
-const classProspek string = "8f8e46fd-75e9-443e-a1f2-7ffab68ece31"
-const classPratama string = "fb85ea10-0fc5-40b9-9e27-f236962c8271"
+var (
+	revisionReason string
+	enableTestRev bool
+)
+
+const (
+	demoPass string = "demo12345"
+
+	classMadya string = "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5"
+	classProspek string = "8f8e46fd-75e9-443e-a1f2-7ffab68ece31"
+	classPratama string = "fb85ea10-0fc5-40b9-9e27-f236962c8271"
+)
 
 func doTest(cmd *cobra.Command, args []string) {
 	url := os.Getenv("SUPABASE_URL")
@@ -48,12 +61,21 @@ if err != nil {
 		log.Fatal("Sign in failed: ", err)
 	}
 
-	fmt.Printf("User ID: %s\n", session.User.ID)
-	fmt.Printf("Access Token: %s\n", session.AccessToken)
+	fmt.Println("User ID:", session.User.ID)
+	fmt.Println("Access Token:", session.AccessToken)
+}
+
+func doMigrate(cmd *cobra.Command, args []string) {
+	fmt.Println("Reason:", revisionReason)
+	fmt.Println("Is Test Rev:", enableTestRev)
 }
 
 func init() {
 	dbCmd.AddCommand(testCmd)
+	dbCmd.AddCommand(migrateCmd)
+	migrateCmd.Flags().StringVarP(&revisionReason, "reason", "r", "", "the reason for this revision")
+	migrateCmd.MarkFlagRequired("reason")
+	migrateCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "mark this revision as a test revision")
 	rootCmd.AddCommand(dbCmd)
 }
 
