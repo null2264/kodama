@@ -1,13 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	supabase "github.com/supabase-community/supabase-go"
 	"log"
 	"os"
+	"path/filepath"
 
+	"github.com/null2264/kodama/kodama-db/core"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	_ "github.com/lib/pq"
 )
 
 var rootCmd = &cobra.Command{
@@ -57,7 +61,7 @@ func doTest(cmd *cobra.Command, args []string) {
 	}
 
 	session, err := client.SignInWithEmailPassword("demo@test.example.com", demoPass)
-if err != nil {
+	if err != nil {
 		log.Fatal("Sign in failed: ", err)
 	}
 
@@ -66,7 +70,25 @@ if err != nil {
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {
-	fmt.Println("Reason:", revisionReason)
+	dsn, ok := os.LookupEnv("PG_URI")
+	if !ok {
+		log.Fatal("PG_URI is not set")
+	}
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	migration := core.NewMigrations(filepath.Join(cwd, "migrations"), db)
+	migration.Test()
+	fmt.Println("Migration", migration)
+	fmt.Println("cwd:", cwd)
 	fmt.Println("Is Test Rev:", enableTestRev)
 }
 
@@ -80,6 +102,15 @@ func init() {
 }
 
 func main() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := os.Stat(filepath.Join(cwd, "migrations")); os.IsNotExist(err) {
+		log.Fatal("Invalid working directory.")
+	}
+
 	godotenv.Load(".env.local")
 	godotenv.Load()
 
