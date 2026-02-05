@@ -40,7 +40,7 @@ func (e *pgError) Error() string {
     return e.message
 }
 
-func NewMigrations() (*Migrations, error) {
+func NewMigrations(loadTest bool) (*Migrations, error) {
 	var err error = nil
 	dsn, ok := os.LookupEnv("PG_URI")
 	if !ok {
@@ -86,12 +86,14 @@ func NewMigrations() (*Migrations, error) {
 		err = errors.Join(err, cwdErr)
 	}
 
-	return &Migrations{
+	m := &Migrations{
 		rootPath: filepath.Join(cwd, "migrations"),
 		db: db,
 		revisions: make(map[int64]Revision),
 		executed: executed,
-	}, err
+	}
+	m.fetchRevisions(loadTest)
+	return m, err
 }
 
 func (m *Migrations) Reset() {
@@ -146,19 +148,20 @@ func (m *Migrations) Create(reason string, isTest bool) Revision {
 	return rev
 }
 
-func (m *Migrations) Upgrade(testRevEnabled bool) {
-	entries, err := os.ReadDir(m.rootPath)
+func (m *Migrations) fetchRevisions(testRevEnabled bool) {
+	matches, err := filepath.Glob(filepath.Join(m.rootPath, "*.sql"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, e := range entries {
-		isTest := e.Name()[0] == 'T'
-		if isTest&& !testRevEnabled {
+	for _, e := range matches {
+		filename := filepath.Base(e)
+		isTest := filename[0] == 'T'
+		if isTest && !testRevEnabled {
 			continue
 		}
 
-		match := revisionRe.FindStringSubmatch(e.Name())
+		match := revisionRe.FindStringSubmatch(filename)
 		result := make(map[string]string)
 
 		for i, name := range revisionRe.SubexpNames() {
@@ -169,7 +172,7 @@ func (m *Migrations) Upgrade(testRevEnabled bool) {
 
 		timestamp, err := strconv.ParseInt(result["timestamp"], 10, 64)
 		if err != nil {
-			fmt.Println("Invalid timestamp. file:", e.Name())
+			fmt.Println("Invalid timestamp. file:", filename)
 			continue
 		}
 
@@ -177,10 +180,39 @@ func (m *Migrations) Upgrade(testRevEnabled bool) {
 			isTest: isTest,
 			description: result["description"],
 			timestamp: timestamp,
-			filename: e.Name(),
+			filename: filename,
 		}
 		m.revisions[rev.timestamp] = rev
 	}
-	fmt.Println(m.revisions)
-	// TODO: The actual migration
+}
+
+func (m *Migrations) Upgrade(testRevEnabled bool) {
+	keys := []int64{}
+
+	for _, rev := range m.revisions {
+		if slices.Contains(m.executed, rev.timestamp) {
+			continue
+		}
+		keys = append(keys, rev.timestamp)
+	}
+
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		rev := m.revisions[key]
+
+		sql, err := os.ReadFile(filepath.Join(m.rootPath, rev.filename))
+		if err != nil {
+			continue
+		}
+
+		fmt.Println("Applying", rev.filename)
+
+		if _, err := m.db.Exec(string(sql)); err != nil {
+			fmt.Println(err)
+		}
+		if _, err := m.db.Exec("INSERT INTO schema_migrations (version) VALUES ($1)", rev.timestamp); err != nil {
+			fmt.Println(err)
+		}
+	}
 }

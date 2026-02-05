@@ -12,6 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	revisionReason string
+	enableTestRev  bool = false
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "kodama-db",
 	Short: "Database Utility CLI for Kodama",
@@ -41,7 +46,7 @@ var resetCmd = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset the database",
 	Run: func(cmd *cobra.Command, args []string) {
-		migration, err := core.NewMigrations()
+		migration, err := core.NewMigrations(enableTestRev)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -54,11 +59,6 @@ var upgradeCmd = &cobra.Command{
 	Short: "Apply all available revisions",
 	Run:   doUpgrade,
 }
-
-var (
-	revisionReason string
-	enableTestRev  bool
-)
 
 const (
 	demoPass string = "demo12345"
@@ -86,7 +86,7 @@ func doTest(cmd *cobra.Command, args []string) {
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {
-	migration, err := core.NewMigrations()
+	migration, err := core.NewMigrations(enableTestRev)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func doMigrate(cmd *cobra.Command, args []string) {
 }
 
 func doUpgrade(cmd *cobra.Command, args []string) {
-	migration, err := core.NewMigrations()
+	migration, err := core.NewMigrations(enableTestRev)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -109,6 +109,7 @@ func init() {
 	migrateCmd.Flags().StringVarP(&revisionReason, "reason", "r", "", "the reason for this revision")
 	migrateCmd.MarkFlagRequired("reason")
 	migrateCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "mark this revision as a test revision")
+	upgradeCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "apply test revisions")
 	rootCmd.AddCommand(dbCmd)
 }
 
