@@ -1,10 +1,14 @@
+// Package core - Mainly contains migration revision handler
 package core
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	_ "github.com/lib/pq"
 )
 
 type Revision struct {
@@ -21,13 +25,31 @@ type Migrations struct {
 	executed []int
 }
 
-func NewMigrations(rootPath string, db *sql.DB) *Migrations {
+type pgError struct {
+	message string
+}
+
+func (e *pgError) Error() string {
+    return e.message
+}
+
+func NewMigrations() (*Migrations, error) {
+	var err error = nil
+	dsn, ok := os.LookupEnv("PG_URI")
+	if !ok {
+		err = &pgError{message: "PG_URI is not set"}
+	}
+
+	db, dbErr := sql.Open("postgres", dsn)
+
+	cwd, cwdErr := os.Getwd()
+
 	return &Migrations{
-		rootPath: rootPath,
+		rootPath: filepath.Join(cwd, "migrations"),
 		db: db,
 		revisions: make(map[int]Revision),
 		executed: []int{},
-	}
+	}, errors.Join(err, dbErr, cwdErr)
 }
 
 func (m *Migrations) Reset() {

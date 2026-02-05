@@ -1,17 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	supabase "github.com/supabase-community/supabase-go"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/null2264/kodama/kodama-db/core"
 	"github.com/joho/godotenv"
+	"github.com/null2264/kodama/kodama-db/core"
 	"github.com/spf13/cobra"
-	_ "github.com/lib/pq"
 )
 
 var rootCmd = &cobra.Command{
@@ -39,15 +37,27 @@ var migrateCmd = &cobra.Command{
 	Run:   doMigrate,
 }
 
+var resetCmd = &cobra.Command{
+	Use:   "reset",
+	Short: "Reset the database",
+	Run: func(cmd *cobra.Command, args []string) {
+		migration, err := core.NewMigrations()
+		if err != nil {
+			log.Fatal(err)
+		}
+		migration.Reset()
+	},
+}
+
 var (
 	revisionReason string
-	enableTestRev bool
+	enableTestRev  bool
 )
 
 const (
 	demoPass string = "demo12345"
 
-	classMadya string = "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5"
+	classMadya   string = "11943061-aa9d-4cc0-90f6-2ca7b70bc1b5"
 	classProspek string = "8f8e46fd-75e9-443e-a1f2-7ffab68ece31"
 	classPratama string = "fb85ea10-0fc5-40b9-9e27-f236962c8271"
 )
@@ -70,31 +80,20 @@ func doTest(cmd *cobra.Command, args []string) {
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {
-	dsn, ok := os.LookupEnv("PG_URI")
-	if !ok {
-		log.Fatal("PG_URI is not set")
-	}
-
-	db, err := sql.Open("postgres", dsn)
+	migration, err := core.NewMigrations()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	migration := core.NewMigrations(filepath.Join(cwd, "migrations"), db)
 	migration.Test()
+
 	fmt.Println("Migration", migration)
-	fmt.Println("cwd:", cwd)
 	fmt.Println("Is Test Rev:", enableTestRev)
 }
 
 func init() {
 	dbCmd.AddCommand(testCmd)
 	dbCmd.AddCommand(migrateCmd)
+	dbCmd.AddCommand(resetCmd)
 	migrateCmd.Flags().StringVarP(&revisionReason, "reason", "r", "", "the reason for this revision")
 	migrateCmd.MarkFlagRequired("reason")
 	migrateCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "mark this revision as a test revision")
@@ -108,7 +107,7 @@ func main() {
 	}
 
 	if _, err := os.Stat(filepath.Join(cwd, "migrations")); os.IsNotExist(err) {
-		log.Fatal("Invalid working directory.")
+		log.Fatal("Invalid working directory, there are no 'migrations' directory.")
 	}
 
 	godotenv.Load(".env.local")
