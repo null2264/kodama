@@ -49,6 +49,12 @@ var resetCmd = &cobra.Command{
 	},
 }
 
+var upgradeCmd = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Apply all available revisions",
+	Run:   doUpgrade,
+}
+
 var (
 	revisionReason string
 	enableTestRev  bool
@@ -87,10 +93,19 @@ func doMigrate(cmd *cobra.Command, args []string) {
 	migration.Create(revisionReason, enableTestRev)
 }
 
+func doUpgrade(cmd *cobra.Command, args []string) {
+	migration, err := core.NewMigrations()
+	if err != nil {
+		log.Fatal(err)
+	}
+	migration.Upgrade(enableTestRev)
+}
+
 func init() {
 	dbCmd.AddCommand(testCmd)
 	dbCmd.AddCommand(migrateCmd)
 	dbCmd.AddCommand(resetCmd)
+	dbCmd.AddCommand(upgradeCmd)
 	migrateCmd.Flags().StringVarP(&revisionReason, "reason", "r", "", "the reason for this revision")
 	migrateCmd.MarkFlagRequired("reason")
 	migrateCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "mark this revision as a test revision")
@@ -111,7 +126,7 @@ func main() {
 	godotenv.Load()
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		os.Exit(1)
 	}
 }

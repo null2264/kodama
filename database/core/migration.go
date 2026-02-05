@@ -10,16 +10,19 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib" // Using pgx because for some reason pq keep returning EOF
 )
 
+var revisionRe *regexp.Regexp = regexp.MustCompile(`(?P<is_test>T?)(?P<timestamp>[0-9]+)__(?P<description>.+).sql`)
+
 type Revision struct {
 	isTest bool
 	timestamp int64
 	description string
-	filePath string
+	filename string
 }
 
 type Migrations struct {
@@ -116,7 +119,7 @@ func (m *Migrations) isNextRevisionTaken(revision int64) bool {
 
 func (m *Migrations) Create(reason string, isTest bool) Revision {
 	now := time.Now()
-	timestamp := now.UnixMilli()
+	timestamp := now.Unix()
 	if m.isNextRevisionTaken(timestamp) {
 		log.Fatal("Revision is already exists")
 	}
@@ -124,33 +127,60 @@ func (m *Migrations) Create(reason string, isTest bool) Revision {
 	re := regexp.MustCompile(`\s`)
 	cleaned := re.ReplaceAllString(reason, "_")
 	filename := fmt.Sprint(If(isTest, "T", ""), timestamp, "__", cleaned, ".sql")
-	path := filepath.Join(m.rootPath, filename)
 	stub := fmt.Sprintln("-- Creation Date:", now.UTC(), "\n-- Reason:", reason, "\n")
 
 	rev := Revision{
 		isTest: isTest,
-		description: reason,
+		description: cleaned,
 		timestamp: timestamp,
-		filePath: path,
+		filename: filename,
 	}
 
-	err := os.WriteFile(path, []byte(stub), 0644)
+	err := os.WriteFile(filepath.Join(m.rootPath, rev.filename), []byte(stub), 0644)
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		fmt.Print("Successfully created ", If(isTest, "test ", ""), "revision '", filename, "'\n")
+		fmt.Print("Successfully created ", If(isTest, "test ", ""), "revision '", rev.filename, "'\n")
 	}
 
 	return rev
 }
 
-func (m *Migrations) Test() {
+func (m *Migrations) Upgrade(testRevEnabled bool) {
 	entries, err := os.ReadDir(m.rootPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, e := range entries {
-		fmt.Println(e.Name())
+		isTest := e.Name()[0] == 'T'
+		if isTest&& !testRevEnabled {
+			continue
+		}
+
+		match := revisionRe.FindStringSubmatch(e.Name())
+		result := make(map[string]string)
+
+		for i, name := range revisionRe.SubexpNames() {
+			if i != 0 && name != "" {
+				result[name] = match[i]
+			}
+		}
+
+		timestamp, err := strconv.ParseInt(result["timestamp"], 10, 64)
+		if err != nil {
+			fmt.Println("Invalid timestamp. file:", e.Name())
+			continue
+		}
+
+		rev := Revision{
+			isTest: isTest,
+			description: result["description"],
+			timestamp: timestamp,
+			filename: e.Name(),
+		}
+		m.revisions[rev.timestamp] = rev
 	}
+	fmt.Println(m.revisions)
+	// TODO: The actual migration
 }
