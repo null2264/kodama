@@ -8,7 +8,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	_ "github.com/lib/pq"
+
+	_ "github.com/jackc/pgx/v5/stdlib"  // Using pgx because for some reason pq keep returning EOF
 )
 
 type Revision struct {
@@ -21,8 +22,8 @@ type Revision struct {
 type Migrations struct {
 	rootPath string
 	db *sql.DB
-	revisions map[int]Revision
-	executed []int
+	revisions map[int64]Revision
+	executed []int64
 }
 
 type pgError struct {
@@ -40,16 +41,51 @@ func NewMigrations() (*Migrations, error) {
 		err = &pgError{message: "PG_URI is not set"}
 	}
 
-	db, dbErr := sql.Open("postgres", dsn)
+	db, dbErr := sql.Open("pgx", dsn)
+	if dbErr != nil {
+		err = errors.Join(err, dbErr)
+	}
+
+	executed := []int64{}
+
+	//#region schema migrations storage
+	_, _ = db.Exec(`
+		CREATE TABLE IF NOT EXISTS public.schema_migrations (
+			version BIGINT PRIMARY KEY,
+			applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+		)
+	`)
+	_, _ = db.Exec("ALTER TABLE public.schema_migrations ENABLE ROW LEVEL SECURITY")
+
+	data, fetchErr := db.Query("SELECT * FROM public.schema_migrations")
+	if fetchErr != nil {
+		log.Fatal(fetchErr)
+	}
+	defer data.Close()
+
+	for data.Next() {
+		var (
+			version		int64
+			timestamp	string
+		)
+		if err := data.Scan(&version, &timestamp); err != nil {
+			log.Fatal(err)
+		}
+		executed = append(executed, version)
+	}
+	//#endregion
 
 	cwd, cwdErr := os.Getwd()
+	if cwdErr != nil {
+		err = errors.Join(err, cwdErr)
+	}
 
 	return &Migrations{
 		rootPath: filepath.Join(cwd, "migrations"),
 		db: db,
-		revisions: make(map[int]Revision),
-		executed: []int{},
-	}, errors.Join(err, dbErr, cwdErr)
+		revisions: make(map[int64]Revision),
+		executed: executed,
+	}, err
 }
 
 func (m *Migrations) Reset() {
