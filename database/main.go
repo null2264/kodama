@@ -84,10 +84,7 @@ func doMigrate(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	migration.Test()
-
-	fmt.Println("Migration", migration)
-	fmt.Println("Is Test Rev:", enableTestRev)
+	migration.Create(revisionReason, enableTestRev)
 }
 
 func init() {

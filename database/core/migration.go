@@ -8,15 +8,18 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"slices"
+	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"  // Using pgx because for some reason pq keep returning EOF
+	_ "github.com/jackc/pgx/v5/stdlib" // Using pgx because for some reason pq keep returning EOF
 )
 
 type Revision struct {
-	IsTest bool
-	Timestamp int
-	Description string
-	FilePath string
+	isTest bool
+	timestamp int64
+	description string
+	filePath string
 }
 
 type Migrations struct {
@@ -57,7 +60,7 @@ func NewMigrations() (*Migrations, error) {
 	`)
 	_, _ = db.Exec("ALTER TABLE public.schema_migrations ENABLE ROW LEVEL SECURITY")
 
-	data, fetchErr := db.Query("SELECT * FROM public.schema_migrations")
+	data, fetchErr := db.Query("SELECT version FROM public.schema_migrations ORDER BY version ASC")
 	if fetchErr != nil {
 		log.Fatal(fetchErr)
 	}
@@ -66,13 +69,13 @@ func NewMigrations() (*Migrations, error) {
 	for data.Next() {
 		var (
 			version		int64
-			timestamp	string
 		)
-		if err := data.Scan(&version, &timestamp); err != nil {
+		if err := data.Scan(&version); err != nil {
 			log.Fatal(err)
 		}
 		executed = append(executed, version)
 	}
+	//slices.Contains(executed, value)
 	//#endregion
 
 	cwd, cwdErr := os.Getwd()
@@ -100,6 +103,45 @@ func (m *Migrations) Reset() {
 	if _, err := m.db.Exec("DELETE FROM public.schema_migrations"); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func If[T any](cond bool, a, b T) T {
+    if cond { return a }
+    return b
+}
+
+func (m *Migrations) isNextRevisionTaken(revision int64) bool {
+	return slices.Contains(m.executed, revision)
+}
+
+func (m *Migrations) Create(reason string, isTest bool) Revision {
+	now := time.Now()
+	timestamp := now.UnixMilli()
+	if m.isNextRevisionTaken(timestamp) {
+		log.Fatal("Revision is already exists")
+	}
+
+	re := regexp.MustCompile(`\s`)
+	cleaned := re.ReplaceAllString(reason, "_")
+	filename := fmt.Sprint(If(isTest, "T", ""), timestamp, "__", cleaned, ".sql")
+	path := filepath.Join(m.rootPath, filename)
+	stub := fmt.Sprintln("-- Creation Date:", now.UTC(), "\n-- Reason:", reason, "\n")
+
+	rev := Revision{
+		isTest: isTest,
+		description: reason,
+		timestamp: timestamp,
+		filePath: path,
+	}
+
+	err := os.WriteFile(path, []byte(stub), 0644)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Print("Successfully created ", If(isTest, "test ", ""), "revision '", filename, "'\n")
+	}
+
+	return rev
 }
 
 func (m *Migrations) Test() {
