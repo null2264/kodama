@@ -33,6 +33,8 @@ kotlin {
             dependencies {
                 api(libs.ktor.cio)
             }
+
+            dependsOn(commonMain.get())
         }
 
         androidMain {
