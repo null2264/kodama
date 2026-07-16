@@ -133,7 +133,7 @@ AS $$
 DECLARE
   v_is_privileged boolean;
 BEGIN
-  -- 1. Security Check: Ensure the user is an Admin or the Head Judge for this contest.
+  --#region Privilege checks
   SELECT (
     kodama.is_admin() OR
     EXISTS (
@@ -147,16 +147,14 @@ BEGIN
   IF NOT v_is_privileged THEN
     RAISE EXCEPTION 'User does not have permission to advance this contest.';
   END IF;
+  --#endregion
 
-  -- 2. Logic: Find the top 10 bonsai in each class based on Phase 1 scores
-  --    and mark them as phase 2 candidates.
   WITH ranked_bonsai AS (
     SELECT
       b.id as bonsai_id,
-      -- Rank bonsai within each class based on the average score
       ROW_NUMBER() OVER(
         PARTITION BY b.contest_class_id
-        ORDER BY AVG(r.score) DESC, b.created_at ASC -- Tie-break with submission time
+        ORDER BY AVG(r.score) DESC, b.created_at ASC
       ) as rank
     FROM kodama.bonsai b
     JOIN kodama.reviews r ON b.id = r.bonsai_id
@@ -169,7 +167,6 @@ BEGIN
     SELECT bonsai_id FROM ranked_bonsai WHERE rank <= 10
   );
 
-  -- 3. State Change: Update the contest's overall state to Phase 2.
   UPDATE kodama.contests
   SET state = 'reviewing_phase_2'
   WHERE id = p_contest_id;
