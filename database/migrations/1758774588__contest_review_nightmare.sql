@@ -6,7 +6,6 @@ CREATE TABLE kodama.reviews (
     bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
     judge_id uuid NOT NULL REFERENCES auth.users(id),
 
-    -- The structured scores for Phase 1
     -- {"penampilan": 100, "gerak_dasar": 100, "keserasian": 100, "kematangan": 100}
     scores jsonb NOT NULL,
     total_score integer NOT NULL,
@@ -36,7 +35,7 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION kodama.validate_phase1_score()
+CREATE OR REPLACE FUNCTION kodama.validate_score()
 RETURNS TRIGGER AS $$
 DECLARE
   v_required_keys text[] := array['penampilan', 'gerak_dasar', 'keserasian', 'kematangan'];
@@ -61,12 +60,11 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER on_review_submit
 BEFORE INSERT OR UPDATE ON kodama.reviews
 FOR EACH ROW
-EXECUTE FUNCTION kodama.validate_phase1_score();
+EXECUTE FUNCTION kodama.validate_score();
 
 ALTER TABLE kodama.reviews ENABLE ROW LEVEL SECURITY;
 
--- POLICY 1: Allow judges to submit reviews during Phase 1
-CREATE POLICY "Judges can submit reviews in Phase 1 for their assigned class" ON kodama.reviews
+CREATE POLICY "Judges can submit reviews for their assigned class" ON kodama.reviews
 FOR INSERT TO authenticated
 WITH CHECK (
     (
@@ -77,7 +75,7 @@ WITH CHECK (
             JOIN kodama.bonsai b ON c.id = b.contest_id
             WHERE
                 b.id = reviews.bonsai_id
-                AND c.state = 'reviewing_phase_1'
+                AND c.state = 'reviewing'
         )
     )
     AND
@@ -93,7 +91,6 @@ WITH CHECK (
                 AND p.user_id = auth.uid()
                 AND m.state = 'verified' -- Can only review verified bonsai
                 AND (
-                    -- Head Judges can review any class in Phase 1
                     p.role = 'head_judge'
                     OR
                     -- Regular judges are restricted to their assigned class
@@ -125,97 +122,50 @@ USING (
     )
 );
 
-CREATE OR REPLACE FUNCTION kodama.advance_to_phase_2(p_contest_id uuid)
-RETURNS void -- It doesn't need to return anything
+CREATE OR REPLACE FUNCTION kodama.best_in_show(p_contest_id uuid)
+RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = 'kodama'
 AS $$
 DECLARE
-  v_is_privileged boolean;
+  v_winner_id uuid;
+  v_total_bonsai integer;
 BEGIN
-  --#region Privilege checks
-  SELECT (
-    kodama.is_admin() OR
-    EXISTS (
-        SELECT 1 FROM kodama.contest_participants
-        WHERE user_id = auth.uid()
-          AND contest_id = p_contest_id
-          AND role = 'head_judge'
-    )
-  ) INTO v_is_privileged;
-
-  IF NOT v_is_privileged THEN
-    RAISE EXCEPTION 'User does not have permission to advance this contest.';
+  IF NOT (kodama.is_admin() OR EXISTS (
+    SELECT 1 FROM kodama.contest_participants
+    WHERE user_id = auth.uid()
+      AND contest_id = p_contest_id
+      AND role = 'head_judge'
+  )) THEN
+    RAISE EXCEPTION 'User does not have permission to determine best in show.';
   END IF;
-  --#endregion
 
-  WITH ranked_bonsai AS (
-    SELECT
-      b.id as bonsai_id,
-      ROW_NUMBER() OVER(
-        PARTITION BY b.contest_class_id
-        ORDER BY AVG(r.score) DESC, b.created_at ASC
-      ) as rank
-    FROM kodama.bonsai b
-    JOIN kodama.reviews r ON b.id = r.bonsai_id
-    WHERE b.contest_id = p_contest_id AND r.phase = 'phase_1'
-    GROUP BY b.id, b.contest_class_id
-  )
-  UPDATE kodama.bonsai_metadata
-  SET is_phase_2_candidate = true
-  WHERE id IN (
-    SELECT bonsai_id FROM ranked_bonsai WHERE rank <= 10
-  );
+  IF (SELECT state FROM kodama.contests WHERE id = p_contest_id) <> 'reviewing' THEN
+    RAISE EXCEPTION 'Contest is not in reviewing phase.';
+  END IF;
+
+  SELECT COUNT(DISTINCT r.bonsai_id) INTO v_total_bonsai
+  FROM kodama.bonsai b
+  JOIN kodama.reviews r ON b.id = r.bonsai_id
+  WHERE b.contest_id = p_contest_id;
+
+  IF v_total_bonsai = 0 THEN
+    RAISE EXCEPTION 'No reviewed bonsai found in this contest.';
+  END IF;
+
+  SELECT b.id INTO v_winner_id
+  FROM kodama.bonsai b
+  JOIN kodama.reviews r ON b.id = r.bonsai_id
+  WHERE b.contest_id = p_contest_id
+  GROUP BY b.id, b.created_at
+  ORDER BY AVG(r.total_score) DESC, b.created_at ASC
+  LIMIT 1;
 
   UPDATE kodama.contests
-  SET state = 'reviewing_phase_2'
+  SET state = 'finished'
   WHERE id = p_contest_id;
 
+  RETURN v_winner_id;
 END;
 $$;
-
-CREATE TABLE kodama.phase_2_votes (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
-    judge_id uuid NOT NULL REFERENCES auth.users(id),
-    -- The specific bonsai the judge voted for.
-    bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
-    created_at timestamptz NOT NULL DEFAULT now(),
-
-    -- THE MOST IMPORTANT RULE: A judge can only vote ONCE per contest.
-    UNIQUE(contest_id, judge_id)
-);
-
-ALTER TABLE kodama.phase_2_votes ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Judges can cast their Best in Show vote." ON kodama.phase_2_votes
-FOR INSERT TO authenticated
-WITH CHECK (
-  -- The user must be a judge for this contest.
-  kodama.is_contest_judge(contest_id)
-  AND
-  -- The contest must be in the correct phase.
-  (SELECT state FROM kodama.contests WHERE id = contest_id) = 'reviewing_phase_2'
-  AND
-  -- The bonsai being voted for MUST be a Phase 2 candidate.
-  (SELECT is_phase_2_candidate FROM kodama.bonsai_metadata WHERE id = bonsai_id) = true
-);
-
--- Policy for viewing votes. To prevent influencing other judges,
--- let's say only Admins and Head Judges can see the vote counts.
-CREATE POLICY "Admins and Head Judges can see all votes." ON kodama.phase_2_votes
-FOR SELECT TO authenticated
-USING (
-    kodama.is_admin() OR
-    EXISTS (
-        SELECT 1 FROM kodama.contest_participants p
-        WHERE p.contest_id = phase_2_votes.contest_id
-          AND p.user_id = auth.uid()
-          AND p.role = 'head_judge'
-    )
-);
-
--- Optional: Allow a judge to see their own vote after casting it.
-CREATE POLICY "Judges can see their own vote." ON kodama.phase_2_votes
-FOR SELECT TO authenticated
-USING (judge_id = auth.uid());

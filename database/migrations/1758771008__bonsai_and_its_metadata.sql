@@ -26,8 +26,7 @@ USING (auth.uid() = owner_id AND kodama.is_registration_open(contest_id));
 -- Metadata for kodama.bonsai table for columns that should only be able to be modified by the user in a special way, like RPC or SQL Function
 CREATE TABLE kodama.bonsai_metadata (
     id uuid PRIMARY KEY REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
-    state kodama.bonsai_state NOT NULL DEFAULT 'draft',
-    is_phase_2_candidate boolean NOT NULL DEFAULT false
+    state kodama.bonsai_state NOT NULL DEFAULT 'draft'
 );
 
 ALTER TABLE kodama.bonsai_metadata ENABLE ROW LEVEL SECURITY;

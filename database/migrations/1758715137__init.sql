@@ -30,7 +30,6 @@ CREATE TYPE kodama.contest_role AS ENUM (
     'head_judge'
 );
 
--- TODO: Handle 2 phase review
 CREATE TYPE kodama.bonsai_state AS ENUM (
     'draft',
     -- FIXME: Maybe this state is not needed? since if the state turn to 'waiting_verify' then the bonsai is already "finalized"
@@ -42,15 +41,11 @@ CREATE TYPE kodama.bonsai_state AS ENUM (
 
 CREATE TYPE kodama.contest_state AS ENUM (
     'draft',
-    'accepting',  -- Draft is finalized and is now accepting registration
-    'closed',  -- Registration is closed
-    'reviewing_phase_1',  -- Phase 1 start, scoring in progress, scores are locked upon being submitted but can still be edited if head judge permits it
-    'discuss_phase_2',  -- Phase 1 end, scores are fully locked, in this state judges (and head judge) can discuss about which bonsai to be crowned as "Best in Show"
-    'reviewing_phase_2',  -- Phase 2 start, voting start, judges are now able to vote which bonsai to be crowned as "Best in Show"
-    'finished'  -- Phase 2 end, contest is over, show the result
+    'accepting',
+    'closed',
+    'reviewing',
+    'finished'
 );
-
-CREATE TYPE kodama.review_phase AS ENUM ('phase_1', 'phase_2');
 --#endregion
 
 CREATE OR REPLACE FUNCTION kodama.set_current_timestamp_updated_at()
