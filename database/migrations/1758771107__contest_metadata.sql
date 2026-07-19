@@ -40,6 +40,11 @@ USING (
         WHERE contest_participants.contest_id = bonsai.contest_id
           AND contest_participants.user_id = auth.uid()
           AND contest_participants.role IN ('judge', 'head_judge')
+          AND (
+              contest_participants.role = 'head_judge'
+              OR
+              contest_participants.contest_class_id = bonsai.contest_class_id
+          )
     )
 );
 

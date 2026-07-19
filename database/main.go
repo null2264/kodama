@@ -483,6 +483,117 @@ func doTest(cmd *cobra.Command, args []string) {
 		log.Fatalf("[FAIL] Force-close winner %s does not match reviewed bonsai", forceWinner)
 	}
 	log.Println("[SUCCESS] Force-close completed correctly")
+
+	// ================================================================
+	// STEP 12: Admin can end the contest (finished -> ended) and it stays read-only
+	// ================================================================
+	log.Println("[INFO] Logging in as Admin...")
+	login("admin")
+
+	log.Print("[TESTING] Ending contest (finished -> ended)...")
+	if _, _, err := client.From("contests").Update(
+		map[string]string{"state": "ended"}, "", "",
+	).Eq("id", contest2ID).Execute(); err != nil {
+		log.Fatal("Failed to end contest: ", err)
+	}
+	var endedCheck []rowState
+	if _, err := client.From("contests").
+		Select("state", "", false).
+		Eq("id", contest2ID).
+		ExecuteTo(&endedCheck); err != nil {
+		log.Fatal("Failed to check contest state: ", err)
+	}
+	if endedCheck[0].State != "ended" {
+		log.Fatalf("[FAIL] Contest state is '%s', expected 'ended'", endedCheck[0].State)
+	}
+	log.Println("[SUCCESS] Contest state is 'ended'")
+
+	log.Print("[TESTING] Verifying ended contest rejects state changes...")
+	if _, _, err := client.From("contests").Update(
+		map[string]string{"state": "reviewing"}, "", "",
+	).Eq("id", contest2ID).Execute(); err != nil {
+		log.Println("[SUCCESS] Ended contest rejects state change")
+	} else {
+		log.Fatalf("[FAIL] Ended contest state was changed")
+	}
+
+	// ================================================================
+	// STEP 13: Verify score UPDATE is rejected
+	// ================================================================
+	log.Println("[INFO] Logging in as Judge1...")
+	login("judge1")
+
+	log.Print("[TESTING] Trying to UPDATE a submitted score...")
+	if _, _, err := client.From("reviews").Update(
+		map[string]interface{}{
+			"scores":      map[string]int{"penampilan": 99, "gerak_dasar": 99, "keserasian": 99, "kematangan": 99},
+			"total_score": 396,
+		}, "", "",
+	).Eq("bonsai_id", bonsai1ID).Eq("judge_id", judge1ID).Execute(); err != nil {
+		log.Println("[SUCCESS] Score UPDATE correctly rejected")
+	} else {
+		log.Fatalf("[FAIL] Score UPDATE was accepted")
+	}
+
+	// ================================================================
+	// STEP 14: Verify duplicate bonsai name is rejected
+	// ================================================================
+	log.Println("[INFO] Logging in as Admin...")
+	login("admin")
+
+	log.Print("[TESTING] Creating a new contest for duplicate name test...")
+	var dupContest []rowID
+	if _, err := client.From("contests").Insert(
+		map[string]string{"name": "Dup Test", "description": ""},
+		false, "", "", "",
+	).ExecuteTo(&dupContest); err != nil {
+		log.Fatal("Failed to create contest: ", err)
+	}
+	dupContestID := dupContest[0].ID
+
+	if _, _, err := client.From("contest_classes").Insert([]map[string]string{
+		{"contest_id": dupContestID, "class_id": classProspek},
+	}, false, "", "", "").Execute(); err != nil {
+		log.Fatal("Failed to add class: ", err)
+	}
+	dupClass := chooseClass(dupContestID, classProspek)
+	client.From("contests").Update(
+		map[string]string{"state": "accepting"}, "", "",
+	).Eq("id", dupContestID).Execute()
+
+	log.Println("[INFO] Logging in as Contestant1...")
+	login("contestant1")
+
+	var dup1 []rowID
+	if _, err := client.From("bonsai").Insert(map[string]string{
+		"name": "dup_name", "contest_id": dupContestID, "contest_class_id": dupClass,
+	}, false, "", "", "").ExecuteTo(&dup1); err != nil {
+		log.Fatal("Failed to register first bonsai: ", err)
+	}
+	log.Printf("[SUCCESS] First bonsai 'dup_name' registered\n")
+
+	log.Print("[TESTING] Registering second bonsai with same name...")
+	var dup2 []rowID
+	if _, err := client.From("bonsai").Insert(map[string]string{
+		"name": "dup_name", "contest_id": dupContestID, "contest_class_id": dupClass,
+	}, false, "", "", "").ExecuteTo(&dup2); err != nil {
+		log.Println("[SUCCESS] Duplicate bonsai name correctly rejected")
+	} else {
+		log.Fatalf("[FAIL] Duplicate bonsai name was accepted")
+	}
+
+	// ================================================================
+	// STEP 15: Verify get_contest_users lists participants by role
+	// ================================================================
+	log.Println("[INFO] Logging in as Admin...")
+	login("admin")
+
+	log.Print("[TESTING] Listing contest users via get_contest_users...")
+	resultUsers := client.Rpc("get_contest_users", "", map[string]string{"p_contest_id": contestID})
+	if resultUsers == "" || resultUsers == "[]" {
+		log.Fatal("[FAIL] get_contest_users returned empty result")
+	}
+	log.Printf("[SUCCESS] Contest users: %s\n", resultUsers)
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {

@@ -44,7 +44,8 @@ CREATE TYPE kodama.contest_state AS ENUM (
     'accepting',
     'closed',
     'reviewing',
-    'finished'
+    'finished',
+    'ended'
 );
 --#endregion
 

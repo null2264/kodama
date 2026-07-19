@@ -41,13 +41,15 @@ DECLARE
   v_required_keys text[] := array['penampilan', 'gerak_dasar', 'keserasian', 'kematangan'];
   v_submitted_keys text[];
 BEGIN
-  -- Check for correct keys
+  IF TG_OP = 'UPDATE' THEN
+    RAISE EXCEPTION 'Scores cannot be edited after submission.';
+  END IF;
+
   v_submitted_keys := array(SELECT jsonb_object_keys(NEW.scores));
   IF NOT (v_submitted_keys @> v_required_keys AND v_submitted_keys <@ v_required_keys) THEN
     RAISE EXCEPTION 'Submitted scores have mismatched criteria. Expected: %, Got: %', v_required_keys, v_submitted_keys;
   END IF;
 
-  -- Calculate total score
   NEW.total_score := (
     SELECT sum(value::numeric)
     FROM jsonb_each_text(NEW.scores)
@@ -222,4 +224,60 @@ BEGIN
 
   RETURN v_winner_id;
 END;
+$$;
+
+-- ================================================================
+-- State machine enforcement
+-- ================================================================
+
+CREATE OR REPLACE FUNCTION kodama.validate_contest_state_transition()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.state = 'draft' AND NEW.state = 'accepting' THEN RETURN NEW; END IF;
+  IF OLD.state = 'accepting' AND NEW.state = 'closed' THEN RETURN NEW; END IF;
+  IF OLD.state = 'closed' AND NEW.state = 'reviewing' THEN RETURN NEW; END IF;
+  IF OLD.state = 'reviewing' AND NEW.state = 'finished' THEN RETURN NEW; END IF;
+  IF OLD.state = 'finished' AND NEW.state = 'ended' THEN
+    IF kodama.is_admin() THEN RETURN NEW; END IF;
+    RAISE EXCEPTION 'Only admins can end a contest.';
+  END IF;
+  RAISE EXCEPTION 'Invalid contest state transition: % -> %', OLD.state, NEW.state;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_contest_state_change
+BEFORE UPDATE OF state ON kodama.contests
+FOR EACH ROW
+WHEN (OLD.state IS DISTINCT FROM NEW.state)
+EXECUTE FUNCTION kodama.validate_contest_state_transition();
+
+-- ================================================================
+-- Helper: check if a contest is still editable
+-- ================================================================
+
+CREATE OR REPLACE FUNCTION kodama.is_contest_editable(p_contest_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = ''
+AS $$
+  SELECT state NOT IN ('finished', 'ended') FROM kodama.contests WHERE id = p_contest_id;
+$$;
+
+-- ================================================================
+-- Helper: list users in a contest grouped by role
+-- ================================================================
+
+CREATE OR REPLACE FUNCTION kodama.get_contest_users(p_contest_id uuid)
+RETURNS TABLE(user_id uuid, email text, role kodama.contest_role, contest_class_id uuid)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT p.user_id, u.email, p.role, p.contest_class_id
+  FROM kodama.contest_participants p
+  JOIN auth.users u ON u.id = p.user_id
+  WHERE p.contest_id = p_contest_id
+  ORDER BY p.role, u.email;
 $$;

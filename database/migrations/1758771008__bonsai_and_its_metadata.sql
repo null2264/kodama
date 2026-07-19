@@ -6,7 +6,8 @@ CREATE TABLE kodama.bonsai (
     name text NOT NULL,
     owner_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id),
     contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
-    contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT
+    contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT,
+    UNIQUE(name, contest_id)
 );
 
 ALTER TABLE kodama.bonsai ENABLE ROW LEVEL SECURITY;
@@ -15,9 +16,23 @@ CREATE POLICY "Users can create their own bonsai." ON kodama.bonsai
 FOR INSERT TO authenticated
 WITH CHECK (auth.uid() = owner_id AND kodama.is_registration_open(contest_id));
 
-CREATE POLICY "Users can view their own bonsai." ON kodama.bonsai
+CREATE POLICY "Users can view their own bonsai or all entries in finished contests." ON kodama.bonsai
 FOR SELECT
-USING (auth.uid() = owner_id);
+USING (
+    auth.uid() = owner_id
+    OR
+    EXISTS (
+        SELECT 1 FROM kodama.contests
+        WHERE id = bonsai.contest_id
+          AND state IN ('finished', 'ended')
+          AND EXISTS (
+              SELECT 1 FROM kodama.contest_participants
+              WHERE contest_id = bonsai.contest_id
+                AND user_id = auth.uid()
+                AND role = 'contestant'
+          )
+    )
+);
 
 CREATE POLICY "Users can update their own bonsai." ON kodama.bonsai
 FOR UPDATE TO authenticated

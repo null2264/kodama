@@ -19,6 +19,18 @@ CREATE POLICY "Authenticated users can view active contests." ON kodama.contests
 FOR SELECT TO authenticated
 USING (state <> 'draft');
 
+-- Head Judges can change contest states (limited by the state machine trigger).
+CREATE POLICY "Head Judges can update contest states." ON kodama.contests
+FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM kodama.contest_participants
+        WHERE contest_id = id
+          AND user_id = auth.uid()
+          AND role = 'head_judge'
+    )
+);
+
 CREATE OR REPLACE FUNCTION kodama.is_registration_open(contest_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
