@@ -2,7 +2,7 @@ module github.com/null2264/kodama/kodama-db
 
 go 1.25.6
 
-require github.com/jackc/pgx/v5 v5.8.0
+require github.com/jackc/pgx/v5 v5.9.2
 
 require (
 	github.com/google/uuid v1.6.0 // indirect
