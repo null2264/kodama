@@ -169,3 +169,57 @@ BEGIN
   RETURN v_winner_id;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION kodama.finish_contest(p_contest_id uuid, p_force boolean DEFAULT false)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+DECLARE
+  v_total_verified integer;
+  v_total_reviewed integer;
+  v_winner_id uuid;
+BEGIN
+  IF NOT (kodama.is_admin() OR EXISTS (
+    SELECT 1 FROM kodama.contest_participants
+    WHERE user_id = auth.uid()
+      AND contest_id = p_contest_id
+      AND role = 'head_judge'
+  )) THEN
+    RAISE EXCEPTION 'User does not have permission to finish this contest.';
+  END IF;
+
+  IF (SELECT state FROM kodama.contests WHERE id = p_contest_id) <> 'reviewing' THEN
+    RAISE EXCEPTION 'Contest is not in reviewing phase.';
+  END IF;
+
+  SELECT COUNT(*) INTO v_total_verified
+  FROM kodama.bonsai b
+  JOIN kodama.bonsai_metadata m ON b.id = m.id
+  WHERE b.contest_id = p_contest_id AND m.state = 'verified';
+
+  SELECT COUNT(DISTINCT r.bonsai_id) INTO v_total_reviewed
+  FROM kodama.bonsai b
+  JOIN kodama.reviews r ON b.id = r.bonsai_id
+  WHERE b.contest_id = p_contest_id;
+
+  IF NOT p_force AND v_total_reviewed < v_total_verified THEN
+    RAISE EXCEPTION 'Not all verified bonsai have been reviewed (%).', v_total_reviewed;
+  END IF;
+
+  SELECT b.id INTO v_winner_id
+  FROM kodama.bonsai b
+  JOIN kodama.reviews r ON b.id = r.bonsai_id
+  WHERE b.contest_id = p_contest_id
+  GROUP BY b.id, b.created_at
+  ORDER BY AVG(r.total_score) DESC, b.created_at ASC
+  LIMIT 1;
+
+  UPDATE kodama.contests
+  SET state = 'finished'
+  WHERE id = p_contest_id;
+
+  RETURN v_winner_id;
+END;
+$$;
