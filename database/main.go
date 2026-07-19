@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	supabase "github.com/supabase-community/supabase-go"
 	"log"
 	"os"
@@ -71,18 +70,127 @@ const (
 func doTest(cmd *cobra.Command, args []string) {
 	url := os.Getenv("SUPABASE_URL")
 	key := os.Getenv("SUPABASE_KEY")
-	client, err := supabase.NewClient(url, key, &supabase.ClientOptions{})
+
+	client, err := supabase.NewClient(url, key, &supabase.ClientOptions{Schema: "kodama"})
 	if err != nil {
-		log.Fatal("Failed to initalize the client: ", err)
+		log.Fatal("Failed to initialize client: ", err)
 	}
 
-	session, err := client.SignInWithEmailPassword("demo@test.example.com", demoPass)
-	if err != nil {
-		log.Fatal("Sign in failed: ", err)
+	login := func(user string) {
+		_ = client.Auth.Logout()
+		if _, err := client.SignInWithEmailPassword(user+"@test.example.com", demoPass); err != nil {
+			log.Fatalf("Failed to sign in as %s: %v", user, err)
+		}
 	}
 
-	fmt.Println("User ID:", session.User.ID)
-	fmt.Println("Access Token:", session.AccessToken)
+	type rowID struct {
+		ID string `json:"id"`
+	}
+
+	chooseClass := func(contestID, classID string) string {
+		var classes []rowID
+		if _, err := client.From("contest_classes").
+			Select("id", "", false).
+			Eq("contest_id", contestID).
+			Eq("class_id", classID).
+			ExecuteTo(&classes); err != nil {
+			log.Fatal("Failed to choose class: ", err)
+		}
+		return classes[0].ID
+	}
+
+	// --- Admin creates a contest and finalizes it
+	log.Println("[INFO] Logging in as Admin...")
+	login("admin")
+
+	log.Print("[TESTING] Creating contest...")
+	var contests []rowID
+	if _, err := client.From("contests").Insert(
+		map[string]string{"name": "Test", "description": "Lorem ipsum"},
+		false, "", "", "",
+	).ExecuteTo(&contests); err != nil {
+		log.Fatal("Failed to create contest: ", err)
+	}
+	contestID := contests[0].ID
+	log.Println("[SUCCESS] Contest has been created")
+
+	log.Print("[TESTING] Adding classes to contest draft...")
+	if _, _, err := client.From("contest_classes").Insert([]map[string]string{
+		{"contest_id": contestID, "class_id": classProspek},
+		{"contest_id": contestID, "class_id": classMadya},
+		{"contest_id": contestID, "class_id": classPratama},
+	}, false, "", "", "").Execute(); err != nil {
+		log.Fatal("Failed to add classes: ", err)
+	}
+	log.Println("[SUCCESS] Classes added to contest draft")
+
+	log.Print("[TESTING] Finalizing contest...")
+	if _, _, err := client.From("contests").Update(
+		map[string]string{"state": "accepting"}, "", "",
+	).Eq("id", contestID).Execute(); err != nil {
+		log.Fatal("Failed to finalize contest: ", err)
+	}
+	log.Println("[SUCCESS] Contest has been finalized")
+
+	// --- Contestants registering their bonsai
+	log.Println("[INFO] Logging in as Demo...")
+	login("demo")
+
+	registerAndFinalizeBonsai := func() string {
+		log.Print("[TESTING] Registering bonsai to a contest as a contestant...")
+		var bonsais []rowID
+		if _, err := client.From("bonsai").Insert(map[string]string{
+			"name":             "Test",
+			"contest_id":       contestID,
+			"contest_class_id": chooseClass(contestID, classPratama),
+		}, false, "", "", "").ExecuteTo(&bonsais); err != nil {
+			log.Fatal("Failed to register bonsai: ", err)
+		}
+		bonsaiID := bonsais[0].ID
+		log.Printf("[SUCCESS] Bonsai registered with ID %s\n", bonsaiID)
+
+		log.Print("[TESTING] Finalizing bonsai...")
+		_ = client.Rpc("finalize_bonsai", "", map[string]string{"bonsai_id": bonsaiID})
+		log.Printf("[SUCCESS] Bonsai with ID %s has been finalized\n", bonsaiID)
+		return bonsaiID
+	}
+
+	bonsaiID1 := registerAndFinalizeBonsai()
+	bonsaiID2 := registerAndFinalizeBonsai()
+
+	// --- Admin closes the registration
+	log.Println("[INFO] Logging in as Admin...")
+	login("admin")
+
+	for _, bid := range []string{bonsaiID1, bonsaiID2} {
+		log.Printf("[TESTING] Verifying bonsai with ID %s as an admin...\n", bid)
+		_ = client.Rpc("verify_bonsai", "", map[string]string{"bonsai_id": bid})
+		log.Printf("[SUCCESS] Bonsai with ID %s has been verified\n", bid)
+	}
+
+	log.Print("[TESTING] Closing contest as an admin...")
+	if _, _, err := client.From("contests").Update(
+		map[string]string{"state": "closed"}, "", "",
+	).Eq("id", contestID).Execute(); err != nil {
+		log.Fatal("Failed to close contest: ", err)
+	}
+	log.Println("[SUCCESS] Contest has been closed")
+
+	// --- A contestant tries to register when the contest registration is closed
+	log.Println("[INFO] Logging in as Demo...")
+	login("demo")
+
+	log.Print("[TESTING] Registering bonsai to a CLOSED contest as a contestant...")
+	var bonsais []rowID
+	if _, err := client.From("bonsai").Insert(map[string]string{
+		"name":             "Test",
+		"contest_id":       contestID,
+		"contest_class_id": chooseClass(contestID, classPratama),
+	}, false, "", "", "").ExecuteTo(&bonsais); err != nil {
+		log.Println("[SUCCESS] Bonsai failed to register to a CLOSED contest")
+	} else {
+		log.Fatalf("[FAIL] Bonsai registered with ID %s to a CLOSED contest", bonsais[0].ID)
+	}
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {
