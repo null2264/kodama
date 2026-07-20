@@ -6,11 +6,11 @@ CREATE SCHEMA kodama;
 
 --#region Grants bs so supabase/postgrest can stop crying
 -- We need to do this otherwise supabase (or rather postgrest) would cry about not having permission
--- REF: https://github.com/supabase/supabase/blob/a2fc6d592cb4ea50fd518b99db199a31912040b9/docker/volumes/db/init/00-initial-schema.sql#L26-L29
-grant usage              on schema kodama to postgres, anon, authenticated, service_role;
-alter default privileges in schema kodama grant all on tables to postgres, anon, authenticated, service_role;
-alter default privileges in schema kodama grant all on functions to postgres, anon, authenticated, service_role;
-alter default privileges in schema kodama grant all on sequences to postgres, anon, authenticated, service_role;
+-- REF: https://github.com/supabase/supabase/blob/24ce0ba5f87698ad72c173c7a26fa6c5c105e8ca/docker/volumes/db/webhooks.sql#L5C3-L9C127
+GRANT USAGE ON SCHEMA kodama TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA kodama GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA kodama GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA kodama GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
 --#endregion
 
 --#region Enums / Custom Types
