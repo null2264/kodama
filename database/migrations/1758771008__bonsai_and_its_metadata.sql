@@ -7,6 +7,7 @@ CREATE TABLE kodama.bonsai (
     owner_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id),
     contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
     contest_class_id uuid NOT NULL REFERENCES kodama.contest_classes(id) ON DELETE RESTRICT,
+    created_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE(name, contest_id)
 );
 
