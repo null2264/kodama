@@ -401,8 +401,9 @@ func doTest(cmd *cobra.Command, args []string) {
 
 	if _, _, err := client.From("contest_participants").Insert([]map[string]string{
 		{"user_id": judge1ID, "contest_id": contest2ID, "role": "judge", "contest_class_id": c2ProspekID},
+		{"user_id": judge2ID, "contest_id": contest2ID, "role": "judge", "contest_class_id": c2PratamaID},
 	}, false, "", "", "").Execute(); err != nil {
-		log.Fatal("Failed to assign judge: ", err)
+		log.Fatal("Failed to assign judges: ", err)
 	}
 
 	// Open registration
@@ -620,6 +621,59 @@ func doTest(cmd *cobra.Command, args []string) {
 		log.Fatal("[FAIL] get_contest_users returned empty result")
 	}
 	log.Printf("[SUCCESS] Contest users: %s\n", resultUsers)
+
+	// ================================================================
+	// STEP 16: Verify get_pending_reviews lists unscored bonsai for judges
+	// ================================================================
+	log.Println("[INFO] Logging in as Judge2 (assigned to Pratama class, no scores yet)...")
+	login("judge2")
+
+	log.Print("[TESTING] Listing pending reviews for judge2...")
+	pending := client.Rpc("get_pending_reviews", "", map[string]string{"p_contest_id": contest2ID})
+	if pending == "" || strings.HasPrefix(pending, "{") {
+		log.Fatal("[FAIL] get_pending_reviews returned error: ", pending)
+	}
+	if !strings.Contains(pending, "force_b") {
+		log.Fatal("[FAIL] get_pending_reviews did not include unscored bonsai force_b")
+	}
+	if strings.Contains(pending, "force_a") {
+		log.Fatal("[FAIL] get_pending_reviews included out-of-class bonsai force_a")
+	}
+	log.Println("[SUCCESS] get_pending_reviews correctly lists only unscored bonsai in judge's class")
+
+	log.Print("[TESTING] Listing pending reviews for judge1 (already scored their bonsai)...")
+	login("judge1")
+	pending1 := client.Rpc("get_pending_reviews", "", map[string]string{"p_contest_id": contest2ID})
+	if pending1 == "" || strings.HasPrefix(pending1, "{") {
+		log.Fatal("[FAIL] get_pending_reviews returned error for judge1: ", pending1)
+	}
+	if pending1 != "[]" {
+		log.Fatal("[FAIL] get_pending_reviews should be empty for judge1 (already scored force_a, no other Prospek bonsai): ", pending1)
+	}
+	log.Println("[SUCCESS] get_pending_reviews correctly empty for judge1")
+
+	// ================================================================
+	// STEP 17: Contestants see review scores on their own bonsai
+	// ================================================================
+	log.Println("[INFO] Logging in as Contestant1...")
+	login("contestant1")
+
+	log.Print("[TESTING] Contestant viewing scores on their finished contest bonsai...")
+	var contestantReviews []struct {
+		BonsaiID   string `json:"bonsai_id"`
+		TotalScore int    `json:"total_score"`
+		JudgeID    string `json:"judge_id"`
+	}
+	if _, err := client.From("reviews").
+		Select("bonsai_id,total_score,judge_id", "", false).
+		Eq("bonsai_id", bonsai1ID).
+		ExecuteTo(&contestantReviews); err != nil {
+		log.Fatal("[FAIL] Contestant could not read reviews: ", err)
+	}
+	if len(contestantReviews) == 0 {
+		log.Fatal("[FAIL] Contestant saw zero reviews for their bonsai")
+	}
+	log.Printf("[SUCCESS] Contestant sees %d review(s) on their bonsai\n", len(contestantReviews))
 }
 
 func doMigrate(cmd *cobra.Command, args []string) {
