@@ -1,29 +1,6 @@
 -- Creation Date: 2025-09-25 03:31:47.967893+00:00 UTC
 -- Reason: contest metadata
 
-CREATE TABLE kodama.contest_participants (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL REFERENCES auth.users(id),
-    contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
-    role kodama.contest_role NOT NULL,
-
-    -- A judge is assigned to a specific class *within a contest*.
-    -- This points to the junction table record. It's nullable for Head Judges/Contestants.
-    contest_class_id uuid NULL REFERENCES kodama.contest_classes(id) ON DELETE SET NULL,
-
-    created_at timestamptz NOT NULL DEFAULT now(),
-
-    CONSTRAINT role_requires_class_id
-    CHECK (
-        (role <> 'judge') OR (contest_class_id IS NOT NULL)
-    )
-);
-
-CREATE UNIQUE INDEX contest_participants_idx
-ON kodama.contest_participants (user_id, contest_id, role, contest_class_id) NULLS NOT DISTINCT;
-
-ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "Judges can view verified bonsai in their contests." ON kodama.bonsai
 FOR SELECT TO authenticated
 USING (

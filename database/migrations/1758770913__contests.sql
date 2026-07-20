@@ -19,18 +19,6 @@ CREATE POLICY "Authenticated users can view active contests." ON kodama.contests
 FOR SELECT TO authenticated
 USING (state <> 'draft');
 
--- Head Judges can change contest states (limited by the state machine trigger).
-CREATE POLICY "Head Judges can update contest states." ON kodama.contests
-FOR UPDATE TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM kodama.contest_participants
-        WHERE contest_id = id
-          AND user_id = auth.uid()
-          AND role = 'head_judge'
-    )
-);
-
 CREATE OR REPLACE FUNCTION kodama.is_registration_open(contest_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
@@ -66,5 +54,37 @@ USING (
     EXISTS (
         SELECT 1 FROM kodama.contests c
         WHERE c.id = contest_classes.contest_id AND c.state <> 'draft'
+    )
+);
+
+CREATE TABLE kodama.contest_participants (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id uuid NOT NULL REFERENCES auth.users(id),
+    contest_id uuid NOT NULL REFERENCES kodama.contests(id) ON DELETE CASCADE,
+    role kodama.contest_role NOT NULL,
+
+    contest_class_id uuid NULL REFERENCES kodama.contest_classes(id) ON DELETE SET NULL,
+
+    created_at timestamptz NOT NULL DEFAULT now(),
+
+    CONSTRAINT role_requires_class_id
+    CHECK (
+        (role <> 'judge') OR (contest_class_id IS NOT NULL)
+    )
+);
+
+CREATE UNIQUE INDEX contest_participants_idx
+ON kodama.contest_participants (user_id, contest_id, role, contest_class_id) NULLS NOT DISTINCT;
+
+ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Head Judges can update contest states." ON kodama.contests
+FOR UPDATE TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM kodama.contest_participants
+        WHERE contest_id = id
+          AND user_id = auth.uid()
+          AND role = 'head_judge'
     )
 );
