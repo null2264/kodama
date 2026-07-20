@@ -78,6 +78,13 @@ ON kodama.contest_participants (user_id, contest_id, role, contest_class_id) NUL
 
 ALTER TABLE kodama.contest_participants ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY "Admins can manage contest participants." ON kodama.contest_participants
+FOR ALL USING (kodama.is_admin()) WITH CHECK (kodama.is_admin());
+
+CREATE POLICY "Participants can view their own assignments." ON kodama.contest_participants
+FOR SELECT TO authenticated
+USING (user_id = auth.uid());
+
 CREATE POLICY "Head Judges can update contest states." ON kodama.contests
 FOR UPDATE TO authenticated
 USING (

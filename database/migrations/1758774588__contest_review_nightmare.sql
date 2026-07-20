@@ -4,7 +4,7 @@
 CREATE TABLE kodama.reviews (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     bonsai_id uuid NOT NULL REFERENCES kodama.bonsai(id) ON DELETE CASCADE,
-    judge_id uuid NOT NULL REFERENCES auth.users(id),
+    judge_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id),
 
     -- {"penampilan": 100, "gerak_dasar": 100, "keserasian": 100, "kematangan": 100}
     scores jsonb NOT NULL,
@@ -69,8 +69,10 @@ ALTER TABLE kodama.reviews ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Judges can submit reviews for their assigned class" ON kodama.reviews
 FOR INSERT TO authenticated
 WITH CHECK (
+    kodama.is_bonsai_verified(reviews.bonsai_id)
+    AND
     (
-        -- The user must be a designated judge or head judge for the contest
+        -- The contest must be in reviewing state
         SELECT EXISTS (
             SELECT 1
             FROM kodama.contests c
@@ -87,11 +89,9 @@ WITH CHECK (
             SELECT 1
             FROM kodama.bonsai b
             JOIN kodama.contest_participants p ON b.contest_id = p.contest_id
-            JOIN kodama.bonsai_metadata m ON b.id = m.id
             WHERE
                 b.id = reviews.bonsai_id
                 AND p.user_id = auth.uid()
-                AND m.state = 'verified' -- Can only review verified bonsai
                 AND (
                     p.role = 'head_judge'
                     OR

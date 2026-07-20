@@ -95,6 +95,17 @@ CREATE POLICY "Users can view their own bonsai metadata." ON kodama.bonsai_metad
 FOR SELECT
 USING (kodama.is_bonsai_owner(id, auth.uid()));
 
+CREATE OR REPLACE FUNCTION kodama.is_bonsai_verified(bonsai_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+    RETURN COALESCE((SELECT state = 'verified' FROM kodama.bonsai_metadata WHERE id = is_bonsai_verified.bonsai_id), false);
+END;
+$$;
+
 CREATE POLICY "Users can delete their own DRAFT bonsai." ON kodama.bonsai
 FOR DELETE TO authenticated
 USING (auth.uid() = owner_id AND kodama.is_bonsai_in_draft(id));

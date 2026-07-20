@@ -4,12 +4,7 @@
 CREATE POLICY "Judges can view verified bonsai in their contests." ON kodama.bonsai
 FOR SELECT TO authenticated
 USING (
-    EXISTS (
-        SELECT 1
-        FROM kodama.bonsai_metadata
-        WHERE bonsai_metadata.id = bonsai.id
-            AND bonsai_metadata.state = 'verified'
-    )
+    kodama.is_bonsai_verified(id)
     AND
     EXISTS (
         SELECT 1
