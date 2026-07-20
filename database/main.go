@@ -2,7 +2,6 @@ package main
 
 import (
 	supabase "github.com/supabase-community/supabase-go"
-	"github.com/supabase-community/gotrue-go/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -79,17 +78,18 @@ func doTest(cmd *cobra.Command, args []string) {
 	}
 
 	signup := func(user string) string {
-		resp, err := client.Auth.Signup(types.SignupRequest{
-			Email:    user + "@test.example.com",
-			Password: demoPass,
-		})
+		email := user + "@test.example.com"
+		users, err := client.Auth.AdminListUsers()
 		if err != nil {
-			log.Fatalf("Failed to sign up %s: %v", user, err)
+			log.Fatalf("Failed to list users for %s: %v", user, err)
 		}
-		if resp.User.ID.String() == "00000000-0000-0000-0000-000000000000" {
-			log.Fatalf("[FAIL] Signup returned empty user ID for %s (autoconfirm may be off)", user)
+		for _, u := range users.Users {
+			if u.Email == email {
+				return u.ID.String()
+			}
 		}
-		return resp.User.ID.String()
+		log.Fatalf("Failed to find user %s (%s) in admin users list", user, email)
+		return ""
 	}
 
 	login := func(user string) {

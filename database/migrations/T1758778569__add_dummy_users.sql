@@ -29,3 +29,7 @@ SELECT public.create_user('admin@test.example.com', 'demo12345');
 UPDATE kodama.user_metadata SET role = 'admin';
 SELECT public.create_user('demo@test.example.com', 'demo12345');
 SELECT public.create_user('judge@test.example.com', 'demo12345');
+SELECT public.create_user('judge1@test.example.com', 'demo12345');
+SELECT public.create_user('judge2@test.example.com', 'demo12345');
+SELECT public.create_user('contestant1@test.example.com', 'demo12345');
+SELECT public.create_user('contestant2@test.example.com', 'demo12345');
