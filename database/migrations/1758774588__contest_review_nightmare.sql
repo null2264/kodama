@@ -124,6 +124,12 @@ USING (
     )
 );
 
+-- POLICY 5: Allow all authenticated users to attempt updates (validation enforced by trigger).
+CREATE POLICY "Update blocked by validate_score trigger." ON kodama.reviews
+FOR UPDATE TO authenticated
+USING (true)
+WITH CHECK (true);
+
 CREATE OR REPLACE FUNCTION kodama.best_in_show(p_contest_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -179,9 +185,9 @@ SECURITY DEFINER
 SET search_path = 'kodama'
 AS $$
 DECLARE
+  v_winner_id uuid;
   v_total_verified integer;
   v_total_reviewed integer;
-  v_winner_id uuid;
 BEGIN
   IF NOT (kodama.is_admin() OR EXISTS (
     SELECT 1 FROM kodama.contest_participants
@@ -207,7 +213,7 @@ BEGIN
   WHERE b.contest_id = p_contest_id;
 
   IF NOT p_force AND v_total_reviewed < v_total_verified THEN
-    RAISE EXCEPTION 'Not all verified bonsai have been reviewed (%).', v_total_reviewed;
+    RAISE EXCEPTION 'Not all verified bonsai have been reviewed.';
   END IF;
 
   SELECT b.id INTO v_winner_id

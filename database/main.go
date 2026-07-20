@@ -316,9 +316,9 @@ func doTest(cmd *cobra.Command, args []string) {
 	login("admin")
 
 	log.Print("[TESTING] Finishing contest (auto-close, all bonsai reviewed)...")
-	result := client.Rpc("finish_contest", "", map[string]interface{}{
+	result := client.Rpc("finish_contest", "", map[string]string{
 		"p_contest_id": contestID,
-		"p_force":      false,
+		"p_force":      "false",
 	})
 	if result == "" {
 		log.Fatal("[FAIL] finish_contest RPC returned empty result")
@@ -406,31 +406,55 @@ func doTest(cmd *cobra.Command, args []string) {
 	}
 
 	// Open registration
-	client.From("contests").Update(map[string]string{"state": "accepting"}, "", "").Eq("id", contest2ID).Execute()
+	if _, _, err := client.From("contests").Update(map[string]string{"state": "accepting"}, "", "").Eq("id", contest2ID).Execute(); err != nil {
+		log.Fatal("Failed to open registration: ", err)
+	}
 
 	// Register and verify 2 bonsai
 	login("contestant1")
 	var b2a []rowID
-	client.From("bonsai").Insert(map[string]string{
+	if _, err := client.From("bonsai").Insert(map[string]string{
 		"name": "force_a", "contest_id": contest2ID, "contest_class_id": c2ProspekID,
-	}, false, "", "", "").ExecuteTo(&b2a)
+	}, false, "", "", "").ExecuteTo(&b2a); err != nil {
+		log.Fatal("Failed to register force_a: ", err)
+	}
+	if len(b2a) == 0 {
+		log.Fatal("No ID returned for force_a")
+	}
 	bonsai2a := b2a[0].ID
-	client.Rpc("finalize_bonsai", "", map[string]string{"bonsai_id": bonsai2a})
+	if res := client.Rpc("finalize_bonsai", "", map[string]string{"bonsai_id": bonsai2a}); res == "" || strings.HasPrefix(res, "{") {
+		log.Fatal("finalize_bonsai for force_a failed: ", res)
+	}
 
 	login("contestant2")
 	var b2b []rowID
-	client.From("bonsai").Insert(map[string]string{
+	if _, err := client.From("bonsai").Insert(map[string]string{
 		"name": "force_b", "contest_id": contest2ID, "contest_class_id": c2PratamaID,
-	}, false, "", "", "").ExecuteTo(&b2b)
+	}, false, "", "", "").ExecuteTo(&b2b); err != nil {
+		log.Fatal("Failed to register force_b: ", err)
+	}
+	if len(b2b) == 0 {
+		log.Fatal("No ID returned for force_b")
+	}
 	bonsai2b := b2b[0].ID
-	client.Rpc("finalize_bonsai", "", map[string]string{"bonsai_id": bonsai2b})
+	if res := client.Rpc("finalize_bonsai", "", map[string]string{"bonsai_id": bonsai2b}); res == "" || strings.HasPrefix(res, "{") {
+		log.Fatal("finalize_bonsai for force_b failed: ", res)
+	}
 
 	// Admin verifies both, closes, opens reviewing
 	login("admin")
-	client.Rpc("verify_bonsai", "", map[string]string{"bonsai_id": bonsai2a})
-	client.Rpc("verify_bonsai", "", map[string]string{"bonsai_id": bonsai2b})
-	client.From("contests").Update(map[string]string{"state": "closed"}, "", "").Eq("id", contest2ID).Execute()
-	client.From("contests").Update(map[string]string{"state": "reviewing"}, "", "").Eq("id", contest2ID).Execute()
+	if res := client.Rpc("verify_bonsai", "", map[string]string{"bonsai_id": bonsai2a}); res == "" || strings.HasPrefix(res, "{") {
+		log.Fatal("verify_bonsai for bonsai2a failed: ", res)
+	}
+	if res := client.Rpc("verify_bonsai", "", map[string]string{"bonsai_id": bonsai2b}); res == "" || strings.HasPrefix(res, "{") {
+		log.Fatal("verify_bonsai for bonsai2b failed: ", res)
+	}
+	if _, _, err := client.From("contests").Update(map[string]string{"state": "closed"}, "", "").Eq("id", contest2ID).Execute(); err != nil {
+		log.Fatal("Failed to close contest: ", err)
+	}
+	if _, _, err := client.From("contests").Update(map[string]string{"state": "reviewing"}, "", "").Eq("id", contest2ID).Execute(); err != nil {
+		log.Fatal("Failed to open reviewing: ", err)
+	}
 
 	// Score only ONE of the two bonsai
 	log.Println("[INFO] Logging in as Judge1...")
@@ -448,11 +472,11 @@ func doTest(cmd *cobra.Command, args []string) {
 	login("admin")
 
 	log.Print("[TESTING] Auto-close with incomplete reviews...")
-	autoResult := client.Rpc("finish_contest", "", map[string]interface{}{
+	autoResult := client.Rpc("finish_contest", "", map[string]string{
 		"p_contest_id": contest2ID,
-		"p_force":      false,
+		"p_force":      "false",
 	})
-	if autoResult == "" {
+	if autoResult == "" || strings.HasPrefix(autoResult, "{") {
 		log.Println("[SUCCESS] Auto-close correctly rejected (not all bonsai reviewed)")
 	} else {
 		log.Fatalf("[FAIL] Auto-close succeeded when not all bonsai were reviewed")
@@ -460,9 +484,9 @@ func doTest(cmd *cobra.Command, args []string) {
 
 	// Now force-close (should succeed)
 	log.Print("[TESTING] Force-close by admin...")
-	forceResult := client.Rpc("finish_contest", "", map[string]interface{}{
+	forceResult := client.Rpc("finish_contest", "", map[string]string{
 		"p_contest_id": contest2ID,
-		"p_force":      true,
+		"p_force":      "true",
 	})
 	if forceResult == "" {
 		log.Fatal("[FAIL] Force-close RPC returned empty result")
@@ -557,9 +581,11 @@ func doTest(cmd *cobra.Command, args []string) {
 		log.Fatal("Failed to add class: ", err)
 	}
 	dupClass := chooseClass(dupContestID, classProspek)
-	client.From("contests").Update(
+	if _, _, err := client.From("contests").Update(
 		map[string]string{"state": "accepting"}, "", "",
-	).Eq("id", dupContestID).Execute()
+	).Eq("id", dupContestID).Execute(); err != nil {
+		log.Fatal("Failed to open registration for dup test: ", err)
+	}
 
 	log.Println("[INFO] Logging in as Contestant1...")
 	login("contestant1")
