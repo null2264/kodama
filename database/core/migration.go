@@ -209,7 +209,7 @@ func (m *Migrations) Upgrade(testRevEnabled bool) {
 		fmt.Println("Applying", rev.filename)
 
 		if _, err := m.db.Exec(string(sql)); err != nil {
-			fmt.Println(err)
+			log.Fatalln(err)
 		}
 		if _, err := m.db.Exec("INSERT INTO schema_migrations (version) VALUES ($1)", rev.timestamp); err != nil {
 			fmt.Println(err)
