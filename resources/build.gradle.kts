@@ -36,11 +36,10 @@ compose.resources {
 
 tasks {
     val localesConfigTask = getLocalesConfigTask()
-    named("preBuild") {
-        dependsOn(localesConfigTask)
-    }
 
     withType<KotlinCompile> {
+        dependsOn(localesConfigTask)
+
         compilerOptions.freeCompilerArgs.addAll(
             "-Xexpect-actual-classes",
         )
