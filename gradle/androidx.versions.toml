@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.0"  # Keep this at 9.0.0 because Android Plugin for IDEA is still behind
+agp = "9.0.1"  # Keep this at 9.0.1 because Android Plugin for IDEA is still behind
 compose-test = "1.7.8"
 
 [libraries]
