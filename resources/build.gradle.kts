@@ -16,8 +16,8 @@ kotlin {
     jvm("desktop")
     sourceSets {
         commonMain.dependencies {
-            api(compose.runtime)
-            api(compose.components.resources)
+            api(kotlinx.compose.runtime)
+            api(kotlinx.compose.components)
         }
         androidMain.dependencies {
         }
@@ -37,7 +37,7 @@ compose.resources {
 
 tasks {
     val localesConfigTask = getLocalesConfigTask()
-    preBuild {
+    named("preBuild") {
         dependsOn(localesConfigTask)
     }
 
