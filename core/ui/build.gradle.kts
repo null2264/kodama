@@ -57,10 +57,10 @@ kotlin {
         //    implementation(libs.sqldelight.driver.native)
         //}
     }
-}
 
-android {
-    namespace = "kodama.ui"
+    androidLibrary {
+        namespace = "kodama.ui"
+    }
 }
 
 tasks {

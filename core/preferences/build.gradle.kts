@@ -34,10 +34,10 @@ kotlin {
         appleMain.dependencies {
         }
     }
-}
 
-android {
-    namespace = "kodama.preferences"
+    androidLibrary {
+        namespace = "kodama.preferences"
+    }
 }
 
 tasks {

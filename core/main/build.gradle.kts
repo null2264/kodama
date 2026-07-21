@@ -49,10 +49,10 @@ kotlin {
             dependsOn(nonJsMain)
         }
     }
-}
 
-android {
-    namespace = "kodama.core"
+    androidLibrary {
+        namespace = "kodama.core"
+    }
 }
 
 tasks {

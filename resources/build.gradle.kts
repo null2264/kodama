@@ -24,10 +24,10 @@ kotlin {
         iosMain.dependencies {
         }
     }
-}
 
-android {
-    namespace = "kodama.resources"
+    androidLibrary {
+        namespace = "kodama.resources"
+    }
 }
 
 compose.resources {
