@@ -1,5 +1,5 @@
 [versions]
-voyager = "1.1.0-beta03"
+voyager = "2.2.21-1.10.3"
 coil = "3.1.0"
 buildconfig = "5.3.5"
 koin = "4.1.0-Beta5"
