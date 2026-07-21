@@ -60,13 +60,7 @@ subprojects {
         }
     }
 
-    plugins.withId(androidx.plugins.application.get().pluginId) {
-        configureAndroidJvm()
-    }
-    plugins.withId(androidx.plugins.kmp.library.get().pluginId) {
-        configureAndroidJvm()
-    }
-    plugins.withId(androidx.plugins.library.get().pluginId) {
+    plugins.withId("com.android.base") {
         configureAndroidJvm()
     }
 }
