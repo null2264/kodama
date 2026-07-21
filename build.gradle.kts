@@ -1,5 +1,6 @@
-import com.android.build.gradle.BasePlugin
+import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.gradle.BasePlugin
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -42,7 +43,9 @@ subprojects {
 
             defaultConfig.apply {
                 minSdk = AndroidConfig.minSdk
-                targetSdk = AndroidConfig.targetSdk
+                if (this is ApplicationBaseFlavor) {
+                    targetSdk = AndroidConfig.targetSdk
+                }
             }
 
             compileOptions.apply {
