@@ -1,7 +1,7 @@
 [versions]
 voyager = "2.2.21-1.10.3"
 coil = "3.5.0"
-buildconfig = "5.3.5"
+buildconfig = "5.7.1"
 koin = "4.2.2"
 ktor = "3.1.1"
 settings = "1.3.0"
