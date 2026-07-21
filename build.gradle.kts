@@ -35,7 +35,7 @@ subprojects {
 
     fun Project.configureAndroidJvm() {
         configure<CommonExtension> {
-            compileSdkVersion = AndroidConfig.compileSdk
+            compileSdkVersion(AndroidConfig.compileSdk)
             ndkVersion = AndroidConfig.ndk
 
             defaultConfig.apply {
