@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    alias(androidx.plugins.library)
+    alias(androidx.plugins.kmp.library)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
     alias(libs.plugins.buildconfig)
@@ -49,10 +49,10 @@ kotlin {
             dependsOn(nonJsMain)
         }
     }
-}
 
-android {
-    namespace = "kodama.core"
+    androidLibrary {
+        namespace = "kodama.core"
+    }
 }
 
 tasks {

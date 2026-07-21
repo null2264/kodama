@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    alias(androidx.plugins.library)
+    alias(androidx.plugins.kmp.library)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.multiplatform)
@@ -34,10 +34,10 @@ kotlin {
         appleMain.dependencies {
         }
     }
-}
 
-android {
-    namespace = "kodama.preferences"
+    androidLibrary {
+        namespace = "kodama.preferences"
+    }
 }
 
 tasks {

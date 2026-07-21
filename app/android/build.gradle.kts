@@ -2,7 +2,6 @@ plugins {
     alias(androidx.plugins.application)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
-    alias(kotlinx.plugins.android)
 }
 
 android {
