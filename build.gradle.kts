@@ -1,5 +1,5 @@
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.BasePlugin
+import com.android.build.api.dsl.CommonExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -33,12 +33,12 @@ subprojects {
     }
      */
 
-    plugins.withType<BasePlugin> {
-        configure<BaseExtension> {
-            compileSdkVersion(AndroidConfig.compileSdk)
+    fun Project.configureAndroidJvm() {
+        configure<CommonExtension> {
+            compileSdkVersion = AndroidConfig.compileSdk
             ndkVersion = AndroidConfig.ndk
 
-            defaultConfig {
+            defaultConfig.apply {
                 minSdk = AndroidConfig.minSdk
                 targetSdk = AndroidConfig.targetSdk
             }
@@ -53,5 +53,15 @@ subprojects {
                 add("coreLibraryDesugaring", libs.desugar)
             }
         }
+    }
+
+    plugins.withId(androidx.plugins.application.get().pluginId) {
+        configureAndroidJvm()
+    }
+    plugins.withId(androidx.plugins.kmp.library.get().pluginId) {
+        configureAndroidJvm()
+    }
+    plugins.withId(androidx.plugins.library.get().pluginId) {
+        configureAndroidJvm()
     }
 }
