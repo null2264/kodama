@@ -35,7 +35,9 @@ subprojects {
 
     fun Project.configureAndroidJvm() {
         configure<CommonExtension> {
-            compileSdkVersion(AndroidConfig.compileSdk)
+            compileSdk {
+                version = release(AndroidConfig.compileSdk)
+            }
             ndkVersion = AndroidConfig.ndk
 
             defaultConfig.apply {
@@ -43,7 +45,7 @@ subprojects {
                 targetSdk = AndroidConfig.targetSdk
             }
 
-            compileOptions {
+            compileOptions.apply {
                 sourceCompatibility = JavaVersion.VERSION_17
                 targetCompatibility = JavaVersion.VERSION_17
                 isCoreLibraryDesugaringEnabled = true
