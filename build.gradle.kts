@@ -1,6 +1,6 @@
 import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.gradle.BasePlugin
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -73,12 +73,16 @@ subprojects {
                     version = release(AndroidConfig.minSdk)
                 }
                 enableCoreLibraryDesugaring = true
-
-                dependencies {
-                    add("coreLibraryDesugaring", libs.desugar)
-                }
             }
         }
+
+        dependencies {
+            add("coreLibraryDesugaring", libs.desugar)
+        }
+    }
+
+    private fun KotlinMultiplatformExtension.android(block: KotlinMultiplatformAndroidLibraryTarget.() -> Unit) {
+        targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach(block)
     }
 
     plugins.withId("com.android.application") {
