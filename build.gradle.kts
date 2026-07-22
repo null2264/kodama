@@ -3,6 +3,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
 import com.android.build.gradle.BasePlugin
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -63,17 +64,19 @@ subprojects {
 
     fun Project.configureKmpAndroidJvm() {
         // Thanks google
-        configure<KotlinMultiplatformAndroidLibraryExtension> {
-            compileSdk {
-                version = release(AndroidConfig.compileSdk)
-            }
-            minSdk {
-                version = release(AndroidConfig.minSdk)
-            }
-            enableCoreLibraryDesugaring = true
+        configure<KotlinMultiplatformExtension> {
+            android {
+                compileSdk {
+                    version = release(AndroidConfig.compileSdk)
+                }
+                minSdk {
+                    version = release(AndroidConfig.minSdk)
+                }
+                enableCoreLibraryDesugaring = true
 
-            dependencies {
-                add("coreLibraryDesugaring", libs.desugar)
+                dependencies {
+                    add("coreLibraryDesugaring", libs.desugar)
+                }
             }
         }
     }
