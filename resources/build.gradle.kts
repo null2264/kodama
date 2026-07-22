@@ -6,6 +6,7 @@ plugins {
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
+    id("kmp.android.jvm")
 }
 
 kotlin {

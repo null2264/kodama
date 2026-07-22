@@ -5,10 +5,10 @@ plugins {
     alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
     alias(libs.plugins.buildconfig)
+    id("kmp.android.jvm")
 }
 
 kotlin {
-    androidTarget()
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -50,7 +50,7 @@ kotlin {
         }
     }
 
-    androidLibrary {
+    android {
         namespace = "kodama.core"
     }
 }
