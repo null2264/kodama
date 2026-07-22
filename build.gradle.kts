@@ -81,7 +81,7 @@ subprojects {
         }
     }
 
-    private fun KotlinMultiplatformExtension.android(block: KotlinMultiplatformAndroidLibraryTarget.() -> Unit) {
+    fun KotlinMultiplatformExtension.android(block: KotlinMultiplatformAndroidLibraryTarget.() -> Unit) {
         targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach(block)
     }
 
