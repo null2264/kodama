@@ -60,7 +60,13 @@ subprojects {
         }
     }
 
-    plugins.withId("com.android.base") {
+    plugins.withId("com.android.application") {
+        configureAndroidJvm()
+    }
+    plugins.withId("com.android.library") {
+        configureAndroidJvm()
+    }
+    plugins.withId("com.android.kotlin.multiplatform.library") {
         configureAndroidJvm()
     }
 }

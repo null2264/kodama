@@ -24,7 +24,7 @@ kotlin {
         }
     }
 
-    androidLibrary {
+    android {
         namespace = "kodama.resources"
     }
 }
