@@ -65,7 +65,7 @@ subprojects {
     fun Project.configureKmpAndroidJvm() {
         // Thanks google
         configure<KotlinMultiplatformExtension> {
-            android {
+            targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach {
                 compileSdk {
                     version = release(AndroidConfig.compileSdk)
                 }
@@ -79,10 +79,6 @@ subprojects {
         dependencies {
             add("coreLibraryDesugaring", libs.desugar)
         }
-    }
-
-    fun KotlinMultiplatformExtension.android(block: KotlinMultiplatformAndroidLibraryTarget.() -> Unit) {
-        targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach(block)
     }
 
     plugins.withId("com.android.application") {
