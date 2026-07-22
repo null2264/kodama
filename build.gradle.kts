@@ -67,17 +67,10 @@ subprojects {
             compileSdk {
                 version = release(AndroidConfig.compileSdk)
             }
-            ndkVersion = AndroidConfig.ndk
-
-            defaultConfig.apply {
-                minSdk = AndroidConfig.minSdk
+            minSdk {
+                version = release(AndroidConfig.minSdk)
             }
-
-            compileOptions.apply {
-                sourceCompatibility = JavaVersion.VERSION_17
-                targetCompatibility = JavaVersion.VERSION_17
-                isCoreLibraryDesugaringEnabled = true
-            }
+            enableCoreLibraryDesugaring = true
 
             dependencies {
                 add("coreLibraryDesugaring", libs.desugar)
