@@ -14,8 +14,7 @@ kotlin {
     jvm("desktop")
     sourceSets {
         commonMain.dependencies {
-            api(kotlinx.compose.runtime)
-            api(kotlinx.compose.components)
+            api(kotlinx.bundles.compose)
         }
         androidMain.dependencies {
         }

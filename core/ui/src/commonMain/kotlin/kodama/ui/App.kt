@@ -17,7 +17,7 @@ fun App(
     val status by supabaseAuth.sessionStatus.collectAsState()
 
     when (status) {
-        is SessionStatus.Authenticated -> Navigator(HomeScreen)
-        else -> Navigator(AuthScreen)
+        is SessionStatus.Authenticated -> Navigator(HomeScreen())
+        else -> Navigator(AuthScreen())
     }
 }

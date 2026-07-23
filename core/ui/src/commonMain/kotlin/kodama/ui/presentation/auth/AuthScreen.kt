@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,10 +27,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import io.github.jan.supabase.compose.auth.ui.password.PasswordField
+import kodama.resources.icons.alternate_email
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 
-internal object AuthScreen : Screen() {
+internal class AuthScreen : Screen() {
     @OptIn(AuthUiExperimental::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
@@ -55,7 +55,7 @@ internal object AuthScreen : Screen() {
                     imeAction = ImeAction.Next,
                 ),
                 keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-                leadingIcon = { Icon(Icons.Filled.Email, "Email") },
+                leadingIcon = { Icon(alternate_email, "Email") },
             )
             PasswordField(
                 value = state.password,
@@ -81,7 +81,7 @@ internal object AuthScreen : Screen() {
 //            text = if (signUp) "Sign Up with Google" else "Login with Google"
 //        ) { viewModel.loginWithGoogle() }
         }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        Box(modifier = Modifier.fillMaxSize().navigationBarsPadding(), contentAlignment = Alignment.BottomCenter) {
             TextButton(onClick = { screenModel.toggleAuth() }) {
                 Text(if (state.signUp) "Already have an account? Login" else "Not registered? Register")
             }

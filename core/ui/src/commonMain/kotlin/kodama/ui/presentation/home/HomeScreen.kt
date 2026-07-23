@@ -54,7 +54,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 
-internal object HomeScreen : Screen() {
+internal class HomeScreen : Screen() {
+
     @Composable
     override fun Content() {
         val coroutineScope = rememberCoroutineScope()
