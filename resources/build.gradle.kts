@@ -1,12 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    alias(androidx.plugins.kmp.library)
+    id("kmp.android.jvm")
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
-    alias(kotlinx.plugins.multiplatform)
     alias(kotlinx.plugins.serialization)
-    id("kmp.android.jvm")
 }
 
 kotlin {
