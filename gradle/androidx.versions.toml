@@ -19,3 +19,4 @@ kodama-app = { id = "kodama.plugins.app" }
 kodama-library = { id = "kodama.plugins.library" }
 kodama-android-base = { id = "kodama.plugins.android" }
 kodama-kmp-library = { id = "kodama.plugins.kmp.library" }
+kodama-jvm = { id = "kodama.plugins.kmp.jvm" }

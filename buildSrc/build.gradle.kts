@@ -1,4 +1,6 @@
 plugins {
+    alias(kotlinx.plugins.jvm)
+    alias(kotlinx.plugins.sam.with.receiver)
     `java-gradle-plugin`
 }
 
@@ -20,7 +22,16 @@ gradlePlugin {
             id = androidx.plugins.kodama.android.base.get().pluginId
             implementationClass = "AndroidPlugin"
         }
+        register("kodama.plugins.jvm") {
+            id = androidx.plugins.kodama.jvm.get().pluginId
+            implementationClass = "KmpJvmPlugin"
+        }
     }
+}
+
+
+samWithReceiver {
+    annotation("org.gradle.api.HasImplicitReceiver")
 }
 
 repositories {
@@ -31,8 +42,8 @@ repositories {
 
 dependencies {
     compileOnly(gradleKotlinDsl())
-    compileOnly(androidx.gradle)
-    compileOnly(kotlinx.gradle)
+    implementation(androidx.gradle)
+    implementation(kotlinx.gradle)
 
     compileOnly(files(androidx::class.java.superclass.protectionDomain.codeSource.location))
     compileOnly(files(kotlinx::class.java.superclass.protectionDomain.codeSource.location))

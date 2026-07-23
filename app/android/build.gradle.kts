@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(androidx.plugins.kodama.app)
     alias(kotlinx.plugins.compose)
@@ -22,8 +24,12 @@ android {
             keepDebugSymbols += "**/libandroidx.graphics.path.so"
         }
     }
-    kotlinOptions {
-        jvmTarget = "17"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        javaParameters.set(true)
     }
 }
 

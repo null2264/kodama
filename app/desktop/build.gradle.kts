@@ -1,7 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    alias(kotlinx.plugins.multiplatform)
+    alias(androidx.plugins.kodama.jvm)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.serialization)
