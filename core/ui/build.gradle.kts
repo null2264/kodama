@@ -24,7 +24,7 @@ kotlin {
 
             implementation(compose.foundation)
             implementation(compose.material3)
-            implementation(compose.components.uiToolingPreview)
+            implementation(kotlinx.compose.ui.tooling.preview)
             implementation(libs.bundles.voyager)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)

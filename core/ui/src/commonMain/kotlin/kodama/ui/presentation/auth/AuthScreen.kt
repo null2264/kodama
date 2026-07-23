@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import io.github.jan.supabase.compose.auth.ui.password.PasswordField
 import kodama.resources.icons.alternate_email
+import kodama.ui.component.KodamaTextField
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 
@@ -41,7 +42,7 @@ internal class AuthScreen : Screen() {
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val passwordFocus = remember { FocusRequester() }
@@ -50,7 +51,8 @@ internal class AuthScreen : Screen() {
                     value = state.username,
                     onValueChange = screenModel::onUsernameFieldChanged,
                     singleLine = true,
-                    label = { Text("Username") },
+                    label = { Text("Name") },
+                    placeholder = { Text("John Doe") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
@@ -59,23 +61,28 @@ internal class AuthScreen : Screen() {
                     leadingIcon = { Icon(alternate_email, "Email") },
                 )
             }
-            OutlinedTextField(
+            KodamaTextField(
                 value = state.email,
                 onValueChange = screenModel::onEmailFieldChanged,
-                singleLine = true,
-                label = { Text("E-Mail") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-                leadingIcon = { Icon(alternate_email, "Email") },
+                label = "Email",
+                placeholder = "contoh@email.co.id",
+                icon = { Icon(alternate_email, "Email") }
+//                singleLine = true,
+//                label = { Text("E-Mail") },
+//                placeholder = { Text("contoh@email.co.id") },
+//                keyboardOptions = KeyboardOptions(
+//                    keyboardType = KeyboardType.Email,
+//                    imeAction = ImeAction.Next,
+//                ),
+//                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+//                leadingIcon = { Icon(alternate_email, "Email") },
             )
             PasswordField(
                 value = state.password,
                 onValueChange = screenModel::onPasswordFieldChanged,
-                modifier = Modifier.focusRequester(passwordFocus)
-                    .padding(top = 10.dp),
+                label = { Text("Password") },
+                placeholder = { Text("Minimal 8 karakter") },
+                modifier = Modifier.focusRequester(passwordFocus),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
