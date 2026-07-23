@@ -7,10 +7,10 @@ plugins {
 }
 
 kotlin {
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-    jvm()
+//    iosX64()
+//    iosArm64()
+//    iosSimulatorArm64()
+    jvm("desktop")
 
     applyDefaultHierarchyTemplate()
 
@@ -27,7 +27,7 @@ kotlin {
             }
         }
 
-        val nonJsMain by creating {
+        val nonJsMain = create("nonJsMain") {
             dependencies {
                 api(libs.ktor.cio)
             }

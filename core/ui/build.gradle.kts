@@ -13,9 +13,9 @@ plugins {
 }
 
 kotlin {
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+//    iosX64()
+//    iosArm64()
+//    iosSimulatorArm64()
     jvm("desktop")
     sourceSets {
         commonMain.dependencies {
