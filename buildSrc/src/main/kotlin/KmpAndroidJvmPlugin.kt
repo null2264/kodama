@@ -20,7 +20,7 @@ class KmpAndroidJvmPlugin : Plugin<Project> {
         }
 
         project.dependencies {
-            add("coreLibraryDesugaring", libs.desugar)
+            add("coreLibraryDesugaring", project.libs.findLibrary("desugar").get())
         }
     }
 }

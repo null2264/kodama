@@ -12,6 +12,7 @@ coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 compose-components = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
+kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
