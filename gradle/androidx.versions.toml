@@ -15,3 +15,7 @@ gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 application = { id = "com.android.application", version.ref = "agp" }
 library = { id = "com.android.library", version.ref = "agp" }
 kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kodama-app = { id = "kodama.plugins.app" }
+kodama-library = { id = "kodama.plugins.library" }
+kodama-android-base = { id = "kodama.plugins.android" }
+kodama-kmp-library = { id = "kodama.plugins.kmp.library" }

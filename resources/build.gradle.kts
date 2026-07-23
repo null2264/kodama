@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("kmp.android.jvm")
+    alias(androidx.plugins.kodama.kmp.library)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.serialization)

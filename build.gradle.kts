@@ -32,40 +32,4 @@ subprojects {
         }
     }
      */
-
-    fun Project.configureAndroidJvm() {
-        configure<CommonExtension> {
-            compileSdk {
-                version = release(AndroidConfig.compileSdk)
-            }
-            ndkVersion = AndroidConfig.ndk
-
-            defaultConfig.apply {
-                minSdk = AndroidConfig.minSdk
-                if (this is ApplicationBaseFlavor) {
-                    targetSdk = AndroidConfig.targetSdk
-                }
-            }
-
-            compileOptions.apply {
-                sourceCompatibility = JavaVersion.VERSION_17
-                targetCompatibility = JavaVersion.VERSION_17
-                isCoreLibraryDesugaringEnabled = true
-            }
-
-            dependencies {
-                add("coreLibraryDesugaring", libs.desugar)
-            }
-        }
-    }
-
-    plugins.withId("com.android.application") {
-        configureAndroidJvm()
-    }
-    plugins.withId("com.android.library") {
-        configureAndroidJvm()
-    }
-    plugins.withId("com.android.kotlin.multiplatform.library") {
-        apply(plugin = "kmp.android.jvm")
-    }
 }

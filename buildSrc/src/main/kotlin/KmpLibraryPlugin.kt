@@ -6,7 +6,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-class KmpAndroidJvmPlugin : Plugin<Project> {
+class KmpLibraryPlugin : Plugin<Project> {
     override fun apply(project: Project) = with(project) {
         plugins {
             alias(androidx.plugins.kmp.library)

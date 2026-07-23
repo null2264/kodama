@@ -1,5 +1,5 @@
 plugins {
-    alias(androidx.plugins.application)
+    alias(androidx.plugins.kodama.app)
     alias(kotlinx.plugins.compose)
     alias(kotlinx.plugins.compose.compiler)
 }
