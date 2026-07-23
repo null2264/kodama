@@ -1,26 +1,29 @@
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
-import com.android.build.api.dsl.release
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KmpAndroidJvmPlugin : Plugin<Project> {
-    override fun apply(project: Project) {
-        project.configure<KotlinMultiplatformExtension> {
-            targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach {
-                compileSdk {
-                    version = release(AndroidConfig.compileSdk)
-                }
-                minSdk {
-                    version = release(AndroidConfig.minSdk)
-                }
+    override fun apply(project: Project) = with(project) {
+        kotlin {
+            android {
+                compileSdk = AndroidConfig.compileSdk
+                minSdk = AndroidConfig.minSdk
                 enableCoreLibraryDesugaring = true
             }
         }
 
-        project.dependencies {
-            add("coreLibraryDesugaring", project.libs.findLibrary("desugar").get())
+        dependencies {
+            "coreLibraryDesugaring"(libs.desugar)
         }
     }
+}
+
+private fun Project.kotlin(block: KotlinMultiplatformExtension.() -> Unit) {
+    extensions.configure(block)
+}
+
+private fun KotlinMultiplatformExtension.android(block: KotlinMultiplatformAndroidLibraryTarget.() -> Unit) {
+    targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach(block)
 }

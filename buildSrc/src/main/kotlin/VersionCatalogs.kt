@@ -1,4 +1,3 @@
-import com.android.build.api.dsl.CommonExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.accessors.dm.LibrariesForKotlinx
 import org.gradle.accessors.dm.LibrariesForAndroidx
