@@ -16,6 +16,12 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
         }
     }
 
+    fun onUsernameFieldChanged(username: String) {
+        mutableState.update {
+            it.copy(username = username)
+        }
+    }
+
     fun onEmailFieldChanged(email: String) {
         mutableState.update {
             it.copy(email = email)
@@ -57,6 +63,7 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
 
     data class State(
         val signUp: Boolean = false,
+        val username: String = "",  // Used for sign up only
         val email: String = "",
         val password: String = "",
     )

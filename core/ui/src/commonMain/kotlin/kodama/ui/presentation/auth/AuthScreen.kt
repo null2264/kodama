@@ -45,6 +45,20 @@ internal class AuthScreen : Screen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val passwordFocus = remember { FocusRequester() }
+            if (state.signUp) {
+                OutlinedTextField(
+                    value = state.username,
+                    onValueChange = screenModel::onUsernameFieldChanged,
+                    singleLine = true,
+                    label = { Text("Username") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                    ),
+                    keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+                    leadingIcon = { Icon(alternate_email, "Email") },
+                )
+            }
             OutlinedTextField(
                 value = state.email,
                 onValueChange = screenModel::onEmailFieldChanged,
@@ -73,7 +87,7 @@ internal class AuthScreen : Screen() {
             Button(
                 onClick = { screenModel.authenticate() },
                 modifier = Modifier.padding(top = 10.dp),
-                enabled = state.email.isNotBlank() && state.password.isNotBlank()
+                enabled = state.email.isNotBlank() && state.password.isNotBlank() && (state.username.isNotBlank() || !state.signUp)
             ) {
                 Text(if (state.signUp) "Register" else "Login")
             }
