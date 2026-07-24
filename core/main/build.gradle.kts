@@ -64,6 +64,6 @@ tasks {
 }
 
 buildConfig {
-    buildConfigField("String", "SUPABASE_URL", "\"${env.fetch("SUPABASE_URL", "")}\"")
-    buildConfigField("String", "SUPABASE_KEY", "\"${env.fetch("SUPABASE_KEY", "")}\"")
+    buildConfigField("String", "SUPABASE_URL", "\"${env.fetch("SUPABASE_URL", "http://stubs")}\"")
+    buildConfigField("String", "SUPABASE_KEY", "\"${env.fetch("SUPABASE_KEY", "stubs")}\"")
 }

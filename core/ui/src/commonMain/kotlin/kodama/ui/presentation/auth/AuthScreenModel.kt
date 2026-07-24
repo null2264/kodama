@@ -7,6 +7,8 @@ import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel.State>(State()) {
 
@@ -41,6 +43,9 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
                 auth.signUpWith(Email) {
                     this.email = state.value.email
                     this.password = state.value.password
+                    this.data = buildJsonObject {
+                        put("name", state.value.username)
+                    }
                 }
             } else {
                 auth.signInWith(Email) {

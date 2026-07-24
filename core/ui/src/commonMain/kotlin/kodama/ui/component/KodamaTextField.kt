@@ -1,6 +1,7 @@
 package kodama.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,6 +52,7 @@ fun KodamaTextField(
     onValueChange: (String) -> Unit,
     icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    isError: Boolean = false,
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -76,6 +79,7 @@ fun KodamaTextField(
             Column(
                 modifier = Modifier
                     .background(textFieldsColors.unfocusedContainerColor, RoundedCornerShape(16.dp))
+                    .then(if (isError) Modifier.border(2.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(16.dp)) else Modifier)
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -149,6 +153,7 @@ fun KodamaTextFieldPreview() {
                 contentDescription = "Email Icon",
             )
         },
+        isError = true,
         isPassword = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
     )
