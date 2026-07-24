@@ -11,15 +11,15 @@ kotlin {
 //    iosX64()
 //    iosArm64()
 //    iosSimulatorArm64()
-    jvm("desktop")
+    jvm()
     sourceSets {
         commonMain.dependencies {
             api(kotlinx.bundles.compose)
         }
         androidMain.dependencies {
         }
-        iosMain.dependencies {
-        }
+//        iosMain.dependencies {
+//        }
     }
 
     android {
