@@ -17,7 +17,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.kermit)
 
-            implementation(compose.foundation)
+            implementation(kotlinx.compose.foundation)
 
             implementation(kotlinx.coroutines.core)
 

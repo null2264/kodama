@@ -13,7 +13,10 @@ serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-jso
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 compose-components = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
+compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose"}
 compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose"}
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose" }
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
@@ -26,4 +29,6 @@ jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 sam-with-receiver = { id = "org.jetbrains.kotlin.plugin.sam.with.receiver", version.ref = "kotlin" }
 
 [bundles]
-compose = [ "compose-components", "compose-ui", "compose-runtime" ]
+compose-partial = [ "compose-components", "compose-ui", "compose-runtime" ]
+compose = [ "compose-components", "compose-ui", "compose-runtime", "compose-foundation" ]
+compose-ui-tooling = [ "compose-ui-tooling", "compose-ui-tooling-preview" ]

@@ -1,4 +1,3 @@
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import com.android.build.api.dsl.ManagedVirtualDevice
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
@@ -22,9 +21,9 @@ kotlin {
             implementation(projects.core.preferences)
             implementation(projects.resources)
 
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(kotlinx.compose.ui.tooling.preview)
+            implementation(androidx.compose.material3)
+            implementation(kotlinx.bundles.compose)
+            implementation(kotlinx.bundles.compose.ui.tooling)
             implementation(libs.bundles.voyager)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
@@ -40,13 +39,11 @@ kotlin {
 
         commonTest.dependencies {
             implementation(kotlin("test"))
-            @OptIn(ExperimentalComposeLibrary::class)
-            implementation(compose.uiTest)
+            implementation(kotlinx.compose.ui.test)
             implementation(kotlinx.coroutines.test)
         }
 
         androidMain.dependencies {
-            implementation(compose.uiTooling)
             implementation(androidx.activity.compose)
             implementation(libs.sqldelight.driver.android)
         }

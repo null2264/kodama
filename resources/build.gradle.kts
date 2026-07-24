@@ -14,7 +14,7 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
-            api(kotlinx.bundles.compose)
+            api(kotlinx.bundles.compose.partial)
         }
         androidMain.dependencies {
         }
