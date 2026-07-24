@@ -70,7 +70,7 @@ const (
 
 func doTest(cmd *cobra.Command, args []string) {
 	url := os.Getenv("SUPABASE_URL")
-	key := os.Getenv("SUPABASE_KEY")
+	key := os.Getenv("SUPABASE_SECRET_KEY")  // Using secret key because a test requires it.
 
 	client, err := supabase.NewClient(url, key, &supabase.ClientOptions{Schema: "kodama"})
 	if err != nil {
