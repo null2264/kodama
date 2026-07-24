@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,9 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import io.github.jan.supabase.compose.auth.ui.password.PasswordField
 import kodama.resources.icons.alternate_email
@@ -41,10 +46,26 @@ internal class AuthScreen : Screen() {
         val state by screenModel.state.collectAsState()
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Column(
+                modifier = Modifier.padding(bottom = 6.dp),
+            ) {
+                Text(
+                    text = if (state.signUp) "Daftar" else "Selamat Datang",
+                    style = TextStyle(
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.W900,
+                    ),
+                )
+                Text(
+                    text = if (state.signUp) "Silahkan isi formulir di bawah ini" else "Silahkan masuk",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                    ),
+                )
+            }
             val passwordFocus = remember { FocusRequester() }
             val emailFocus = remember { FocusRequester() }
             if (state.signUp) {
@@ -94,7 +115,7 @@ internal class AuthScreen : Screen() {
             )
             Button(
                 onClick = { screenModel.authenticate() },
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 enabled = state.email.isNotBlank() && state.password.isNotBlank() && (state.username.isNotBlank() || !state.signUp)
             ) {
                 Text(if (state.signUp) "Register" else "Login")
