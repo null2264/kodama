@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.jan.supabase.auth.Auth
 import kodama.preferences.collectAsState
-import kodama.resources.IndieFlower_Regular
+import kodama.resources.Overpass_VariableFont
 import kodama.resources.Res
 import kodama.resources.cyclone
 import kodama.resources.ic_cyclone
@@ -78,7 +78,7 @@ internal class HomeScreen : Screen() {
             ) {
                 Text(
                     text = stringResource(Res.string.cyclone),
-                    fontFamily = FontFamily(Font(Res.font.IndieFlower_Regular)),
+                    fontFamily = FontFamily(Font(Res.font.Overpass_VariableFont)),
                     style = MaterialTheme.typography.displayLarge
                 )
 

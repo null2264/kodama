@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,12 +35,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import io.github.jan.supabase.compose.auth.ui.password.PasswordField
+import kodama.resources.Overpass_VariableFont
+import kodama.resources.Res
 import kodama.resources.icons.alternate_email
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
+import org.jetbrains.compose.resources.Font
 
 internal class AuthScreen : Screen() {
     @OptIn(AuthUiExperimental::class, ExperimentalMaterial3Api::class)
@@ -48,6 +53,8 @@ internal class AuthScreen : Screen() {
         val screenModel = rememberScreenModel<AuthScreenModel>()
 
         val state by screenModel.state.collectAsState()
+
+        var alertDialog: AlertDialogBuilder? by remember { mutableStateOf(null) }
 
         KodamaScaffold(
             onNavigationIconClicked = {},
@@ -62,6 +69,7 @@ internal class AuthScreen : Screen() {
                 ) {
                     Text(
                         text = if (state.signUp) "Daftar" else "Selamat Datang",
+                        fontFamily = FontFamily(Font(Res.font.Overpass_VariableFont)),
                         style = TextStyle(
                             fontSize = 36.sp,
                             fontWeight = FontWeight.W900,
@@ -69,8 +77,9 @@ internal class AuthScreen : Screen() {
                     )
                     Text(
                         text = if (state.signUp) "Silahkan isi formulir di bawah ini" else "Silahkan masuk",
+                        fontFamily = FontFamily(Font(Res.font.Overpass_VariableFont)),
                         style = TextStyle(
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                         ),
                     )
                 }
@@ -133,7 +142,14 @@ internal class AuthScreen : Screen() {
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            screenModel.authenticate()
+                            screenModel.authenticate(onError = { err ->
+                                alertDialog = AlertDialogBuilder().apply {
+                                    title = "Something went wrong!"
+                                    text = err.errorDescription
+                                    onConfirm = { alertDialog = null }
+                                    onCancel = { alertDialog = null }
+                                }
+                            })
                         }
                     ),
                     icon = { Icon(alternate_email, "Email") },
@@ -141,7 +157,16 @@ internal class AuthScreen : Screen() {
                     isError = isPasswordError,
                 )
                 Button(
-                    onClick = { screenModel.authenticate() },
+                    onClick = {
+                        screenModel.authenticate(onError = { err ->
+                            alertDialog = AlertDialogBuilder().apply {
+                                title = "Something went wrong!"
+                                text = err.errorDescription
+                                onConfirm = { alertDialog = null }
+                                onCancel = { alertDialog = null }
+                            }
+                        })
+                    },
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     enabled =
                         state.email.isNotBlank() &&
@@ -161,6 +186,8 @@ internal class AuthScreen : Screen() {
                     Text(if (state.signUp) "Already have an account? Login" else "Not registered? Register")
                 }
             }
+
+            alertDialog?.build()
         }
     }
 }

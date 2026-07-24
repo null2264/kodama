@@ -24,6 +24,7 @@ kotlin {
 
     android {
         namespace = "kodama.resources"
+        androidResources.enable = true
     }
 }
 
