@@ -10,7 +10,7 @@ kotlin {
 //    iosX64()
 //    iosArm64()
 //    iosSimulatorArm64()
-    jvm("desktop")
+    jvm()
 
     applyDefaultHierarchyTemplate()
 
@@ -39,9 +39,9 @@ kotlin {
             dependsOn(nonJsMain)
         }
 
-        appleMain {
-            dependsOn(nonJsMain)
-        }
+//        appleMain {
+//            dependsOn(nonJsMain)
+//        }
 
         jvmMain {
             dependsOn(nonJsMain)

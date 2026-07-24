@@ -11,7 +11,7 @@ kotlin {
 //    iosX64()
 //    iosArm64()
 //    iosSimulatorArm64()
-    jvm("desktop")
+    jvm()
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
@@ -29,8 +29,8 @@ kotlin {
             implementation(androidx.core)
             implementation(androidx.preference)
         }
-        appleMain.dependencies {
-        }
+//        appleMain.dependencies {
+//        }
     }
 
     android {
