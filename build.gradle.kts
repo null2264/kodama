@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.ApplicationBaseFlavor
-import com.android.build.api.dsl.CommonExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -16,7 +14,15 @@ subprojects {
     tasks.withType<KotlinCompile> {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
-            freeCompilerArgs.add("-Xjdk-release=${JavaVersion.VERSION_17}")
+            freeCompilerArgs.addAll(
+                "-Xjdk-release=${JavaVersion.VERSION_17}",
+                "-Xexpect-actual-classes",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
+                "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            )
         }
     }
 

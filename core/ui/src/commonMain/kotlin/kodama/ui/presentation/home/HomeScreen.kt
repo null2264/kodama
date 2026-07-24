@@ -47,6 +47,8 @@ import kodama.resources.logout
 import kodama.resources.run
 import kodama.resources.stop
 import kodama.ui.UiPreferences
+import kodama.ui.component.AppBarType
+import kodama.ui.component.KodamaScaffold
 import kodama.ui.presentation.utils.Screen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
@@ -63,77 +65,82 @@ internal class HomeScreen : Screen() {
         val uiPreferences: UiPreferences = koinInject()
         val auth: Auth = koinInject()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        KodamaScaffold(
+            onNavigationIconClicked = {},
+            appBarType = AppBarType.LARGE,
         ) {
-            Text(
-                text = stringResource(Res.string.cyclone),
-                fontFamily = FontFamily(Font(Res.font.IndieFlower_Regular)),
-                style = MaterialTheme.typography.displayLarge
-            )
-
-            var isAnimate by remember { mutableStateOf(false) }
-            val transition = rememberInfiniteTransition()
-            val rotate by transition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(1000, easing = LinearEasing)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(Res.string.cyclone),
+                    fontFamily = FontFamily(Font(Res.font.IndieFlower_Regular)),
+                    style = MaterialTheme.typography.displayLarge
                 )
-            )
 
-            Image(
-                modifier = Modifier
-                    .size(250.dp)
-                    .padding(16.dp)
-                    .run { if (isAnimate) rotate(rotate) else this },
-                imageVector = vectorResource(Res.drawable.ic_cyclone),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                contentDescription = null
-            )
-
-            ElevatedButton(
-                modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .widthIn(min = 200.dp),
-                onClick = { isAnimate = !isAnimate },
-                content = {
-                    Icon(vectorResource(Res.drawable.ic_rotate_right), contentDescription = null)
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(
-                        stringResource(if (isAnimate) Res.string.stop else Res.string.run)
+                var isAnimate by remember { mutableStateOf(false) }
+                val transition = rememberInfiniteTransition()
+                val rotate by transition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing)
                     )
+                )
+
+                Image(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .padding(16.dp)
+                        .run { if (isAnimate) rotate(rotate) else this },
+                    imageVector = vectorResource(Res.drawable.ic_cyclone),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                    contentDescription = null
+                )
+
+                ElevatedButton(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .widthIn(min = 200.dp),
+                    onClick = { isAnimate = !isAnimate },
+                    content = {
+                        Icon(vectorResource(Res.drawable.ic_rotate_right), contentDescription = null)
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(
+                            stringResource(if (isAnimate) Res.string.stop else Res.string.run)
+                        )
+                    }
+                )
+
+                val currentTheme by uiPreferences.theme().collectAsState()
+
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
+                ) {
+                    val themes = UiPreferences.Theme.entries
+                    themes.forEachIndexed { index, entry ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = themes.size,
+                            ),
+                            onClick = { uiPreferences.theme().set(entry) },
+                            selected = currentTheme == entry,
+                            label = { Text(stringResource(entry.localizedString)) }
+                        )
+                    }
                 }
-            )
 
-            val currentTheme by uiPreferences.theme().collectAsState()
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-            ) {
-                val themes = UiPreferences.Theme.entries
-                themes.forEachIndexed { index, entry ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = themes.size,
-                        ),
-                        onClick = { uiPreferences.theme().set(entry) },
-                        selected = currentTheme == entry,
-                        label = { Text(stringResource(entry.localizedString)) }
-                    )
+                TextButton(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
+                    onClick = { coroutineScope.launch { auth.signOut() } },
+                ) {
+                    Text(stringResource(Res.string.logout))
                 }
-            }
-
-            TextButton(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                onClick = { coroutineScope.launch { auth.signOut() } },
-            ) {
-                Text(stringResource(Res.string.logout))
             }
         }
     }

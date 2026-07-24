@@ -61,9 +61,6 @@ kotlin {
 tasks {
     withType<KotlinCompile> {
         compilerOptions.freeCompilerArgs.addAll(
-            "-Xexpect-actual-classes",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
         )
     }
 }
