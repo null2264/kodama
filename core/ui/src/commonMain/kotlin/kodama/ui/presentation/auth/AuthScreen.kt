@@ -42,46 +42,45 @@ internal class AuthScreen : Screen() {
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val passwordFocus = remember { FocusRequester() }
+            val emailFocus = remember { FocusRequester() }
             if (state.signUp) {
-                OutlinedTextField(
+                KodamaTextField(
                     value = state.username,
                     onValueChange = screenModel::onUsernameFieldChanged,
                     singleLine = true,
-                    label = { Text("Name") },
-                    placeholder = { Text("John Doe") },
+                    label = "Name",
+                    placeholder = "John Doe",
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
                     ),
-                    keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-                    leadingIcon = { Icon(alternate_email, "Email") },
+                    keyboardActions = KeyboardActions(onNext = { emailFocus.requestFocus() }),
+                    icon = { Icon(alternate_email, "Email") },
                 )
             }
             KodamaTextField(
                 value = state.email,
                 onValueChange = screenModel::onEmailFieldChanged,
+                singleLine = true,
                 label = "Email",
                 placeholder = "contoh@email.co.id",
-                icon = { Icon(alternate_email, "Email") }
-//                singleLine = true,
-//                label = { Text("E-Mail") },
-//                placeholder = { Text("contoh@email.co.id") },
-//                keyboardOptions = KeyboardOptions(
-//                    keyboardType = KeyboardType.Email,
-//                    imeAction = ImeAction.Next,
-//                ),
-//                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-//                leadingIcon = { Icon(alternate_email, "Email") },
+                modifier = Modifier.focusRequester(emailFocus),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+                icon = { Icon(alternate_email, "Email") },
             )
-            PasswordField(
+            KodamaTextField(
                 value = state.password,
                 onValueChange = screenModel::onPasswordFieldChanged,
-                label = { Text("Password") },
-                placeholder = { Text("Minimal 8 karakter") },
+                label = "Password",
+                placeholder = "Minimal 8 karakter",
                 modifier = Modifier.focusRequester(passwordFocus),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -90,10 +89,12 @@ internal class AuthScreen : Screen() {
                 keyboardActions = KeyboardActions(onDone = {
                     screenModel.authenticate()
                 }),
+                icon = { Icon(alternate_email, "Email") },
+                isPassword = true,
             )
             Button(
                 onClick = { screenModel.authenticate() },
-                modifier = Modifier.padding(top = 10.dp),
+                modifier = Modifier.padding(top = 4.dp),
                 enabled = state.email.isNotBlank() && state.password.isNotBlank() && (state.username.isNotBlank() || !state.signUp)
             ) {
                 Text(if (state.signUp) "Register" else "Login")

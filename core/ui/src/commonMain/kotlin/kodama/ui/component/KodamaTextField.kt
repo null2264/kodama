@@ -14,9 +14,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,15 +49,14 @@ fun KodamaTextField(
     placeholder: String,
     onValueChange: (String) -> Unit,
     icon: @Composable () -> Unit,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    isPassword: Boolean = false,
     modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    textFieldsColors: TextFieldColors = TextFieldDefaults.colors(),
+    isPassword: Boolean = false,
 ) {
     var isPasswordVisible by remember { mutableStateOf(!isPassword) }
-
-    val backgroundColor = Color(0xFFE0E0E0)
-    val textColor = Color(0xFF333333)
-    val labelColor = Color(0xFF555555)
 
     BasicTextField(
         value = value,
@@ -62,15 +65,17 @@ fun KodamaTextField(
         textStyle = TextStyle(
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = textColor,
+            color = textFieldsColors.unfocusedTextColor,
             letterSpacing = 0.5.sp
         ),
+        singleLine = singleLine,
         keyboardOptions = keyboardOptions,
-        visualTransformation = if (isPassword && isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardActions = keyboardActions,
+        visualTransformation = if (isPassword && !isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         decorationBox = { innerTextField ->
             Column(
                 modifier = Modifier
-                    .background(backgroundColor, RoundedCornerShape(16.dp))
+                    .background(textFieldsColors.unfocusedContainerColor, RoundedCornerShape(16.dp))
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -79,7 +84,7 @@ fun KodamaTextField(
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = labelColor,
+                        color = textFieldsColors.unfocusedLabelColor,
                         letterSpacing = 0.5.sp
                     )
                 )
@@ -99,7 +104,7 @@ fun KodamaTextField(
                                 style = TextStyle(
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = labelColor.copy(alpha = 0.6f),
+                                    color = textFieldsColors.unfocusedLabelColor.copy(alpha = 0.6f),
                                     letterSpacing = 0.5.sp
                                 )
                             )
@@ -116,7 +121,7 @@ fun KodamaTextField(
                             Icon(
                                 imageVector = if (isPasswordVisible) visibility_off else visibility,
                                 contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
-                                tint = textColor,
+                                tint = textFieldsColors.unfocusedTextColor,
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
