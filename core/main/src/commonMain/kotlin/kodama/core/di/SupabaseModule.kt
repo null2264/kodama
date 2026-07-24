@@ -6,6 +6,9 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
+import kodama.core.data.ImageRepository
 import org.koin.dsl.module
 
 val supabaseModule = module {
@@ -19,8 +22,13 @@ val supabaseModule = module {
                 scheme = "app"
                 host = "supabase.com"
             }
+            install(Storage)
         }
     }
 
     single<Auth> { get<SupabaseClient>().auth }
+
+    single<Storage> { get<SupabaseClient>().storage }
+
+    single { ImageRepository(get()) }
 }

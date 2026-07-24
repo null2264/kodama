@@ -34,12 +34,13 @@ sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", versi
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version = "3.7.0" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:compose-auth" }
 supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui" }
+supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
 
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
 
 [bundles]
-supabase = [ "supabase-auth", "supabase-auth-ui" ]
+supabase = [ "supabase-auth", "supabase-auth-ui", "supabase-storage" ]
 voyager = [ "voyager-navigator", "voyager-screenmodel" ]
 
 [plugins]
