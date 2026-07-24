@@ -24,7 +24,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          touch .env.local  # TODO: Pass the config using GH secrets
+          cp .env .env.local  # TODO: Pass the config using GH secrets
           ./gradlew assembleDebug
 
 #   build-ios:

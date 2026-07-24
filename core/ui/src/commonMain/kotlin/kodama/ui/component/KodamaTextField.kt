@@ -147,8 +147,6 @@ fun KodamaTextFieldPreview() {
             Icon(
                 imageVector = alternate_email,
                 contentDescription = "Email Icon",
-                tint = Color(0xFF333333),
-                modifier = Modifier.size(24.dp)
             )
         },
         isPassword = true,
