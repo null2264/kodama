@@ -17,7 +17,7 @@ class SettingsPreferenceStore(
 
         override fun create(name: String?): PreferenceStore {
             val settings = delegate.create(name ?: PreferenceStore.Factory.DEFAULT_PREFERENCE_NAME)
-            return SettingsPreferenceStore(if (settings is ObservableSettings) settings else settings.makeObservable())
+            return SettingsPreferenceStore(settings as? ObservableSettings ?: settings.makeObservable())
         }
     }
 
