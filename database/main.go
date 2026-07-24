@@ -714,8 +714,8 @@ func main() {
 		log.Fatal("Invalid working directory, there are no 'migrations' directory.")
 	}
 
-	godotenv.Load(".env.local")
-	godotenv.Load()
+	godotenv.Load("../.env.local")
+	godotenv.Load("../.env")
 
 	if err := rootCmd.Execute(); err != nil {
 		// fmt.Println(err)

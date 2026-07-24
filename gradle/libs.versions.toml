@@ -45,3 +45,4 @@ voyager = [ "voyager-navigator", "voyager-screenmodel" ]
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+dotenv = { id = "co.uzzu.dotenv.gradle", version = "4.0.0" }

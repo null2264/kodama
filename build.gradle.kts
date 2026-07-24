@@ -9,6 +9,7 @@ plugins {
     alias(kotlinx.plugins.serialization) apply false
     alias(libs.plugins.buildconfig) apply false
     alias(libs.plugins.sqldelight) apply false
+    alias(libs.plugins.dotenv)
 }
 
 subprojects {
