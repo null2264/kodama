@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.auth.Auth
 import kodama.preferences.collectAsState
 import kodama.resources.Overpass_VariableFont
@@ -45,11 +46,13 @@ import kodama.resources.ic_cyclone
 import kodama.resources.ic_rotate_right
 import kodama.resources.logout
 import kodama.resources.run
+import kodama.resources.security_settings
 import kodama.resources.stop
 import kodama.ui.UiPreferences
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
+import kodama.ui.presentation.settings.TotpSetupScreen
 import kodama.ui.presentation.utils.Screen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
@@ -62,6 +65,7 @@ internal class HomeScreen : Screen() {
     @Composable
     override fun Content() {
         val coroutineScope = rememberCoroutineScope()
+        val navigator = LocalNavigator.current
 
         val uiPreferences: UiPreferences = koinInject()
         val auth: Auth = koinInject()
@@ -137,6 +141,14 @@ internal class HomeScreen : Screen() {
                 }
 
                 var isLoggingOut by remember { mutableStateOf(false) }
+
+                LoadingButton(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
+                    isLoading = false,
+                    onClick = { navigator?.push(TotpSetupScreen()) },
+                ) {
+                    Text(stringResource(Res.string.security_settings))
+                }
 
                 LoadingButton(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),

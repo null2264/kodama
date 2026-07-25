@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,29 +30,28 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
-import io.github.jan.supabase.compose.auth.ui.password.PasswordField
 import kodama.core.util.OperatingSystem
 import kodama.core.util.getCurrentOS
 import kodama.resources.Overpass_VariableFont
 import kodama.resources.Res
 import kodama.resources.icons.alternate_email
+import cafe.adriel.voyager.navigator.LocalNavigator
 import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
-import kodama.ui.component.LoadingButton
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
+import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.Font
 
 internal class AuthScreen : Screen() {
-    @OptIn(AuthUiExperimental::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<AuthScreenModel>()
 
         val state by screenModel.state.collectAsState()
+        val navigator = LocalNavigator.current
 
         var alertDialog: AlertDialogBuilder? by remember { mutableStateOf(null) }
 
@@ -135,14 +131,21 @@ internal class AuthScreen : Screen() {
                 val authenticate = {
                     keyboardController?.hide()
 
-                    screenModel.authenticate(onError = { err ->
-                        alertDialog = AlertDialogBuilder().apply {
-                            title = "Something went wrong!"
-                            text = err.errorDescription
-                            onConfirm = { alertDialog = null }
-                            onCancel = { alertDialog = null }
+                    screenModel.authenticate(
+                        onError = { err ->
+                            alertDialog = AlertDialogBuilder().apply {
+                                title = "Something went wrong!"
+                                text = err.errorDescription
+                                onConfirm = { alertDialog = null }
+                                onCancel = { alertDialog = null }
+                            }
+                        },
+                        onSuccess = {
+                            if (state.signUp) {
+                                navigator?.push(OtpVerificationScreen(state.email))
+                            }
                         }
-                    })
+                    )
                 }
 
                 KodamaTextField(

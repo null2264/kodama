@@ -3,7 +3,6 @@ package kodama.ui.presentation.auth
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.flow.update
@@ -37,7 +36,7 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
         }
     }
 
-    fun authenticate(onError: (AuthRestException) -> Unit = {}) {
+    fun authenticate(onError: (AuthRestException) -> Unit = {}, onSuccess: () -> Unit = {}) {
         screenModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
@@ -51,6 +50,7 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
                                 put("name", state.value.username)
                             }
                         }
+                        onSuccess()
                     } catch (err: AuthRestException) {
                         onError(err)
                     }
@@ -60,6 +60,7 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
                             this.email = state.value.email
                             this.password = state.value.password
                         }
+                        onSuccess()
                     } catch (err: AuthRestException) {
                         onError(err)
                     }
@@ -67,16 +68,6 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
             } finally {
                 mutableState.update { it.copy(isLoading = false) }
             }
-        }
-    }
-
-    fun verify(otp: String) {
-        screenModelScope.launch {
-            auth.verifyEmailOtp(
-                type = OtpType.Email.EMAIL,
-                email = state.value.email,
-                token = otp,
-            )
         }
     }
 

@@ -8,4 +8,20 @@
     <string name="pref_light_theme">Dark</string>
     <string name="pref_system_theme">System</string>
     <string name="back">Back</string>
+    <string name="otp_verification">Verifikasi Email</string>
+    <string name="otp_subtitle">Masukkan kode OTP yang dikirim ke %s</string>
+    <string name="otp_hint">Kode OTP</string>
+    <string name="otp_verify">Verifikasi</string>
+    <string name="otp_resend">Kirim ulang kode</string>
+    <string name="totp_verification">Verifikasi Dua Faktor</string>
+    <string name="totp_subtitle">Masukkan kode dari aplikasi authenticator</string>
+    <string name="totp_hint">Kode TOTP</string>
+    <string name="totp_verify">Verifikasi</string>
+    <string name="totp_setup">Autentikator Dua Faktor</string>
+    <string name="totp_setup_subtitle">Pindai kode QR dengan aplikasi authenticator</string>
+    <string name="totp_manual_secret">Atau masukkan kode manual: %s</string>
+    <string name="totp_code_hint">Masukkan kode verifikasi</string>
+    <string name="totp_enable">Aktifkan</string>
+    <string name="security_settings">Keamanan</string>
+    <string name="error_something_wrong">Terjadi kesalahan!</string>
 </resources>
