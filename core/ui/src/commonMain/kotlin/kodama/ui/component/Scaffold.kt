@@ -29,6 +29,7 @@ expect fun KodamaScaffold(
     navigationIconLabel: String = stringResource(Res.string.back),
     actions: @Composable RowScope.() -> Unit = {},
     appBarType: AppBarType = AppBarType.LARGE,
+    bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
     textFieldState: TextFieldState? = null,
     searchResult: @Composable (ColumnScope.() -> Unit)? = null,
@@ -46,6 +47,7 @@ internal fun CommonScaffold(
     navigationIconLabel: String = stringResource(Res.string.back),
     actions: @Composable RowScope.() -> Unit = {},
     appBarType: AppBarType = AppBarType.LARGE,
+    bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
     textFieldState: TextFieldState? = null,
     searchResult: @Composable (ColumnScope.() -> Unit)? = null,
@@ -104,6 +106,7 @@ internal fun CommonScaffold(
                 AppBarType.NONE -> {}
             }
         },
+        bottomBar = bottomBar,
         snackbarHost = snackbarHost,
         content = content,
     )

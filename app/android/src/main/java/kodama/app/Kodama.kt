@@ -6,6 +6,7 @@ import kodama.ui.di.uiModule
 import org.koin.android.ext.koin.androidContext
 
 class Kodama : Application() {
+
     override fun onCreate() {
         super.onCreate()
         initKoin(

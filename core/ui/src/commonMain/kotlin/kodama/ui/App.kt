@@ -16,7 +16,8 @@ import kodama.core.util.OperatingSystem
 import kodama.core.util.getCurrentOS
 import kodama.ui.presentation.auth.AuthScreen
 import kodama.ui.presentation.auth.TotpVerificationScreen
-import kodama.ui.presentation.home.HomeScreen
+import kodama.ui.presentation.home.HomeTab
+import kodama.ui.presentation.main.MainScreen
 import org.koin.compose.koinInject
 
 @Composable
@@ -57,7 +58,7 @@ fun App(
         needsTotp && totpFactorId != null && totpChallengeId != null -> {
             Navigator(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
         }
-        status is SessionStatus.Authenticated && !needsTotp -> Navigator(HomeScreen())
+        status is SessionStatus.Authenticated && !needsTotp -> Navigator(MainScreen())
         status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> Navigator(AuthScreen())
     }
 }
