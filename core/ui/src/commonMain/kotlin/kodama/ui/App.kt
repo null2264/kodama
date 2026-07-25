@@ -12,11 +12,8 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.mfa.AuthenticatorAssuranceLevel
 import io.github.jan.supabase.auth.mfa.FactorType
 import io.github.jan.supabase.auth.status.SessionStatus
-import kodama.core.util.OperatingSystem
-import kodama.core.util.getCurrentOS
 import kodama.ui.presentation.auth.AuthScreen
 import kodama.ui.presentation.auth.TotpVerificationScreen
-import kodama.ui.presentation.home.HomeTab
 import kodama.ui.presentation.main.MainScreen
 import org.koin.compose.koinInject
 
@@ -49,12 +46,9 @@ fun App(
         }
     }
 
-    if (status is SessionStatus.Initializing && getCurrentOS() == OperatingSystem.ANDROID) return
+    if (status is SessionStatus.Initializing) return
 
     when {
-        status is SessionStatus.Initializing -> {
-            // TODO: Splash screen for other OSes
-        }
         needsTotp && totpFactorId != null && totpChallengeId != null -> {
             Navigator(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
         }
