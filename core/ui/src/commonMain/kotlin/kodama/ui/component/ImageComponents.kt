@@ -2,15 +2,18 @@ package kodama.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import kodama.ui.presentation.image.ImageUploaderScreenModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun BonsaiPict(
@@ -92,6 +97,67 @@ fun ImageUploader(
             modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
         ) {
             Text("Pick Image")
+        }
+    }
+}
+
+@Composable
+fun BonsaiImageUploader(
+    bonsaiId: String,
+    currentPath: String?,
+    screenModel: ImageUploaderScreenModel,
+    supabaseUrl: String,
+    modifier: Modifier = Modifier,
+) {
+    val filePicker = rememberImageFilePicker()
+    val coroutineScope = rememberCoroutineScope()
+    val state = screenModel.state.value
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            BonsaiPict(
+                pictPath = state.uploadedPath ?: currentPath,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp),
+                supabaseUrl = supabaseUrl,
+            )
+            if (state.isUploading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+        }
+
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    val bytes = filePicker.pick()
+                    if (bytes != null) {
+                        screenModel.uploadBonsaiPict(bonsaiId, bytes)
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            enabled = !state.isUploading,
+        ) {
+            Text("Pick Image")
+        }
+
+        state.error?.let { error ->
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+
+        state.successMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
     }
 }

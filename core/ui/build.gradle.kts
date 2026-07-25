@@ -48,6 +48,10 @@ kotlin {
             implementation(libs.sqldelight.driver.android)
         }
 
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+        }
+
         //iosMain.dependencies {
         //    implementation(libs.sqldelight.driver.native)
         //}
