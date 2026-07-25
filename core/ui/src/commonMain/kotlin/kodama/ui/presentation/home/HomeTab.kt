@@ -93,12 +93,6 @@ internal object HomeTab : Tab {
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                Text(
-                    text = stringResource(Res.string.open_contests),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
                 when {
                     isLoading -> {
                         Box(

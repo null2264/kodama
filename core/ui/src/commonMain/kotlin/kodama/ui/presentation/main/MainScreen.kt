@@ -40,6 +40,7 @@ internal class MainScreen : Screen() {
                         TabNavigationItem(ProfileTab)
                     }
                 },
+                title = title,
             ) { contentPadding ->
                 val tabNavigator = LocalTabNavigator.current
 
