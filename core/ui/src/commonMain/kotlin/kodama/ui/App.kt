@@ -16,6 +16,8 @@ fun App(
 ) {
     val status by supabaseAuth.sessionStatus.collectAsState()
 
+    if (status is SessionStatus.Initializing) return  // Should be hidden by Splash Screen
+
     when (status) {
         is SessionStatus.Authenticated -> Navigator(HomeScreen())
         else -> Navigator(AuthScreen())

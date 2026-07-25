@@ -515,9 +515,32 @@ private class EnterAlwaysAppBarScrollBehavior(
     val canScroll: () -> Boolean = { true },
 ) : SettlingAppBarScrollBehavior {
 
+    private var _topHeightPx by mutableFloatStateOf(0f)
+    private var _bottomHeightPx by mutableFloatStateOf(0f)
+    private var _searchHeightPx by mutableFloatStateOf(0f)
     private var _scrollOffset by mutableFloatStateOf(initialOffset)
     private var _scrollOffsetLimit by mutableFloatStateOf(initialOffsetLimit)
     private var _contentOffset by mutableFloatStateOf(initialContentOffset)
+
+    override var topHeightPx: Float
+        get() = _topHeightPx
+        set(value) {
+            _topHeightPx = value
+        }
+
+    override var bottomHeightPx: Float
+        get() = _bottomHeightPx
+        set(value) {
+            _bottomHeightPx = value
+            _scrollOffsetLimit = -totalHeightPx
+        }
+
+    override var searchHeightPx: Float
+        get() = _searchHeightPx
+        set(value) {
+            _searchHeightPx = value
+            _scrollOffsetLimit = -totalHeightPx
+        }
 
     override var scrollOffset: Float
         @FrequentlyChangingValue get() = _scrollOffset

@@ -24,6 +24,8 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import kodama.ui.presentation.image.ImageUploaderScreenModel
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 @Composable
 fun BonsaiPict(
@@ -111,7 +113,7 @@ fun BonsaiImageUploader(
 ) {
     val filePicker = rememberImageFilePicker()
     val coroutineScope = rememberCoroutineScope()
-    val state = screenModel.state.value
+    val state by screenModel.state.collectAsState()
 
     Column(modifier = modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth()) {

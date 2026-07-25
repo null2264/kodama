@@ -18,6 +18,7 @@ kotlin {
     jvm()
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.core.main)
             implementation(projects.core.preferences)
             implementation(projects.resources)
 
