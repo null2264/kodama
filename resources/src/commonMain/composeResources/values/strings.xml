@@ -24,4 +24,7 @@
     <string name="totp_enable">Aktifkan</string>
     <string name="security_settings">Keamanan</string>
     <string name="error_something_wrong">Terjadi kesalahan!</string>
+    <string name="open_contests">Lomba Terbuka</string>
+    <string name="no_open_contests">Belum ada lomba yang sedang dibuka</string>
+    <string name="add_contest">Tambah Lomba</string>
 </resources>

@@ -35,13 +35,14 @@ supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version = "3.7.0
 supabase-auth = { module = "io.github.jan-tennert.supabase:compose-auth" }
 supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui" }
 supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 voyager-tab-navigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
 voyager-screenmodel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
 
 [bundles]
-supabase = [ "supabase-auth", "supabase-auth-ui", "supabase-storage" ]
+supabase = [ "supabase-auth", "supabase-auth-ui", "supabase-storage", "supabase-postgrest" ]
 voyager = [ "voyager-navigator", "voyager-tab-navigator", "voyager-screenmodel" ]
 
 [plugins]

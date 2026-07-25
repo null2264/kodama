@@ -6,8 +6,11 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
+import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
 import org.koin.dsl.module
 
@@ -23,6 +26,7 @@ val supabaseModule = module {
                 host = "supabase.com"
             }
             install(Storage)
+            install(Postgrest)
         }
     }
 
@@ -30,5 +34,9 @@ val supabaseModule = module {
 
     single<Storage> { get<SupabaseClient>().storage }
 
+    single<Postgrest> { get<SupabaseClient>().postgrest }
+
     single { ImageRepository(get()) }
+
+    single { ContestRepository(get()) } // Injects SupabaseClient
 }

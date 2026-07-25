@@ -1,63 +1,48 @@
 package kodama.ui.presentation.home
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import io.github.jan.supabase.auth.Auth
-import kodama.preferences.collectAsState
-import kodama.resources.Overpass_VariableFont
+import kodama.core.data.Contest
+import kodama.core.data.ContestRepository
 import kodama.resources.Res
-import kodama.resources.cyclone
-import kodama.resources.ic_cyclone
-import kodama.resources.ic_rotate_right
+import kodama.resources.add_contest
 import kodama.resources.icons.home
-import kodama.resources.logout
-import kodama.resources.run
-import kodama.resources.security_settings
-import kodama.resources.stop
-import kodama.ui.UiPreferences
-import kodama.ui.component.LoadingButton
-import kodama.ui.presentation.settings.TotpSetupScreen
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.Font
+import kodama.resources.icons.plus
+import kodama.resources.no_open_contests
+import kodama.resources.open_contests
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.koinInject
 
 internal object HomeTab : Tab {
@@ -78,72 +63,133 @@ internal object HomeTab : Tab {
 
     @Composable
     override fun Content() {
-        val uiPreferences: UiPreferences = koinInject()
+        val contestRepository: ContestRepository = koinInject()
 
-        Column(
+        var contests by remember { mutableStateOf<List<Contest>>(emptyList()) }
+        var isAdmin by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(true) }
+        var error by remember { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(Unit) {
+            isLoading = true
+            error = null
+            try {
+                contests = contestRepository.getOpenContests()
+                isAdmin = contestRepository.isAdmin()
+            } catch (e: Exception) {
+                error = e.message ?: "Unknown error"
+            } finally {
+                isLoading = false
+            }
+        }
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(Res.string.open_contests),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    error != null -> {
+                        Text(
+                            text = error ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    contests.isEmpty() -> {
+                        Text(
+                            text = stringResource(Res.string.no_open_contests),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    else -> {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(contests, key = { it.id }) { contest ->
+                                ContestCard(contest = contest)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (isAdmin) {
+                FloatingActionButton(
+                    onClick = { /* TODO: Navigate to create contest screen */ },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(plus),
+                        contentDescription = stringResource(Res.string.add_contest)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContestCard(contest: Contest) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Text(
-                text = stringResource(Res.string.cyclone),
-                fontFamily = FontFamily(Font(Res.font.Overpass_VariableFont)),
-                style = MaterialTheme.typography.displayLarge
+                text = contest.name,
+                style = MaterialTheme.typography.titleLarge
             )
 
-            var isAnimate by remember { mutableStateOf(false) }
-            val transition = rememberInfiniteTransition()
-            val rotate by transition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(1000, easing = LinearEasing)
+            contest.description?.let { description ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
-            )
+            }
 
-            Image(
-                modifier = Modifier
-                    .size(250.dp)
-                    .padding(16.dp)
-                    .run { if (isAnimate) rotate(rotate) else this },
-                imageVector = vectorResource(Res.drawable.ic_cyclone),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                contentDescription = null
-            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-            ElevatedButton(
-                modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .widthIn(min = 200.dp),
-                onClick = { isAnimate = !isAnimate },
-                content = {
-                    Icon(vectorResource(Res.drawable.ic_rotate_right), contentDescription = null)
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(
-                        stringResource(if (isAnimate) Res.string.stop else Res.string.run)
-                    )
-                }
-            )
-
-            val currentTheme by uiPreferences.theme().collectAsState()
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val themes = UiPreferences.Theme.entries
-                themes.forEachIndexed { index, entry ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = themes.size,
-                        ),
-                        onClick = { uiPreferences.theme().set(entry) },
-                        selected = currentTheme == entry,
-                        label = { Text(stringResource(entry.localizedString)) }
-                    )
-                }
+                Text(
+                    text = contest.state.replaceFirstChar { it.uppercase() },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
