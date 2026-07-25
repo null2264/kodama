@@ -26,6 +26,6 @@ fun App(
             // TODO: Splash screen for other OSes
         }
         is SessionStatus.Authenticated -> Navigator(HomeScreen())
-        else -> Navigator(AuthScreen())
+        is SessionStatus.NotAuthenticated, is SessionStatus.RefreshFailure -> Navigator(AuthScreen())
     }
 }

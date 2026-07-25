@@ -49,6 +49,7 @@ import kodama.resources.stop
 import kodama.ui.UiPreferences
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
+import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.utils.Screen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
@@ -135,9 +136,15 @@ internal class HomeScreen : Screen() {
                     }
                 }
 
-                TextButton(
+                var isLoggingOut by remember { mutableStateOf(false) }
+
+                LoadingButton(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                    onClick = { coroutineScope.launch { auth.signOut() } },
+                    isLoading = isLoggingOut,
+                    onClick = {
+                        isLoggingOut = true
+                        coroutineScope.launch { auth.signOut() }
+                    },
                 ) {
                     Text(stringResource(Res.string.logout))
                 }

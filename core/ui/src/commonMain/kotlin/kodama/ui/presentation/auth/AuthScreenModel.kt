@@ -39,28 +39,33 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
 
     fun authenticate(onError: (AuthRestException) -> Unit = {}) {
         screenModelScope.launch {
-            val isSignUp = state.value.signUp
-            if (isSignUp) {
-                try {
-                    auth.signUpWith(Email) {
-                        this.email = state.value.email
-                        this.password = state.value.password
-                        this.data = buildJsonObject {
-                            put("name", state.value.username)
+            mutableState.update { it.copy(isLoading = true) }
+            try {
+                val isSignUp = state.value.signUp
+                if (isSignUp) {
+                    try {
+                        auth.signUpWith(Email) {
+                            this.email = state.value.email
+                            this.password = state.value.password
+                            this.data = buildJsonObject {
+                                put("name", state.value.username)
+                            }
                         }
+                    } catch (err: AuthRestException) {
+                        onError(err)
                     }
-                } catch (err: AuthRestException) {
-                    onError(err)
-                }
-            } else {
-                try {
-                    auth.signInWith(Email) {
-                        this.email = state.value.email
-                        this.password = state.value.password
+                } else {
+                    try {
+                        auth.signInWith(Email) {
+                            this.email = state.value.email
+                            this.password = state.value.password
+                        }
+                    } catch (err: AuthRestException) {
+                        onError(err)
                     }
-                } catch (err: AuthRestException) {
-                    onError(err)
                 }
+            } finally {
+                mutableState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -80,5 +85,6 @@ class AuthScreenModel(private val auth: Auth) : StateScreenModel<AuthScreenModel
         val username: String = "",  // Used for sign up only
         val email: String = "",
         val password: String = "",
+        val isLoading: Boolean = false,
     )
 }
