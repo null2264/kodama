@@ -19,8 +19,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -48,14 +46,12 @@ import kodama.resources.Res
 import kodama.resources.cyclone
 import kodama.resources.ic_cyclone
 import kodama.resources.ic_rotate_right
-import kodama.resources.icons.alternate_email
+import kodama.resources.icons.home
 import kodama.resources.logout
 import kodama.resources.run
 import kodama.resources.security_settings
 import kodama.resources.stop
 import kodama.ui.UiPreferences
-import kodama.ui.component.AppBarType
-import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.settings.TotpSetupScreen
 import kotlinx.coroutines.launch
@@ -69,7 +65,7 @@ internal object HomeTab : Tab {
     override val options: TabOptions
         @Composable
         get() {
-            val icon = rememberVectorPainter(alternate_email)
+            val icon = rememberVectorPainter(home)
 
             return remember {
                 TabOptions(
