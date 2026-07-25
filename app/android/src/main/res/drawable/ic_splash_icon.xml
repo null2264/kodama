@@ -1,0 +1,25 @@
+<!-- FIXME: Replace with actual logo -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+    <path
+        android:fillColor="#FF00687A"
+        android:pathData="M12,12m-8.5,0a8.5,8.5 0,1 1,17 0a8.5,8.5 0,1 1,-17 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2L14,9L12,7L10,9Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,22L10,15L12,17L14,15Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,12L9,10L7,12L9,14Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,12L15,14L17,12L15,10Z" />
+</vector>

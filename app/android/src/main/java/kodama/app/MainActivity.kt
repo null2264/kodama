@@ -6,12 +6,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import kodama.ui.theme.KodamaTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.status.SessionStatus
 import kodama.ui.App
+import kodama.ui.theme.KodamaTheme
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
+
+    private val auth: Auth by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        splashScreen.setKeepOnScreenCondition {
+            auth.sessionStatus.value is SessionStatus.Initializing
+        }
+
         setContent {
             KodamaTheme { isDark ->
                 val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)

@@ -43,6 +43,7 @@ dependencies {
 
     implementation(androidx.core)
     implementation(androidx.activity.compose)
+    implementation(androidx.core.splashscreen)
     implementation(libs.koin.android)
     implementation(kotlinx.coroutines.android)
 }
