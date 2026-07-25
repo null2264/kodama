@@ -78,11 +78,7 @@ internal object HomeTab : Tab {
 
     @Composable
     override fun Content() {
-        val coroutineScope = rememberCoroutineScope()
-        val navigator = LocalNavigator.current
-
         val uiPreferences: UiPreferences = koinInject()
-        val auth: Auth = koinInject()
 
         Column(
             modifier = Modifier
@@ -148,27 +144,6 @@ internal object HomeTab : Tab {
                         label = { Text(stringResource(entry.localizedString)) }
                     )
                 }
-            }
-
-            var isLoggingOut by remember { mutableStateOf(false) }
-
-            LoadingButton(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                isLoading = false,
-                onClick = { navigator?.push(TotpSetupScreen()) },
-            ) {
-                Text(stringResource(Res.string.security_settings))
-            }
-
-            LoadingButton(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-                isLoading = isLoggingOut,
-                onClick = {
-                    isLoggingOut = true
-                    coroutineScope.launch { auth.signOut() }
-                },
-            ) {
-                Text(stringResource(Res.string.logout))
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.CurrentScreen
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.mfa.AuthenticatorAssuranceLevel
 import io.github.jan.supabase.auth.mfa.FactorType
@@ -46,13 +47,25 @@ fun App(
         }
     }
 
-    if (status is SessionStatus.Initializing) return
-
-    when {
-        needsTotp && totpFactorId != null && totpChallengeId != null -> {
-            Navigator(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
+    Navigator(AuthScreen()) { navigator ->
+        LaunchedEffect(status, needsTotp, totpFactorId, totpChallengeId) {
+            when {
+                status is SessionStatus.Initializing -> {}
+                needsTotp && totpFactorId != null && totpChallengeId != null -> {
+                    navigator.replaceAll(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
+                }
+                status is SessionStatus.Authenticated && !needsTotp -> {
+                    if (navigator.lastItem !is MainScreen) {
+                        navigator.replaceAll(MainScreen())
+                    }
+                }
+                status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
+                    if (navigator.lastItem is MainScreen || navigator.lastItem is TotpVerificationScreen) {
+                        navigator.replaceAll(AuthScreen())
+                    }
+                }
+            }
         }
-        status is SessionStatus.Authenticated && !needsTotp -> Navigator(MainScreen())
-        status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> Navigator(AuthScreen())
+        CurrentScreen()
     }
 }

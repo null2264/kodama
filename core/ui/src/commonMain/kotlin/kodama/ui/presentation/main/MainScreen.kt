@@ -7,6 +7,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -23,6 +27,7 @@ internal class MainScreen : Screen() {
 
     @Composable
     override fun Content() {
+        var title by remember { mutableStateOf("") }
         TabNavigator(HomeTab) {
             KodamaScaffold(
                 onNavigationIconClicked = {},
@@ -34,8 +39,12 @@ internal class MainScreen : Screen() {
                         // TODO: Maybe make the icon the user's profile picture if they have any
                         TabNavigationItem(ProfileTab)
                     }
-                }
+                },
             ) { contentPadding ->
+                val tabNavigator = LocalTabNavigator.current
+
+                title = tabNavigator.current.options.title
+
                 Box(modifier = Modifier.padding(contentPadding)) {
                     CurrentTab()
                 }
