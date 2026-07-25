@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.ImageLoader
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
 
 @Composable
 fun BonsaiPict(
@@ -31,6 +33,8 @@ fun BonsaiPict(
             contentDescription = "Bonsai picture",
             modifier = modifier.clip(RoundedCornerShape(8.dp)),
             contentScale = contentScale,
+            // FIXME
+            imageLoader = ImageLoader(LocalPlatformContext.current),
         )
     } else {
         Box(
@@ -64,6 +68,8 @@ fun ContestBanner(
                 .heightIn(max = 200.dp)
                 .clip(RoundedCornerShape(12.dp)),
             contentScale = contentScale,
+            // FIXME
+            imageLoader = ImageLoader(LocalPlatformContext.current),
         )
     }
 }
