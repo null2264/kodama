@@ -49,4 +49,12 @@
     <string name="finalize_contest_confirm_title">Buka Pendaftaran?</string>
     <string name="finalize_contest_confirm_text">Lomba akan terlihat oleh semua pengguna dan peserta dapat mendaftar.</string>
     <string name="contest_finalized_success">Pendaftaran lomba berhasil dibuka</string>
+    <string name="bonsai_pending_verification">Bonsai Menunggu Verifikasi</string>
+    <string name="bonsai_voting_progress">Progres Penilaian</string>
+    <string name="voting_progress_format">%d/%d penilaian</string>
+    <string name="judges_voted_format">%d/%d juri</string>
+    <string name="voted">Sudah Dinilai</string>
+    <string name="not_voted">Belum Dinilai</string>
+    <string name="verify_bonsai">Verifikasi</string>
+    <string name="bonsai_list">Daftar Bonsai</string>
 </resources>

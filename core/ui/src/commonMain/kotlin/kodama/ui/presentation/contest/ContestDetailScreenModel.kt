@@ -3,8 +3,11 @@ package kodama.ui.presentation.contest
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kodama.core.data.BonsaiClass
+import kodama.core.data.BonsaiWithMetadata
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
+import kodama.core.data.ContestUser
+import kodama.core.data.Review
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,9 +35,38 @@ class ContestDetailScreenModel(
                         isLoading = false,
                     )
                 }
+                loadSheetData(contest?.state)
             } catch (_: Exception) {
                 mutableState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    private suspend fun loadSheetData(contestState: String?) {
+        if (contestState != "accepting" && contestState != "reviewing") return
+        mutableState.update { it.copy(isSheetLoading = true) }
+        try {
+            val bonsai = contestRepository.getBonsaiWithMetadataForContest(contestId)
+            val reviews = if (contestState == "reviewing") {
+                contestRepository.getReviewsForContest(contestId)
+            } else {
+                emptyList()
+            }
+            val users = if (contestState == "reviewing") {
+                contestRepository.getContestUsers(contestId)
+            } else {
+                emptyList()
+            }
+            mutableState.update {
+                it.copy(
+                    bonsaiList = bonsai,
+                    reviews = reviews,
+                    contestUsers = users,
+                    isSheetLoading = false,
+                )
+            }
+        } catch (_: Exception) {
+            mutableState.update { it.copy(isSheetLoading = false) }
         }
     }
 
@@ -56,10 +88,28 @@ class ContestDetailScreenModel(
         }
     }
 
+    fun verifyBonsai(
+        bonsaiId: String,
+        onError: (String) -> Unit = {},
+    ) {
+        screenModelScope.launch {
+            try {
+                contestRepository.verifyBonsai(bonsaiId)
+                loadSheetData(state.value.contest?.state)
+            } catch (e: Exception) {
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
     data class State(
         val contest: Contest? = null,
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isFinalizing: Boolean = false,
+        val bonsaiList: List<BonsaiWithMetadata> = emptyList(),
+        val reviews: List<Review> = emptyList(),
+        val contestUsers: List<ContestUser> = emptyList(),
+        val isSheetLoading: Boolean = false,
     )
 }
