@@ -3,7 +3,6 @@ package kodama.core.data
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -70,6 +69,17 @@ class ContestRepository(private val client: SupabaseClient) {
             }
             .decodeSingle<Contest>()
         return result.id
+    }
+
+    suspend fun editContestBanner(contestId: String, bannerPath: String? = null) {
+        client.from("kodama", "contests")
+            .update({
+                set("banner_path", bannerPath)
+            }) {
+                filter {
+                    eq("id", contestId)
+                }
+            }
     }
 
     suspend fun addContestClasses(contestId: String, classIds: List<String>) {

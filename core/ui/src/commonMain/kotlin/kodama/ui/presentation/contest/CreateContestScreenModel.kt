@@ -74,7 +74,8 @@ class CreateContestScreenModel(
 
                 val bytes = bannerBytes
                 if (bytes != null) {
-                    imageRepository.uploadContestBanner(contestId, bytes)
+                    val path = imageRepository.uploadContestBanner(contestId, bytes)
+                    contestRepository.editContestBanner(contestId, path)
                 }
 
                 mutableState.update { it.copy(isLoading = false) }
