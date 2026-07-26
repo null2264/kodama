@@ -1,5 +1,6 @@
 package kodama.ui.presentation.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import kodama.resources.icons.add
@@ -41,6 +43,8 @@ import kodama.resources.Res
 import kodama.resources.add_contest
 import kodama.resources.icons.home
 import kodama.resources.no_open_contests
+import kodama.ui.presentation.contest.ContestDetailScreen
+import kodama.ui.presentation.contest.CreateContestScreen
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -63,6 +67,7 @@ internal object HomeTab : Tab {
     @Composable
     override fun Content() {
         val contestRepository: ContestRepository = koinInject()
+        val navigator = LocalNavigator.current
 
         var contests by remember { mutableStateOf<List<Contest>>(emptyList()) }
         var isAdmin by remember { mutableStateOf(false) }
@@ -73,8 +78,8 @@ internal object HomeTab : Tab {
             isLoading = true
             error = null
             try {
-                contests = contestRepository.getOpenContests()
                 isAdmin = contestRepository.isAdmin()
+                contests = contestRepository.getOpenContests()
             } catch (e: Exception) {
                 error = e.message ?: "Unknown error"
             } finally {
@@ -120,7 +125,9 @@ internal object HomeTab : Tab {
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(contests, key = { it.id }) { contest ->
-                                ContestCard(contest = contest)
+                                ContestCard(contest = contest) {
+                                    navigator?.parent?.push(ContestDetailScreen(contest.id))
+                                }
                             }
                         }
                     }
@@ -129,7 +136,7 @@ internal object HomeTab : Tab {
 
             if (isAdmin) {
                 FloatingActionButton(
-                    onClick = { /* TODO: Navigate to create contest screen */ },
+                    onClick = { navigator?.parent?.push(CreateContestScreen()) },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -145,9 +152,9 @@ internal object HomeTab : Tab {
 }
 
 @Composable
-private fun ContestCard(contest: Contest) {
+private fun ContestCard(contest: Contest, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(

@@ -27,4 +27,15 @@
     <string name="open_contests">Lomba Terbuka</string>
     <string name="no_open_contests">Belum ada lomba yang sedang dibuka</string>
     <string name="add_contest">Tambah Lomba</string>
+    <string name="create_contest_title">Buat Lomba</string>
+    <string name="contest_name_label">Nama Lomba</string>
+    <string name="contest_desc_label">Deskripsi</string>
+    <string name="contest_name_placeholder">Masukkan nama lomba</string>
+    <string name="contest_desc_placeholder">Masukkan deskripsi lomba</string>
+    <string name="pick_banner">Pilih Banner</string>
+    <string name="change_banner">Ubah Banner</string>
+    <string name="contest_classes_label">Kelas Bonsai</string>
+    <string name="create_contest_submit">Buat Lomba</string>
+    <string name="contest_created_success">Lomba berhasil dibuat</string>
+    <string name="contest_detail_title">Detail Lomba</string>
 </resources>

@@ -4,6 +4,8 @@ import kodama.ui.UiPreferences
 import kodama.ui.presentation.auth.AuthScreenModel
 import kodama.ui.presentation.auth.OtpVerificationScreenModel
 import kodama.ui.presentation.auth.TotpVerificationScreenModel
+import kodama.ui.presentation.contest.ContestDetailScreenModel
+import kodama.ui.presentation.contest.CreateContestScreenModel
 import kodama.ui.presentation.image.ImageUploaderScreenModel
 import kodama.ui.presentation.settings.TotpSetupScreenModel
 import kodama.ui.presentation.utils.screenModel
@@ -15,5 +17,7 @@ val uiModule = module {
     screenModel { params -> TotpVerificationScreenModel(get(), params.get(), params.get()) }
     screenModel { TotpSetupScreenModel(get()) }
     screenModel { ImageUploaderScreenModel(get()) }
+    screenModel { CreateContestScreenModel(get(), get()) }
+    screenModel { params -> ContestDetailScreenModel(get(), params.get()) }
     single { UiPreferences(get()) }
 }
