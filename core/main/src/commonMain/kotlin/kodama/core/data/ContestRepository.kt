@@ -112,6 +112,15 @@ class ContestRepository(private val client: SupabaseClient) {
             }
     }
 
+    suspend fun updateContestState(contestId: String, newState: String) {
+        client.from("kodama", "contests")
+            .update({
+                set("state", newState)
+            }) {
+                filter { eq("id", contestId) }
+            }
+    }
+
     suspend fun removeContestClasses(contestId: String) {
         client.from("kodama", "contest_classes")
             .delete {

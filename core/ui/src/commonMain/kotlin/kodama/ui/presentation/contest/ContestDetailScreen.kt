@@ -23,7 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,11 +37,14 @@ import kodama.resources.Res
 import kodama.resources.contest_classes_label
 import kodama.resources.contest_created_success
 import kodama.resources.contest_detail_title
+import kodama.resources.finalize_contest
+import kodama.resources.finalize_contest_confirm_text
+import kodama.resources.finalize_contest_confirm_title
 import kodama.resources.icons.edit
-import kodama.core.util.kodamaRole
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
+import kodama.ui.component.LoadingButton
 import kodama.ui.component.ToolTipButton
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
@@ -66,6 +71,7 @@ internal class ContestDetailScreen(
         val supabaseUrl = supabaseClient.config.supabaseUrl
         val auth: Auth = koinInject()
         val isAdmin = auth.currentUserOrNull().isAdmin
+        var showFinalizeDialog by remember { mutableStateOf(false) }
 
         LaunchedEffect(showCreatedSnackbar) {
             if (showCreatedSnackbar) {
@@ -137,6 +143,17 @@ internal class ContestDetailScreen(
                             )
                         }
 
+                        if (isAdmin && contest.state == "draft") {
+                            LoadingButton(
+                                onClick = { showFinalizeDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isFinalizing,
+                                enabled = !state.isFinalizing,
+                            ) {
+                                Text(stringResource(Res.string.finalize_contest))
+                            }
+                        }
+
                         if (state.classes.isNotEmpty()) {
                             Column {
                                 Text(
@@ -176,6 +193,23 @@ internal class ContestDetailScreen(
                         )
                     }
                 }
+            }
+
+            if (showFinalizeDialog) {
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    titleRes = Res.string.finalize_contest_confirm_title
+                    textRes = Res.string.finalize_contest_confirm_text
+                    confirmText = "Ya, Buka"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        showFinalizeDialog = false
+                        screenModel.finalizeContest(
+                            onError = { },
+                            onSuccess = { },
+                        )
+                    }
+                    onCancel = { showFinalizeDialog = false }
+                }.build()
             }
         }
     }

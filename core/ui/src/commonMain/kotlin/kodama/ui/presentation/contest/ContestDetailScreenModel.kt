@@ -14,6 +14,10 @@ class ContestDetailScreenModel(
 ) : StateScreenModel<ContestDetailScreenModel.State>(State()) {
 
     init {
+        loadContest()
+    }
+
+    private fun loadContest() {
         screenModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
@@ -34,9 +38,28 @@ class ContestDetailScreenModel(
         }
     }
 
+    fun finalizeContest(
+        onError: (String) -> Unit = {},
+        onSuccess: () -> Unit,
+    ) {
+        screenModelScope.launch {
+            mutableState.update { it.copy(isFinalizing = true) }
+            try {
+                contestRepository.updateContestState(contestId, "accepting")
+                loadContest()
+                mutableState.update { it.copy(isFinalizing = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                mutableState.update { it.copy(isFinalizing = false) }
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
     data class State(
         val contest: Contest? = null,
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
+        val isFinalizing: Boolean = false,
     )
 }

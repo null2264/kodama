@@ -45,4 +45,8 @@
     <string name="delete_contest_confirm_text">Apakah kamu yakin ingin menghapus lomba ini? Tindakan ini tidak dapat dibatalkan.</string>
     <string name="contest_deleted_success">Lomba berhasil dihapus</string>
     <string name="contest_updated_success">Lomba berhasil diperbarui</string>
+    <string name="finalize_contest">Buka Pendaftaran</string>
+    <string name="finalize_contest_confirm_title">Buka Pendaftaran?</string>
+    <string name="finalize_contest_confirm_text">Lomba akan terlihat oleh semua pengguna dan peserta dapat mendaftar.</string>
+    <string name="contest_finalized_success">Pendaftaran lomba berhasil dibuka</string>
 </resources>
