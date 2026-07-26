@@ -42,10 +42,3 @@ USING (
 );
 --#endregion
 
---#region RLS: Admins see user metadata (for user assignment UI)
-DROP POLICY IF EXISTS "Superuser can see a user's metadata." ON kodama.user_metadata;
-CREATE POLICY "Superuser and admins can see user metadata." ON kodama.user_metadata
-FOR SELECT TO authenticated
-USING (kodama.is_superuser() OR kodama.is_admin());
---#endregion 
-

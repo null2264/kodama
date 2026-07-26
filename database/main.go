@@ -132,8 +132,8 @@ func doTest(cmd *cobra.Command, args []string) {
 
 	// Set admin role (service role key bypasses RLS)
 	log.Print("[TESTING] Promoting admin user...")
-	if _, _, err := client.From("user_metadata").Update(
-		map[string]string{"role": "admin"}, "", "",
+	if _, _, err := client.From("auth.users").Update(
+		map[string]interface{}{"raw_app_meta_data": map[string]string{"role": "admin"}}, "", "",
 	).Eq("id", adminID).Execute(); err != nil {
 		log.Fatal("Failed to set admin role: ", err)
 	}

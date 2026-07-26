@@ -6,15 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,10 +41,12 @@ import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
 import kodama.resources.icons.add
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
+import kodama.core.util.kodamaRole
 import kodama.resources.Res
 import kodama.resources.add_contest
 import kodama.resources.icons.alternate_email
@@ -56,7 +54,8 @@ import kodama.resources.icons.home
 import kodama.resources.no_open_contests
 import kodama.ui.presentation.contest.ContestDetailScreen
 import kodama.ui.presentation.contest.CreateContestScreen
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -79,12 +78,12 @@ internal object HomeTab : Tab {
     @Composable
     override fun Content() {
         val contestRepository: ContestRepository = koinInject()
-        val supabaseClient: SupabaseClient = koinInject()
-        val supabaseUrl = supabaseClient.config.supabaseUrl
+        val auth: Auth = koinInject()
         val navigator = LocalNavigator.current
 
+        val isAdmin = auth.currentUserOrNull()?.kodamaRole == "admin"
+
         var contests by remember { mutableStateOf<List<Contest>>(emptyList()) }
-        var isAdmin by remember { mutableStateOf(false) }
         var isLoading by remember { mutableStateOf(true) }
         var error by remember { mutableStateOf<String?>(null) }
 
@@ -92,7 +91,6 @@ internal object HomeTab : Tab {
             isLoading = true
             error = null
             try {
-                isAdmin = contestRepository.isAdmin()
                 contests = contestRepository.getOpenContests()
             } catch (e: Exception) {
                 error = e.message ?: "Unknown error"

@@ -17,12 +17,6 @@ ALTER ROLE authenticator SET pgrst.db_schemas = 'public,kodama';
 --#endregion
 
 --#region Enums / Custom Types
-CREATE TYPE kodama.role AS ENUM (
-    'superuser',
-    'user',
-    'admin'
-);
-
 CREATE TYPE kodama.contest_role AS ENUM (
     'contestant',
     -- TODO:
@@ -62,19 +56,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TABLE kodama.user_metadata (
-    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    role kodama.role NOT NULL DEFAULT 'user'
-);
+-- Role is stored in auth.users.raw_app_meta_data (JWT), single source of truth
 
--- Insert existing users' metadata
-INSERT INTO kodama.user_metadata (id, role)
-SELECT id, 'user'
-FROM auth.users;
-
-ALTER TABLE kodama.user_metadata ENABLE ROW LEVEL SECURITY;
-
--- Create new metadata when there's a new user
+-- Set default role on user creation
 CREATE OR REPLACE FUNCTION kodama.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -82,44 +66,42 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
-  INSERT INTO kodama.user_metadata (id, role)
-  VALUES (new.id, 'user');
-  RETURN new;
+  UPDATE auth.users
+  SET raw_app_meta_data = raw_app_meta_data || '{"role": "user"}'::jsonb
+  WHERE id = NEW.id;
+  RETURN NEW;
 END;
 $$;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE PROCEDURE kodama.handle_new_user();
 
+-- Reads role from app_metadata (JWT)
 CREATE OR REPLACE FUNCTION kodama.is_admin()
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = 'kodama'
+SET search_path = ''
 AS $$
 BEGIN
     RETURN (
-        SELECT role = 'admin' FROM kodama.user_metadata WHERE id = auth.uid()
+        SELECT (raw_app_meta_data ->> 'role') = 'admin'
+        FROM auth.users WHERE id = auth.uid()
     );
 END;
 $$;
 
+-- Reads role from app_metadata (JWT)
 CREATE OR REPLACE FUNCTION kodama.is_superuser()
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = 'kodama'
+SET search_path = ''
 AS $$
 BEGIN
     RETURN (
-        SELECT role = 'superuser' FROM kodama.user_metadata WHERE id = auth.uid()
+        SELECT (raw_app_meta_data ->> 'role') = 'superuser'
+        FROM auth.users WHERE id = auth.uid()
     );
 END;
 $$;
-
-CREATE POLICY "Superuser can update a user's metadata." ON kodama.user_metadata
-FOR UPDATE TO authenticated
-USING (kodama.is_superuser());
-CREATE POLICY "Superuser can see a user's metadata." ON kodama.user_metadata
-FOR SELECT TO authenticated
-USING (kodama.is_superuser());

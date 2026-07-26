@@ -26,7 +26,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 SELECT public.create_user('admin@test.example.com', 'demo12345');
-UPDATE kodama.user_metadata SET role = 'admin';
+UPDATE auth.users
+SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'::jsonb
+WHERE email = 'admin@test.example.com';
 SELECT public.create_user('demo@test.example.com', 'demo12345');
 SELECT public.create_user('judge@test.example.com', 'demo12345');
 SELECT public.create_user('judge1@test.example.com', 'demo12345');

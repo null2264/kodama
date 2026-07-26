@@ -1,8 +1,8 @@
 package kodama.core.data
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -38,17 +38,11 @@ class ContestRepository(private val client: SupabaseClient) {
                 filter {
                     or {
                         eq("state", "accepting")
-                        if (isAdmin()) eq("state", "draft")
+                        eq("state", "draft")
                     }
                 }
             }
             .decodeList<Contest>()
-    }
-
-    suspend fun isAdmin(): Boolean {
-        return client.postgrest.rpc("is_admin") {
-            schema = "kodama"
-        }.decodeAs<Boolean>()
     }
 
     suspend fun getBonsaiClasses(): List<BonsaiClass> {
