@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -16,13 +17,14 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
 
     private val auth: Auth by inject()
+    private var composableReady = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition {
-            auth.sessionStatus.value is SessionStatus.Initializing
+            auth.sessionStatus.value is SessionStatus.Initializing || !composableReady.value
         }
 
         setContent {
@@ -30,7 +32,7 @@ class MainActivity : ComponentActivity() {
                 val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
                 val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
                 enableEdgeToEdge(navigationBarStyle = if (isDark) darkStyle else lightStyle)
-                App()
+                App(onReady = { composableReady.value = true })
             }
         }
     }

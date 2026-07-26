@@ -21,11 +21,13 @@ import org.koin.compose.koinInject
 @Composable
 fun App(
     supabaseAuth: Auth = koinInject(),
+    onReady: () -> Unit = {},
 ) {
     val status by supabaseAuth.sessionStatus.collectAsState()
     var needsTotp by remember { mutableStateOf(false) }
     var totpFactorId by remember { mutableStateOf<String?>(null) }
     var totpChallengeId by remember { mutableStateOf<String?>(null) }
+    var mfaChecked by remember { mutableStateOf(false) }
 
     LaunchedEffect(status) {
         if (status is SessionStatus.Authenticated) {
@@ -42,27 +44,38 @@ fun App(
                     }
                 }
             } catch (_: Exception) {
-                // MFA check failed, proceed without TOTP
             }
+            mfaChecked = true
+        } else if (status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure) {
+            mfaChecked = true
         }
     }
 
-    Navigator(AuthScreen()) { navigator ->
-        LaunchedEffect(status, needsTotp, totpFactorId, totpChallengeId) {
+    val initialScreen = when (status) {
+        is SessionStatus.Authenticated -> MainScreen()
+        else -> AuthScreen()
+    }
+
+    Navigator(initialScreen) { navigator ->
+        LaunchedEffect(status, needsTotp, totpFactorId, totpChallengeId, mfaChecked) {
             when {
                 status is SessionStatus.Initializing -> {}
+                !mfaChecked -> {}
                 needsTotp && totpFactorId != null && totpChallengeId != null -> {
                     navigator.replaceAll(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
+                    onReady()
                 }
                 status is SessionStatus.Authenticated && !needsTotp -> {
                     if (navigator.lastItem !is MainScreen) {
                         navigator.replaceAll(MainScreen())
                     }
+                    onReady()
                 }
                 status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
                     if (navigator.lastItem is MainScreen || navigator.lastItem is TotpVerificationScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
+                    onReady()
                 }
             }
         }
