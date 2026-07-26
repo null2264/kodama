@@ -38,4 +38,11 @@
     <string name="create_contest_submit">Buat Lomba</string>
     <string name="contest_created_success">Lomba berhasil dibuat</string>
     <string name="contest_detail_title">Detail Lomba</string>
+    <string name="edit_contest_title">Edit Lomba</string>
+    <string name="edit_contest_submit">Simpan Perubahan</string>
+    <string name="delete_contest">Hapus Lomba</string>
+    <string name="delete_contest_confirm_title">Hapus Lomba?</string>
+    <string name="delete_contest_confirm_text">Apakah kamu yakin ingin menghapus lomba ini? Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="contest_deleted_success">Lomba berhasil dihapus</string>
+    <string name="contest_updated_success">Lomba berhasil diperbarui</string>
 </resources>

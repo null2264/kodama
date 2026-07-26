@@ -101,4 +101,28 @@ class ContestRepository(private val client: SupabaseClient) {
             .decodeList<ContestClass>()
             .map { it.class_id }
     }
+
+    suspend fun updateContest(contestId: String, name: String, description: String?) {
+        client.from("kodama", "contests")
+            .update({
+                set("name", name)
+                set("description", description)
+            }) {
+                filter { eq("id", contestId) }
+            }
+    }
+
+    suspend fun removeContestClasses(contestId: String) {
+        client.from("kodama", "contest_classes")
+            .delete {
+                filter { eq("contest_id", contestId) }
+            }
+    }
+
+    suspend fun deleteContest(contestId: String) {
+        client.from("kodama", "contests")
+            .delete {
+                filter { eq("id", contestId) }
+            }
+    }
 }

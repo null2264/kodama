@@ -29,13 +29,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
+import kodama.core.util.isAdmin
 import kodama.resources.Res
 import kodama.resources.contest_classes_label
 import kodama.resources.contest_created_success
 import kodama.resources.contest_detail_title
+import kodama.resources.icons.edit
+import kodama.core.util.kodamaRole
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
+import kodama.ui.component.ToolTipButton
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -59,6 +64,8 @@ internal class ContestDetailScreen(
         val successMessage = stringResource(Res.string.contest_created_success)
         val supabaseClient: SupabaseClient = koinInject()
         val supabaseUrl = supabaseClient.config.supabaseUrl
+        val auth: Auth = koinInject()
+        val isAdmin = auth.currentUserOrNull().isAdmin
 
         LaunchedEffect(showCreatedSnackbar) {
             if (showCreatedSnackbar) {
@@ -71,6 +78,15 @@ internal class ContestDetailScreen(
             title = state.contest?.name ?: stringResource(Res.string.contest_detail_title),
             appBarType = AppBarType.SMALL,
             snackbarHost = { SnackbarHost(snackbarHostState) },
+            actions = {
+                if (isAdmin && state.contest?.state == "draft") {
+                    ToolTipButton(
+                        toolTipLabel = "Edit",
+                        icon = edit,
+                        buttonClicked = { navigator?.parent?.push(EditContestScreen(contestId)) },
+                    )
+                }
+            },
         ) { contentPadding ->
             when {
                 state.isLoading -> {
