@@ -102,14 +102,10 @@ internal object HomeTab : Tab {
         }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
+            modifier = Modifier.fillMaxSize()
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
                 when {
                     isLoading -> {

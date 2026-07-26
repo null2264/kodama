@@ -171,7 +171,7 @@ internal class CreateContestScreen : Screen() {
                         screenModel.createContest(
                             onError = { alertDialogMessage = it },
                             onSuccess = { contestId ->
-                                navigator?.push(ContestDetailScreen(contestId, showCreatedSnackbar = true))
+                                navigator?.replace(ContestDetailScreen(contestId, showCreatedSnackbar = true))
                             },
                         )
                     },
