@@ -10,14 +10,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("CheckReturnValue")
-public val plus: ImageVector
+public val add: ImageVector
   get() {
-    if (_plus != null) {
-      return _plus!!
+    if (_add != null) {
+      return _add!!
     }
-    _plus =
+    _add =
       ImageVector.Builder(
-          name = "plus",
+          name = "add",
           defaultWidth = 24.dp,
           defaultHeight = 24.dp,
           viewportWidth = 24f,
@@ -35,24 +35,24 @@ public val plus: ImageVector
             strokeLineMiter = 1f,
             pathFillType = PathFillType.NonZero,
           ) {
-            moveTo(19f, 13f)
-            horizontalLineTo(13f)
-            verticalLineToRelative(6f)
-            horizontalLineToRelative(-2f)
-            verticalLineToRelative(-6f)
+            moveTo(11f, 13f)
             horizontalLineTo(5f)
-            verticalLineToRelative(-2f)
+            verticalLineTo(11f)
             horizontalLineToRelative(6f)
             verticalLineTo(5f)
             horizontalLineToRelative(2f)
-            verticalLineTo(6f)
+            verticalLineToRelative(6f)
             horizontalLineToRelative(6f)
             verticalLineToRelative(2f)
+            horizontalLineTo(13f)
+            verticalLineToRelative(6f)
+            horizontalLineTo(11f)
+            verticalLineTo(13f)
             close()
           }
         }
         .build()
-    return _plus!!
+    return _add!!
   }
 
-private var _plus: ImageVector? = null
+private var _add: ImageVector? = null

@@ -34,14 +34,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import kodama.resources.icons.add
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.resources.Res
 import kodama.resources.add_contest
 import kodama.resources.icons.home
-import kodama.resources.icons.plus
 import kodama.resources.no_open_contests
-import kodama.resources.open_contests
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -136,7 +135,7 @@ internal object HomeTab : Tab {
                         .padding(16.dp)
                 ) {
                     Icon(
-                        painter = rememberVectorPainter(plus),
+                        painter = rememberVectorPainter(add),
                         contentDescription = stringResource(Res.string.add_contest)
                     )
                 }
