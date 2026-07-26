@@ -245,7 +245,9 @@ class ContestRepository(private val client: SupabaseClient) {
         return client.postgrest.rpc(
             "finalize_bonsai",
             mapOf("bonsai_id" to bonsaiId),
-        ).decodeAs()
+        ) {
+            schema = "kodama"
+        }.decodeAs()
     }
 
     suspend fun deleteBonsai(bonsaiId: String) {
