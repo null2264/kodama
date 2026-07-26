@@ -25,6 +25,10 @@ class ImageRepository(private val storage: Storage) {
         return path
     }
 
+    fun getPublicUrl(contest: Contest): String {
+        return getPublicUrl("contest/${contest.id}/banner")
+    }
+
     fun getPublicUrl(path: String): String {
         return bucket.publicUrl(path)
     }
