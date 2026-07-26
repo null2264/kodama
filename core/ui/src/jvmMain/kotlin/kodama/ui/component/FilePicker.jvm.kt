@@ -34,3 +34,41 @@ actual fun rememberImageFilePicker(): ImageFilePicker {
         )
     }
 }
+
+@Composable
+actual fun rememberDocumentFilePicker(): DocumentFilePicker {
+    return remember {
+        DocumentFilePicker(
+            pick = {
+                suspendCancellableCoroutine { cont ->
+                    Platform.startup {
+                        val fileChooser = FileChooser().apply {
+                            title = "Pilih Bukti Bayar"
+                            extensionFilters.addAll(
+                                FileChooser.ExtensionFilter("Documents", "*.pdf", "*.png", "*.jpg", "*.jpeg", "*.webp", "*.doc", "*.docx")
+                            )
+                        }
+
+                        val window = null
+                        val file = fileChooser.showOpenDialog(window)
+
+                        val result = file?.let { f ->
+                            val ext = f.extension.lowercase()
+                            val contentType = when (ext) {
+                                "pdf" -> "application/pdf"
+                                "png" -> "image/png"
+                                "jpg", "jpeg" -> "image/jpeg"
+                                "webp" -> "image/webp"
+                                "doc" -> "application/msword"
+                                "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                else -> "application/octet-stream"
+                            }
+                            DocumentFilePickerResult(f.readBytes(), f.name, contentType)
+                        }
+                        cont.resume(result)
+                    }
+                }
+            }
+        )
+    }
+}

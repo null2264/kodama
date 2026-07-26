@@ -47,6 +47,7 @@ class ContestDetailScreenModel(
         mutableState.update { it.copy(isSheetLoading = true) }
         try {
             val bonsai = contestRepository.getBonsaiWithMetadataForContest(contestId)
+            val myBonsai = contestRepository.getMyBonsaiForContest(contestId)
             val reviews = if (contestState == "reviewing") {
                 contestRepository.getReviewsForContest(contestId)
             } else {
@@ -60,6 +61,7 @@ class ContestDetailScreenModel(
             mutableState.update {
                 it.copy(
                     bonsaiList = bonsai,
+                    myBonsai = myBonsai,
                     reviews = reviews,
                     contestUsers = users,
                     isSheetLoading = false,
@@ -102,12 +104,41 @@ class ContestDetailScreenModel(
         }
     }
 
+    fun finalizeBonsai(
+        bonsaiId: String,
+        onError: (String) -> Unit = {},
+    ) {
+        screenModelScope.launch {
+            try {
+                contestRepository.finalizeBonsai(bonsaiId)
+                loadSheetData(state.value.contest?.state)
+            } catch (e: Exception) {
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
+    fun deleteBonsai(
+        bonsaiId: String,
+        onError: (String) -> Unit = {},
+    ) {
+        screenModelScope.launch {
+            try {
+                contestRepository.deleteBonsai(bonsaiId)
+                loadSheetData(state.value.contest?.state)
+            } catch (e: Exception) {
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
     data class State(
         val contest: Contest? = null,
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isFinalizing: Boolean = false,
         val bonsaiList: List<BonsaiWithMetadata> = emptyList(),
+        val myBonsai: List<BonsaiWithMetadata> = emptyList(),
         val reviews: List<Review> = emptyList(),
         val contestUsers: List<ContestUser> = emptyList(),
         val isSheetLoading: Boolean = false,

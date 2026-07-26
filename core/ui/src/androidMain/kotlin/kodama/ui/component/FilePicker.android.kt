@@ -43,3 +43,48 @@ actual fun rememberImageFilePicker(): ImageFilePicker {
         )
     }
 }
+
+@Composable
+actual fun rememberDocumentFilePicker(): DocumentFilePicker {
+    val context = LocalContext.current
+    var continuation: ((DocumentFilePickerResult?) -> Unit)? = null
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        val result = uri?.let {
+            val bytes = context.contentResolver.openInputStream(it)?.use { stream ->
+                stream.readBytes()
+            }
+            val mimeType = context.contentResolver.getType(it) ?: "application/octet-stream"
+            val cursor = context.contentResolver.query(it, null, null, null, null)
+            val fileName = cursor?.use { c ->
+                val nameIndex = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                c.moveToFirst()
+                c.getString(nameIndex)
+            } ?: "document"
+            bytes?.let { b -> DocumentFilePickerResult(b, fileName, mimeType) }
+        }
+        continuation?.invoke(result)
+    }
+
+    return remember {
+        DocumentFilePicker(
+            pick = {
+                suspendCancellableCoroutine { cont ->
+                    continuation = { result ->
+                        cont.resume(result)
+                    }
+                    launcher.launch(
+                        arrayOf(
+                            "application/pdf",
+                            "image/*",
+                            "application/msword",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        )
+                    )
+                }
+            }
+        )
+    }
+}

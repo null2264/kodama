@@ -41,6 +41,7 @@ data class BonsaiWithMetadata(
     val created_at: String? = null,
     val pict_path: String? = null,
     val state: String,
+    val payment_proof_path: String? = null,
 )
 
 @Serializable
@@ -198,5 +199,53 @@ class ContestRepository(private val client: SupabaseClient) {
             "verify_bonsai",
             mapOf("bonsai_id" to bonsaiId),
         ).decodeBoolean()
+    }
+
+    suspend fun createBonsai(contestId: String, classId: String, name: String): String {
+        val result = client.from("kodama", "bonsai")
+            .insert(
+                mapOf(
+                    "contest_id" to contestId,
+                    "contest_class_id" to classId,
+                    "name" to name,
+                )
+            ) {
+                select()
+            }
+            .decodeSingle<BonsaiWithMetadata>()
+        return result.id
+    }
+
+    suspend fun finalizeBonsai(bonsaiId: String): Boolean {
+        return client.postgrest.rpc(
+            "finalize_bonsai",
+            mapOf("bonsai_id" to bonsaiId),
+        ).decodeBoolean()
+    }
+
+    suspend fun deleteBonsai(bonsaiId: String) {
+        client.from("kodama", "bonsai")
+            .delete {
+                filter { eq("id", bonsaiId) }
+            }
+    }
+
+    suspend fun setBonsaiPictPath(bonsaiId: String, path: String): Boolean {
+        return client.postgrest.rpc(
+            "set_bonsai_pict_path",
+            mapOf("bonsai_id" to bonsaiId, "path" to path),
+        ).decodeBoolean()
+    }
+
+    suspend fun setBonsaiPaymentProofPath(bonsaiId: String, path: String) {
+        client.postgrest.rpc(
+            "set_bonsai_payment_proof_path",
+            mapOf("bonsai_id" to bonsaiId, "path" to path),
+        )
+    }
+
+    suspend fun getMyBonsaiForContest(contestId: String): List<BonsaiWithMetadata> {
+        val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
+        return getBonsaiWithMetadataForContest(contestId).filter { it.owner_id == userId }
     }
 }

@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -49,19 +50,31 @@ import kodama.core.util.isAdmin
 import kodama.resources.Res
 import kodama.resources.bonsai_list
 import kodama.resources.bonsai_pending_verification
+import kodama.resources.bonsai_state_draft
+import kodama.resources.bonsai_state_verified
+import kodama.resources.bonsai_state_waiting_verify
 import kodama.resources.bonsai_voting_progress
 import kodama.resources.contest_classes_label
 import kodama.resources.contest_created_success
 import kodama.resources.contest_detail_title
+import kodama.resources.delete_bonsai
+import kodama.resources.delete_bonsai_confirm_text
+import kodama.resources.delete_bonsai_confirm_title
+import kodama.resources.finalize_bonsai
+import kodama.resources.finalize_bonsai_confirm_text
+import kodama.resources.finalize_bonsai_confirm_title
 import kodama.resources.finalize_contest
 import kodama.resources.finalize_contest_confirm_text
 import kodama.resources.finalize_contest_confirm_title
 import kodama.resources.icons.edit
 import kodama.resources.judges_voted_format
+import kodama.resources.my_bonsai
 import kodama.resources.not_voted
+import kodama.resources.register_bonsai
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.resources.voting_progress_format
+import kodama.resources.view_payment_proof
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
@@ -97,6 +110,8 @@ internal class ContestDetailScreen(
         val currentUserId = currentUser?.id
         var showFinalizeDialog by remember { mutableStateOf(false) }
         var showBottomSheet by remember { mutableStateOf(false) }
+        var bonsaiToFinalize by remember { mutableStateOf<BonsaiWithMetadata?>(null) }
+        var bonsaiToDelete by remember { mutableStateOf<BonsaiWithMetadata?>(null) }
         val sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
 
@@ -222,6 +237,90 @@ internal class ContestDetailScreen(
                             )
                         }
 
+                        if (!isAdmin && contest.state == "accepting") {
+                            Column {
+                                Text(
+                                    text = stringResource(Res.string.my_bonsai),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                )
+
+                                state.myBonsai.forEach { bonsai ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = bonsai.name,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium,
+                                                )
+                                                Text(
+                                                    text = when (bonsai.state) {
+                                                        "draft" -> stringResource(Res.string.bonsai_state_draft)
+                                                        "waiting_verify" -> stringResource(Res.string.bonsai_state_waiting_verify)
+                                                        "verified" -> stringResource(Res.string.bonsai_state_verified)
+                                                        else -> bonsai.state
+                                                    },
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = when (bonsai.state) {
+                                                        "draft" -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                        "waiting_verify" -> MaterialTheme.colorScheme.tertiary
+                                                        "verified" -> MaterialTheme.colorScheme.primary
+                                                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                    },
+                                                )
+                                            }
+
+                                            if (bonsai.state == "draft") {
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                ) {
+                                                    LoadingButton(
+                                                        onClick = { bonsaiToFinalize = bonsai },
+                                                        modifier = Modifier.weight(1f),
+                                                        isLoading = false,
+                                                        enabled = true,
+                                                    ) {
+                                                        Text(stringResource(Res.string.finalize_bonsai))
+                                                    }
+                                                    TextButton(
+                                                        onClick = { bonsaiToDelete = bonsai },
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(Res.string.delete_bonsai),
+                                                            color = MaterialTheme.colorScheme.error,
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                AssistChip(
+                                    onClick = {
+                                        navigator?.parent?.push(
+                                            CreateBonsaiScreen(contestId, state.classes.map { it.id })
+                                        )
+                                    },
+                                    label = { Text(stringResource(Res.string.register_bonsai)) },
+                                )
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
@@ -256,6 +355,34 @@ internal class ContestDetailScreen(
                 }.build()
             }
 
+            bonsaiToFinalize?.let { bonsai ->
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    titleRes = Res.string.finalize_bonsai_confirm_title
+                    textRes = Res.string.finalize_bonsai_confirm_text
+                    confirmText = "Ya, Finalisasi"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        bonsaiToFinalize = null
+                        screenModel.finalizeBonsai(bonsai.id)
+                    }
+                    onCancel = { bonsaiToFinalize = null }
+                }.build()
+            }
+
+            bonsaiToDelete?.let { bonsai ->
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    titleRes = Res.string.delete_bonsai_confirm_title
+                    textRes = Res.string.delete_bonsai_confirm_text
+                    confirmText = "Hapus"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        bonsaiToDelete = null
+                        screenModel.deleteBonsai(bonsai.id)
+                    }
+                    onCancel = { bonsaiToDelete = null }
+                }.build()
+            }
+
             if (showBottomSheet) {
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
@@ -280,6 +407,7 @@ internal class ContestDetailScreen(
                                 onVerify = { bonsaiId ->
                                     screenModel.verifyBonsai(bonsaiId)
                                 },
+                                supabaseUrl = supabaseUrl,
                             )
                         }
                         contestState == "reviewing" && isAdmin -> {
@@ -321,7 +449,10 @@ internal class ContestDetailScreen(
 private fun AdminAcceptingSheet(
     bonsaiList: List<BonsaiWithMetadata>,
     onVerify: (String) -> Unit,
+    supabaseUrl: String,
 ) {
+    val uriHandler = LocalUriHandler.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -351,24 +482,44 @@ private fun AdminAcceptingSheet(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = bonsai.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium,
-                                )
-                            }
-                            TextButton(
-                                onClick = { onVerify(bonsai.id) },
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(stringResource(Res.string.verify_bonsai))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = bonsai.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                                TextButton(
+                                    onClick = { onVerify(bonsai.id) },
+                                ) {
+                                    Text(stringResource(Res.string.verify_bonsai))
+                                }
+                            }
+
+                            bonsai.payment_proof_path?.let { proofPath ->
+                                val proofUrl = "$supabaseUrl/storage/v1/object/public/kodama-images/$proofPath"
+                                TextButton(
+                                    onClick = {
+                                        uriHandler.openUri(proofUrl)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.view_payment_proof),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
                             }
                         }
                     }

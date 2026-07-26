@@ -57,4 +57,27 @@
     <string name="not_voted">Belum Dinilai</string>
     <string name="verify_bonsai">Verifikasi</string>
     <string name="bonsai_list">Daftar Bonsai</string>
+    <string name="register_bonsai">Daftarkan Bonsai</string>
+    <string name="create_bonsai_title">Daftarkan Bonsai</string>
+    <string name="bonsai_name_label">Nama Bonsai</string>
+    <string name="bonsai_name_placeholder">Masukkan nama bonsai</string>
+    <string name="create_bonsai_submit">Simpan</string>
+    <string name="bonsai_registered_success">Bonsai berhasil didaftarkan</string>
+    <string name="finalize_bonsai">Finalisasi</string>
+    <string name="finalize_bonsai_confirm_title">Finalisasi Bonsai?</string>
+    <string name="finalize_bonsai_confirm_text">Bonsai akan dikirim untuk verifikasi oleh admin. Kamu tidak dapat mengubah bonsai setelah finalisasi.</string>
+    <string name="bonsai_finalized_success">Bonsai berhasil difinalisasi</string>
+    <string name="delete_bonsai">Hapus</string>
+    <string name="delete_bonsai_confirm_title">Hapus Bonsai?</string>
+    <string name="delete_bonsai_confirm_text">Apakah kamu yakin ingin menghapus bonsai ini?</string>
+    <string name="bonsai_deleted_success">Bonsai berhasil dihapus</string>
+    <string name="my_bonsai">Bonsai Saya</string>
+    <string name="bonsai_state_draft">Draft</string>
+    <string name="bonsai_state_waiting_verify">Menunggu Verifikasi</string>
+    <string name="bonsai_state_verified">Terverifikasi</string>
+    <string name="pick_payment_proof">Pilih Bukti Bayar</string>
+    <string name="change_payment_proof">Ubah Bukti Bayar</string>
+    <string name="view_payment_proof">Lihat Bukti Bayar</string>
+    <string name="payment_proof_label">Bukti Bayar</string>
+    <string name="payment_proof_required">Bukti bayar wajib diunggah</string>
 </resources>
