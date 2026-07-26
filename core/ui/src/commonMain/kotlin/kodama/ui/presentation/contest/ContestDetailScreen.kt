@@ -46,6 +46,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
+import kodama.core.data.Review
 import kodama.core.util.isAdmin
 import kodama.resources.Res
 import kodama.resources.bonsai_list
@@ -109,11 +110,17 @@ internal class ContestDetailScreen(
         val isAdmin = currentUser.isAdmin
         val currentUserId = currentUser?.id
         var showFinalizeDialog by remember { mutableStateOf(false) }
+        var showStateTransitionDialog by remember { mutableStateOf(false) }
+        var pendingTransitionState by remember { mutableStateOf<String?>(null) }
+        var showFinishDialog by remember { mutableStateOf(false) }
+        var showForceCloseDialog by remember { mutableStateOf(false) }
         var showBottomSheet by remember { mutableStateOf(false) }
         var bonsaiToFinalize by remember { mutableStateOf<Bonsai?>(null) }
         var bonsaiToDelete by remember { mutableStateOf<Bonsai?>(null) }
         val sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
+        val isFinishedOrEnded = state.contest?.state == "finished" || state.contest?.state == "ended"
+        val isReadOnly = isFinishedOrEnded
 
         val canShowSheet = state.contest?.state == "accepting" || state.contest?.state == "reviewing"
 
@@ -191,10 +198,73 @@ internal class ContestDetailScreen(
                             LoadingButton(
                                 onClick = { showFinalizeDialog = true },
                                 modifier = Modifier.fillMaxWidth(),
-                                isLoading = state.isFinalizing,
-                                enabled = !state.isFinalizing,
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
                             ) {
                                 Text(stringResource(Res.string.finalize_contest))
+                            }
+                        }
+
+                        if (isAdmin && contest.state == "draft") {
+                            AssistChip(
+                                onClick = { navigator?.parent?.push(AssignJudgesScreen(contestId)) },
+                                label = { Text("Assign Judges") },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                ),
+                            )
+                        }
+
+                        if (isAdmin && contest.state == "accepting") {
+                            LoadingButton(
+                                onClick = {
+                                    pendingTransitionState = "closed"
+                                    showStateTransitionDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
+                            ) {
+                                Text("Close Registration")
+                            }
+                        }
+
+                        if (isAdmin && contest.state == "closed") {
+                            LoadingButton(
+                                onClick = {
+                                    pendingTransitionState = "reviewing"
+                                    showStateTransitionDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
+                            ) {
+                                Text("Open Reviewing")
+                            }
+                        }
+
+                        if (isAdmin && contest.state == "reviewing") {
+                            LoadingButton(
+                                onClick = { showFinishDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
+                            ) {
+                                Text("Finish Contest")
+                            }
+                        }
+
+                        if (isAdmin && contest.state == "finished") {
+                            LoadingButton(
+                                onClick = {
+                                    pendingTransitionState = "ended"
+                                    showStateTransitionDialog = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
+                            ) {
+                                Text("End Contest")
                             }
                         }
 
@@ -282,14 +352,16 @@ internal class ContestDetailScreen(
                                                 )
                                             }
 
-                                            if (bonsai.state == "draft") {
+                                            if (bonsai.state == "draft" && !isReadOnly) {
                                                 Spacer(modifier = Modifier.height(8.dp))
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 ) {
                                                     LoadingButton(
-                                                        onClick = { bonsaiToFinalize = bonsai },
+                                                        onClick = {
+                                                            navigator?.push(FinalizeEntryScreen(contestId, bonsai.id))
+                                                        },
                                                         modifier = Modifier.weight(1f),
                                                         isLoading = false,
                                                         enabled = true,
@@ -306,18 +378,39 @@ internal class ContestDetailScreen(
                                                     }
                                                 }
                                             }
+
+                                            if (contest.state == "finished" || contest.state == "ended") {
+                                                val bonsaiReviews = state.reviews.filter { it.bonsai_id == bonsai.id }
+                                                if (bonsaiReviews.isNotEmpty()) {
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Text(
+                                                        text = "Scores:",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                    )
+                                                    bonsaiReviews.forEach { review ->
+                                                        Text(
+                                                            text = "Total: ${review.total_score}/40",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
 
-                                AssistChip(
-                                    onClick = {
-                                        navigator?.push(
-                                            CreateBonsaiScreen(contestId, state.classes.map { it.id })
-                                        )
-                                    },
-                                    label = { Text(stringResource(Res.string.register_bonsai)) },
-                                )
+                                if (!isReadOnly) {
+                                    AssistChip(
+                                        onClick = {
+                                            navigator?.push(
+                                                CreateBonsaiScreen(contestId, state.classes.map { it.id })
+                                            )
+                                        },
+                                        label = { Text(stringResource(Res.string.register_bonsai)) },
+                                    )
+                                }
                             }
                         }
 
@@ -346,12 +439,92 @@ internal class ContestDetailScreen(
                     cancelText = "Batal"
                     onConfirm = {
                         showFinalizeDialog = false
-                        screenModel.finalizeContest(
-                            onError = { },
+                        screenModel.transitionContestState(
+                            newState = "accepting",
+                            onError = { error ->
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(error)
+                                }
+                            },
                             onSuccess = { },
                         )
                     }
                     onCancel = { showFinalizeDialog = false }
+                }.build()
+            }
+
+            if (showStateTransitionDialog) {
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    title = "Konfirmasi"
+                    text = "Apakah Anda yakin ingin mengubah state lomba?"
+                    confirmText = "Ya"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        showStateTransitionDialog = false
+                        pendingTransitionState?.let { newState ->
+                            screenModel.transitionContestState(
+                                newState = newState,
+                                onError = { error ->
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(error)
+                                    }
+                                },
+                                onSuccess = { },
+                            )
+                            pendingTransitionState = null
+                        }
+                    }
+                    onCancel = {
+                        showStateTransitionDialog = false
+                        pendingTransitionState = null
+                    }
+                }.build()
+            }
+
+            if (showFinishDialog) {
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    title = "Finish Contest"
+                    text = "Semua review sudah selesai?"
+                    confirmText = "Finish"
+                    cancelText = "Force Close"
+                    onConfirm = {
+                        showFinishDialog = false
+                        screenModel.finishContest(
+                            force = false,
+                            onError = { error ->
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(error)
+                                }
+                            },
+                            onSuccess = { },
+                        )
+                    }
+                    onCancel = {
+                        showFinishDialog = false
+                        showForceCloseDialog = true
+                    }
+                }.build()
+            }
+
+            if (showForceCloseDialog) {
+                kodama.ui.component.AlertDialogBuilder().apply {
+                    title = "Force Close"
+                    text = "Force close akan menyelesaikan lomba meskipun semua review belum selesai. Yakin?"
+                    confirmText = "Ya, Force Close"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        showForceCloseDialog = false
+                        screenModel.finishContest(
+                            force = true,
+                            onError = { error ->
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(error)
+                                }
+                            },
+                            onSuccess = { },
+                        )
+                    }
+                    onCancel = { showForceCloseDialog = false }
                 }.build()
             }
 
@@ -422,6 +595,10 @@ internal class ContestDetailScreen(
                                 bonsaiList = state.bonsaiList.filter { it.state == "verified" },
                                 reviews = state.reviews,
                                 currentUserId = currentUserId,
+                                contestId = contestId,
+                                onRateBonsai = { bonsaiId ->
+                                    navigator?.parent?.push(RatingScreen(contestId, bonsaiId))
+                                },
                             )
                         }
                         else -> {
@@ -624,6 +801,8 @@ private fun JudgeReviewingSheet(
     bonsaiList: List<Bonsai>,
     reviews: List<kodama.core.data.Review>,
     currentUserId: String?,
+    contestId: String = "",
+    onRateBonsai: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -669,19 +848,19 @@ private fun JudgeReviewingSheet(
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                             )
-                            Text(
-                                text = if (hasVoted) {
-                                    stringResource(Res.string.voted)
-                                } else {
-                                    stringResource(Res.string.not_voted)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (hasVoted) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
+                            if (hasVoted) {
+                                Text(
+                                    text = stringResource(Res.string.voted),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            } else {
+                                TextButton(
+                                    onClick = { onRateBonsai(bonsai.id) },
+                                ) {
+                                    Text("Rate")
+                                }
+                            }
                         }
                     }
                 }

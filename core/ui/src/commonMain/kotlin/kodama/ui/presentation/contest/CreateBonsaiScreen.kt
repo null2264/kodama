@@ -49,17 +49,13 @@ import kodama.resources.Res
 import kodama.resources.bonsai_name_label
 import kodama.resources.bonsai_name_placeholder
 import kodama.resources.change_banner
-import kodama.resources.change_payment_proof
 import kodama.resources.contest_classes_label
 import kodama.resources.create_bonsai_submit
 import kodama.resources.create_bonsai_title
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.check
 import kodama.resources.icons.edit
-import kodama.resources.payment_proof_label
-import kodama.resources.payment_proof_required
 import kodama.resources.pick_banner
-import kodama.resources.pick_payment_proof
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
@@ -160,18 +156,6 @@ internal class CreateBonsaiScreen(
                     }
                 }
 
-                PaymentProofPicker(
-                    fileName = state.paymentProofFileName,
-                    onPick = {
-                        coroutineScope.launch {
-                            val result = documentPicker.pick()
-                            if (result != null) {
-                                screenModel.onPaymentProofPicked(result.bytes, result.fileName, result.contentType)
-                            }
-                        }
-                    },
-                )
-
                 LoadingButton(
                     onClick = {
                         keyboardController?.hide()
@@ -182,7 +166,7 @@ internal class CreateBonsaiScreen(
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     isLoading = state.isLoading,
-                    enabled = state.name.isNotBlank() && state.selectedClassId != null && state.paymentProofFileName != null && !state.isLoading,
+                    enabled = state.name.isNotBlank() && state.selectedClassId != null && !state.isLoading,
                 ) {
                     Text(stringResource(Res.string.create_bonsai_submit))
                 }
@@ -270,75 +254,3 @@ private fun ImagePicker(
     }
 }
 
-@Composable
-private fun PaymentProofPicker(
-    fileName: String?,
-    onPick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = stringResource(Res.string.payment_proof_label),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 4.dp),
-        )
-        Text(
-            text = stringResource(Res.string.payment_proof_required),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(bottom = 8.dp),
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onPick() }
-                .padding(16.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (fileName != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        imageVector = kodama.resources.icons.check,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = fileName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = stringResource(Res.string.change_payment_proof),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        imageVector = kodama.resources.icons.upload,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(Res.string.pick_payment_proof),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-    }
-}

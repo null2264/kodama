@@ -18,8 +18,6 @@ class CreateBonsaiScreenModel(
 ) : StateScreenModel<CreateBonsaiScreenModel.State>(State()) {
 
     private var imageBytes: ByteArray? = null
-    private var paymentProofBytes: ByteArray? = null
-    private var paymentProofContentType: String? = null
 
     init {
         screenModelScope.launch {
@@ -45,12 +43,6 @@ class CreateBonsaiScreenModel(
         mutableState.update { it.copy(imagePreviewBytes = bytes) }
     }
 
-    fun onPaymentProofPicked(bytes: ByteArray, fileName: String, contentType: String) {
-        paymentProofBytes = bytes
-        paymentProofContentType = contentType
-        mutableState.update { it.copy(paymentProofFileName = fileName) }
-    }
-
     fun createBonsai(
         onError: (String) -> Unit = {},
         onSuccess: () -> Unit,
@@ -64,14 +56,17 @@ class CreateBonsaiScreenModel(
             onError("Pilih kelas bonsai")
             return
         }
-        if (paymentProofBytes == null) {
-            onError("Bukti bayar wajib diunggah")
-            return
-        }
 
         screenModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
+                val isDuplicate = contestRepository.checkDuplicateBonsaiName(contestId, currentState.name)
+                if (isDuplicate) {
+                    mutableState.update { it.copy(isLoading = false) }
+                    onError("Nama bonsai sudah digunakan dalam kontes ini")
+                    return@launch
+                }
+
                 val bonsaiId = contestRepository.createBonsai(
                     contestId = contestId,
                     classId = currentState.selectedClassId,
@@ -82,13 +77,6 @@ class CreateBonsaiScreenModel(
                 if (bytes != null) {
                     val path = imageRepository.uploadBonsaiPict(bonsaiId, bytes)
                     contestRepository.setBonsaiPictPath(bonsaiId, path)
-                }
-
-                val proofBytes = paymentProofBytes
-                val proofContentType = paymentProofContentType
-                if (proofBytes != null && proofContentType != null) {
-                    val proofPath = imageRepository.uploadBonsaiProof(bonsaiId, proofBytes, proofContentType)
-                    contestRepository.setBonsaiPaymentProofPath(bonsaiId, proofPath)
                 }
 
                 mutableState.update { it.copy(isLoading = false) }
@@ -105,7 +93,6 @@ class CreateBonsaiScreenModel(
         val selectedClassId: String? = null,
         val availableClasses: List<BonsaiContestClass> = emptyList(),
         val imagePreviewBytes: ByteArray? = null,
-        val paymentProofFileName: String? = null,
         val isLoading: Boolean = false,
     )
 }

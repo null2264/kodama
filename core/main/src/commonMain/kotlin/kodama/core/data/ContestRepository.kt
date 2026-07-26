@@ -279,4 +279,107 @@ class ContestRepository(private val client: SupabaseClient) {
         val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
         return getBonsaiWithMetadataForContest(contestId).filter { it.owner_id == userId }
     }
+
+    suspend fun getAllContests(): List<Contest> {
+        return client.from("kodama", "contests")
+            .select {}
+            .decodeList<Contest>()
+    }
+
+    suspend fun getJoinedContests(): List<Contest> {
+        val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
+        val bonsaiList = client.from("kodama", "bonsai")
+            .select {
+                filter { eq("owner_id", userId) }
+            }
+            .decodeList<Bonsai>()
+        if (bonsaiList.isEmpty()) return emptyList()
+        val contestIds = bonsaiList.map { it.contest_id }.distinct()
+        return contestIds.mapNotNull { getContestById(it) }
+    }
+
+    suspend fun checkDuplicateBonsaiName(contestId: String, name: String): Boolean {
+        val existing = client.from("kodama", "bonsai")
+            .select {
+                filter {
+                    eq("contest_id", contestId)
+                    eq("name", name)
+                }
+            }
+            .decodeList<Bonsai>()
+        return existing.isNotEmpty()
+    }
+
+    suspend fun assignJudge(contestId: String, userId: String, contestClassId: String, role: String = "judge") {
+        client.from("kodama", "contest_participants")
+            .insert(
+                mapOf(
+                    "user_id" to userId,
+                    "contest_id" to contestId,
+                    "role" to role,
+                    "contest_class_id" to contestClassId,
+                )
+            )
+    }
+
+    suspend fun removeJudge(contestId: String, userId: String) {
+        client.from("kodama", "contest_participants")
+            .delete {
+                filter {
+                    eq("contest_id", contestId)
+                    eq("user_id", userId)
+                }
+            }
+    }
+
+    suspend fun finishContest(contestId: String, force: Boolean): String? {
+        return client.postgrest.rpc(
+            "finish_contest",
+            mapOf("p_contest_id" to contestId, "p_force" to force.toString()),
+        ) {
+            schema = "kodama"
+        }.decodeAs<String?>()
+    }
+
+    suspend fun getReviewsForBonsai(bonsaiId: String): List<Review> {
+        return client.from("kodama", "reviews")
+            .select {
+                filter { eq("bonsai_id", bonsaiId) }
+            }
+            .decodeList<Review>()
+    }
+
+    suspend fun submitReview(bonsaiId: String, scores: Map<String, Int>, totalScore: Int, comments: String?) {
+        client.from("kodama", "reviews")
+            .insert(
+                buildMap {
+                    put("bonsai_id", bonsaiId)
+                    put("scores", scores)
+                    put("total_score", totalScore)
+                    if (comments != null) put("comments", comments)
+                }
+            )
+    }
+
+    suspend fun getUsers(): List<ContestUser> {
+        return client.postgrest.rpc(
+            "get_contest_users",
+            mapOf("p_contest_id" to ""),
+        ) {
+            schema = "kodama"
+        }.decodeList<ContestUser>()
+    }
+
+    suspend fun findUserIdByEmail(email: String): String? {
+        return try {
+            client.postgrest.rpc(
+                "find_user_by_email",
+                mapOf("p_email" to email),
+            ) {
+                schema = "kodama"
+            }.decodeAs<String?>()
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

@@ -72,19 +72,39 @@ class ContestDetailScreenModel(
         }
     }
 
-    fun finalizeContest(
+    fun transitionContestState(
+        newState: String,
         onError: (String) -> Unit = {},
         onSuccess: () -> Unit,
     ) {
         screenModelScope.launch {
-            mutableState.update { it.copy(isFinalizing = true) }
+            mutableState.update { it.copy(isUpdatingState = true) }
             try {
-                contestRepository.updateContestState(contestId, "accepting")
+                contestRepository.updateContestState(contestId, newState)
                 loadContest()
-                mutableState.update { it.copy(isFinalizing = false) }
+                mutableState.update { it.copy(isUpdatingState = false) }
                 onSuccess()
             } catch (e: Exception) {
-                mutableState.update { it.copy(isFinalizing = false) }
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
+    fun finishContest(
+        force: Boolean = false,
+        onError: (String) -> Unit = {},
+        onSuccess: (String?) -> Unit,
+    ) {
+        screenModelScope.launch {
+            mutableState.update { it.copy(isUpdatingState = true) }
+            try {
+                val winnerId = contestRepository.finishContest(contestId, force)
+                loadContest()
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onSuccess(winnerId)
+            } catch (e: Exception) {
+                mutableState.update { it.copy(isUpdatingState = false) }
                 onError(e.message ?: "Terjadi kesalahan")
             }
         }
@@ -136,7 +156,7 @@ class ContestDetailScreenModel(
         val contest: Contest? = null,
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
-        val isFinalizing: Boolean = false,
+        val isUpdatingState: Boolean = false,
         val bonsaiList: List<Bonsai> = emptyList(),
         val myBonsai: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),

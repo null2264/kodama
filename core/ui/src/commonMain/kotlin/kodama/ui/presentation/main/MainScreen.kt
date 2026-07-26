@@ -36,7 +36,6 @@ internal class MainScreen : Screen() {
                     NavigationBar {
                         TabNavigationItem(HomeTab)
                         TabNavigationItem(RecentsTab)
-                        // TODO: Maybe make the icon the user's profile picture if they have any
                         TabNavigationItem(ProfileTab)
                     }
                 },

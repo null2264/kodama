@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -17,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +44,6 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
-import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.resources.icons.add
 import kodama.core.data.Contest
@@ -69,12 +72,13 @@ internal object HomeTab : Tab {
             return remember {
                 TabOptions(
                     index = 0u,
-                    title = "Home",
+                    title = "Explore",
                     icon = icon,
                 )
             }
         }
 
+    @OptIn(ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
         val contestRepository: ContestRepository = koinInject()
@@ -86,6 +90,8 @@ internal object HomeTab : Tab {
         var contests by remember { mutableStateOf<List<Contest>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
         var error by remember { mutableStateOf<String?>(null) }
+        var searchQuery by remember { mutableStateOf("") }
+        var selectedFilter by remember { mutableStateOf("All") }
 
         LaunchedEffect(Unit) {
             isLoading = true
@@ -99,12 +105,54 @@ internal object HomeTab : Tab {
             }
         }
 
+        val visibleContests = if (isAdmin) contests else contests.filter { it.state != "draft" }
+
+        val filteredContests = visibleContests.filter { contest ->
+            val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
+            val matchesFilter = when (selectedFilter) {
+                "Registration" -> contest.state == "accepting"
+                "On-going" -> contest.state == "reviewing"
+                "Ended" -> contest.state == "ended" || contest.state == "finished"
+                else -> true
+            }
+            matchesSearch && matchesFilter
+        }
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Text(
+                        text = "Search contests",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val filters = listOf("All", "Location", "Registration", "On-going", "Ended")
+                        filters.forEach { filter ->
+                            FilterChip(
+                                selected = selectedFilter == filter,
+                                onClick = { selectedFilter = filter },
+                                label = { Text(filter) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ),
+                            )
+                        }
+                    }
+                }
+
                 when {
                     isLoading -> {
                         Box(
@@ -121,7 +169,7 @@ internal object HomeTab : Tab {
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                    contests.isEmpty() -> {
+                    filteredContests.isEmpty() -> {
                         Text(
                             text = stringResource(Res.string.no_open_contests),
                             style = MaterialTheme.typography.bodyLarge,
@@ -130,9 +178,10 @@ internal object HomeTab : Tab {
                     }
                     else -> {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            items(contests, key = { it.id }) { contest ->
+                            items(filteredContests, key = { it.id }) { contest ->
                                 ContestCard(contest = contest) {
                                     navigator?.parent?.push(ContestDetailScreen(contest.id))
                                 }
