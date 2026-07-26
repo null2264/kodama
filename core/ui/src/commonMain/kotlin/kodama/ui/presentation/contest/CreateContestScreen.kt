@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -42,6 +44,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import kodama.resources.icons.upload
 import kodama.resources.Res
 import kodama.resources.change_banner
 import kodama.resources.contest_classes_label
@@ -53,6 +56,8 @@ import kodama.resources.create_contest_submit
 import kodama.resources.create_contest_title
 import kodama.resources.pick_banner
 import kodama.resources.icons.alternate_email
+import kodama.resources.icons.check
+import kodama.resources.icons.edit
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
@@ -147,6 +152,7 @@ internal class CreateContestScreen : Screen() {
                             val isSelected = bonsaiClass.id in state.selectedClassIds
                             FilterChip(
                                 selected = isSelected,
+                                leadingIcon = { if (isSelected) { Icon(check, "Selected") } },
                                 onClick = { screenModel.toggleClass(bonsaiClass.id) },
                                 label = { Text(bonsaiClass.name) },
                                 colors = FilterChipDefaults.filterChipColors(
@@ -190,7 +196,6 @@ internal class CreateContestScreen : Screen() {
     }
 }
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 private fun BannerImagePicker(
     previewBytes: ByteArray?,
@@ -214,7 +219,7 @@ private fun BannerImagePicker(
                 contentScale = ContentScale.Crop,
                 imageLoader = ImageLoader(LocalPlatformContext.current),
             )
-            Box(
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp)
@@ -223,7 +228,15 @@ private fun BannerImagePicker(
                         RoundedCornerShape(8.dp),
                     )
                     .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
                     text = stringResource(Res.string.change_banner),
                     style = MaterialTheme.typography.labelSmall,
@@ -236,7 +249,7 @@ private fun BannerImagePicker(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    imageVector = alternate_email,
+                    imageVector = upload,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
