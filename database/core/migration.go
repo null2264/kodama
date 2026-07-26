@@ -101,6 +101,23 @@ func (m *Migrations) Reset() {
 		log.Fatal(err)
 	}
 
+	if _, err := m.db.Exec(`DROP POLICY IF EXISTS "Authenticated users can read images" ON storage.objects`); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := m.db.Exec(`DROP POLICY IF EXISTS "Owner can upload bonsai pict" ON storage.objects`); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := m.db.Exec(`DROP POLICY IF EXISTS "Admin can upload contest banner" ON storage.objects`); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := m.db.Exec(`DROP POLICY IF EXISTS "Owner or admin can manage images" ON storage.objects`); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := m.db.Exec("DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users"); err != nil {
+		log.Fatal(err)
+	}
+
 	if _, err := m.db.Exec("DELETE FROM auth.users WHERE email ~ '@test.example.com$'"); err != nil {
 		log.Fatal(err)
 	}
