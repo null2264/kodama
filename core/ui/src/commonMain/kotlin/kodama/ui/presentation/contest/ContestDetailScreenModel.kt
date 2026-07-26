@@ -3,7 +3,7 @@ package kodama.ui.presentation.contest
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kodama.core.data.BonsaiClass
-import kodama.core.data.BonsaiWithMetadata
+import kodama.core.data.Bonsai
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
@@ -137,8 +137,8 @@ class ContestDetailScreenModel(
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isFinalizing: Boolean = false,
-        val bonsaiList: List<BonsaiWithMetadata> = emptyList(),
-        val myBonsai: List<BonsaiWithMetadata> = emptyList(),
+        val bonsaiList: List<Bonsai> = emptyList(),
+        val myBonsai: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),
         val contestUsers: List<ContestUser> = emptyList(),
         val isSheetLoading: Boolean = false,

@@ -3,6 +3,7 @@ package kodama.core.data
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.Serializable
 
@@ -32,7 +33,15 @@ data class ContestClass(
 )
 
 @Serializable
-data class BonsaiWithMetadata(
+data class BonsaiContestClass(
+    val id: String,
+    val contest_id: String,
+    val class_id: String,
+    val data: BonsaiClass,
+)
+
+@Serializable
+data class Bonsai(
     val id: String,
     val name: String,
     val owner_id: String,
@@ -126,13 +135,23 @@ class ContestRepository(private val client: SupabaseClient) {
             .firstOrNull()
     }
 
-    suspend fun getContestClassIds(contestId: String): List<String> {
+    suspend fun getContestClasses(contestId: String): List<ContestClass> {
         return client.from("kodama", "contest_classes")
             .select {
                 filter { eq("contest_id", contestId) }
             }
             .decodeList<ContestClass>()
-            .map { it.class_id }
+    }
+
+    suspend fun getContestClassIds(contestId: String): List<String> {
+        return getContestClasses(contestId).map { it.class_id }
+    }
+
+    suspend fun getBonsaiContestClasses(contestId: String): List<BonsaiContestClass> {
+        val bonsaiClasses = getBonsaiClasses().associateBy { it.id }
+        return getContestClasses(contestId).map {
+            BonsaiContestClass(it.id, it.contest_id, it.class_id, bonsaiClasses[it.class_id]!!)
+        }
     }
 
     suspend fun updateContest(contestId: String, name: String, description: String?) {
@@ -168,11 +187,13 @@ class ContestRepository(private val client: SupabaseClient) {
             }
     }
 
-    suspend fun getBonsaiWithMetadataForContest(contestId: String): List<BonsaiWithMetadata> {
+    suspend fun getBonsaiWithMetadataForContest(contestId: String): List<Bonsai> {
         return client.postgrest.rpc(
             "get_bonsai_with_metadata",
             mapOf("p_contest_id" to contestId),
-        ).decodeList<BonsaiWithMetadata>()
+        ) {
+            schema = "kodama"
+        }.decodeList<Bonsai>()
     }
 
     suspend fun getReviewsForContest(contestId: String): List<Review> {
@@ -191,14 +212,18 @@ class ContestRepository(private val client: SupabaseClient) {
         return client.postgrest.rpc(
             "get_contest_users",
             mapOf("p_contest_id" to contestId),
-        ).decodeList<ContestUser>()
+        ) {
+            schema = "kodama"
+        }.decodeList<ContestUser>()
     }
 
     suspend fun verifyBonsai(bonsaiId: String): Boolean {
         return client.postgrest.rpc(
             "verify_bonsai",
             mapOf("bonsai_id" to bonsaiId),
-        ).decodeBoolean()
+        ) {
+            schema = "kodama"
+        }.decodeAs()
     }
 
     suspend fun createBonsai(contestId: String, classId: String, name: String): String {
@@ -212,7 +237,7 @@ class ContestRepository(private val client: SupabaseClient) {
             ) {
                 select()
             }
-            .decodeSingle<BonsaiWithMetadata>()
+            .decodeSingle<Bonsai>()
         return result.id
     }
 
@@ -220,7 +245,7 @@ class ContestRepository(private val client: SupabaseClient) {
         return client.postgrest.rpc(
             "finalize_bonsai",
             mapOf("bonsai_id" to bonsaiId),
-        ).decodeBoolean()
+        ).decodeAs()
     }
 
     suspend fun deleteBonsai(bonsaiId: String) {
@@ -234,17 +259,21 @@ class ContestRepository(private val client: SupabaseClient) {
         return client.postgrest.rpc(
             "set_bonsai_pict_path",
             mapOf("bonsai_id" to bonsaiId, "path" to path),
-        ).decodeBoolean()
+        ) {
+            schema = "kodama"
+        }.decodeAs()
     }
 
     suspend fun setBonsaiPaymentProofPath(bonsaiId: String, path: String) {
         client.postgrest.rpc(
             "set_bonsai_payment_proof_path",
-            mapOf("bonsai_id" to bonsaiId, "path" to path),
-        )
+            mapOf("p_bonsai_id" to bonsaiId, "p_path" to path),
+        ) {
+            schema = "kodama"
+        }
     }
 
-    suspend fun getMyBonsaiForContest(contestId: String): List<BonsaiWithMetadata> {
+    suspend fun getMyBonsaiForContest(contestId: String): List<Bonsai> {
         val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
         return getBonsaiWithMetadataForContest(contestId).filter { it.owner_id == userId }
     }

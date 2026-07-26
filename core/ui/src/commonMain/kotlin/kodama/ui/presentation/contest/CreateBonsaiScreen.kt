@@ -50,6 +50,7 @@ import kodama.resources.bonsai_name_label
 import kodama.resources.bonsai_name_placeholder
 import kodama.resources.change_banner
 import kodama.resources.change_payment_proof
+import kodama.resources.contest_classes_label
 import kodama.resources.create_bonsai_submit
 import kodama.resources.create_bonsai_title
 import kodama.resources.icons.alternate_email
@@ -149,7 +150,7 @@ internal class CreateBonsaiScreen(
                                 selected = isSelected,
                                 leadingIcon = { if (isSelected) { Icon(check, "Selected") } },
                                 onClick = { screenModel.onClassSelected(bonsaiClass.id) },
-                                label = { Text(bonsaiClass.name) },
+                                label = { Text(bonsaiClass.data.name) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,

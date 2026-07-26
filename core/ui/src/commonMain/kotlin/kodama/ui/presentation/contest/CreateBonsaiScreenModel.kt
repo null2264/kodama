@@ -3,6 +3,8 @@ package kodama.ui.presentation.contest
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kodama.core.data.BonsaiClass
+import kodama.core.data.BonsaiContestClass
+import kodama.core.data.ContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
 import kotlinx.coroutines.flow.update
@@ -22,8 +24,8 @@ class CreateBonsaiScreenModel(
     init {
         screenModelScope.launch {
             try {
-                val allClasses = contestRepository.getBonsaiClasses()
-                val classes = allClasses.filter { it.id in availableClassIds }
+                val allClasses = contestRepository.getBonsaiContestClasses(contestId)
+                val classes = allClasses.filter { it.class_id in availableClassIds }
                 mutableState.update { it.copy(availableClasses = classes) }
             } catch (_: Exception) {
             }
@@ -101,7 +103,7 @@ class CreateBonsaiScreenModel(
     data class State(
         val name: String = "",
         val selectedClassId: String? = null,
-        val availableClasses: List<BonsaiClass> = emptyList(),
+        val availableClasses: List<BonsaiContestClass> = emptyList(),
         val imagePreviewBytes: ByteArray? = null,
         val paymentProofFileName: String? = null,
         val isLoading: Boolean = false,

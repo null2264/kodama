@@ -28,6 +28,7 @@ fun App(
     var totpFactorId by remember { mutableStateOf<String?>(null) }
     var totpChallengeId by remember { mutableStateOf<String?>(null) }
     var mfaChecked by remember { mutableStateOf(false) }
+    var lastStatus by remember { mutableStateOf<SessionStatus>(SessionStatus.Initializing) }
 
     LaunchedEffect(status) {
         if (status is SessionStatus.Authenticated) {
@@ -58,24 +59,28 @@ fun App(
 
     Navigator(initialScreen) { navigator ->
         LaunchedEffect(status, needsTotp, totpFactorId, totpChallengeId, mfaChecked) {
+            if (lastStatus == status) return@LaunchedEffect
+
             when {
-                status is SessionStatus.Initializing -> {}
-                !mfaChecked -> {}
+                status is SessionStatus.Initializing || !mfaChecked -> {}
                 needsTotp && totpFactorId != null && totpChallengeId != null -> {
                     navigator.replaceAll(TotpVerificationScreen(totpFactorId!!, totpChallengeId!!))
                     onReady()
+                    lastStatus = status
                 }
                 status is SessionStatus.Authenticated && !needsTotp -> {
                     if (navigator.lastItem !is MainScreen) {
                         navigator.replaceAll(MainScreen())
                     }
                     onReady()
+                    lastStatus = status
                 }
                 status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
                     if (navigator.lastItem is MainScreen || navigator.lastItem is TotpVerificationScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
                     onReady()
+                    lastStatus = status
                 }
             }
         }

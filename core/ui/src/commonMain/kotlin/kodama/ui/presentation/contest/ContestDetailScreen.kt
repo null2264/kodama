@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
-import kodama.core.data.BonsaiWithMetadata
+import kodama.core.data.Bonsai
 import kodama.core.util.isAdmin
 import kodama.resources.Res
 import kodama.resources.bonsai_list
@@ -110,8 +110,8 @@ internal class ContestDetailScreen(
         val currentUserId = currentUser?.id
         var showFinalizeDialog by remember { mutableStateOf(false) }
         var showBottomSheet by remember { mutableStateOf(false) }
-        var bonsaiToFinalize by remember { mutableStateOf<BonsaiWithMetadata?>(null) }
-        var bonsaiToDelete by remember { mutableStateOf<BonsaiWithMetadata?>(null) }
+        var bonsaiToFinalize by remember { mutableStateOf<Bonsai?>(null) }
+        var bonsaiToDelete by remember { mutableStateOf<Bonsai?>(null) }
         val sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
 
@@ -312,7 +312,7 @@ internal class ContestDetailScreen(
 
                                 AssistChip(
                                     onClick = {
-                                        navigator?.parent?.push(
+                                        navigator?.push(
                                             CreateBonsaiScreen(contestId, state.classes.map { it.id })
                                         )
                                     },
@@ -447,7 +447,7 @@ internal class ContestDetailScreen(
 
 @Composable
 private fun AdminAcceptingSheet(
-    bonsaiList: List<BonsaiWithMetadata>,
+    bonsaiList: List<Bonsai>,
     onVerify: (String) -> Unit,
     supabaseUrl: String,
 ) {
@@ -531,7 +531,7 @@ private fun AdminAcceptingSheet(
 
 @Composable
 private fun AdminReviewingSheet(
-    bonsaiList: List<BonsaiWithMetadata>,
+    bonsaiList: List<Bonsai>,
     reviews: List<kodama.core.data.Review>,
     contestUsers: List<kodama.core.data.ContestUser>,
 ) {
@@ -621,7 +621,7 @@ private fun AdminReviewingSheet(
 
 @Composable
 private fun JudgeReviewingSheet(
-    bonsaiList: List<BonsaiWithMetadata>,
+    bonsaiList: List<Bonsai>,
     reviews: List<kodama.core.data.Review>,
     currentUserId: String?,
 ) {
