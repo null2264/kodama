@@ -130,6 +130,44 @@ FOR UPDATE TO authenticated
 USING (true)
 WITH CHECK (true);
 
+-- POLICY 6: Contestants can see reviews on their own bonsai in finished contests.
+CREATE POLICY "Contestants can see reviews on their own bonsai in finished contests." ON kodama.reviews
+FOR SELECT TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM kodama.bonsai b
+    WHERE b.id = reviews.bonsai_id
+      AND b.owner_id = auth.uid()
+      AND EXISTS (
+        SELECT 1 FROM kodama.contests c
+        WHERE c.id = b.contest_id AND c.state IN ('finished', 'ended')
+      )
+  )
+);
+
+-- RPC: Get pending reviews for a contest
+CREATE OR REPLACE FUNCTION kodama.get_pending_reviews(p_contest_id uuid)
+RETURNS TABLE(id uuid, name text, owner_id uuid, contest_class_id uuid, created_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = 'kodama'
+AS $$
+  SELECT b.id, b.name, b.owner_id, b.contest_class_id, b.created_at
+  FROM kodama.bonsai b
+  WHERE b.contest_id = p_contest_id
+    AND b.state = 'verified'
+    AND EXISTS (
+      SELECT 1 FROM kodama.contest_participants p
+      WHERE p.contest_id = b.contest_id
+        AND p.user_id = auth.uid()
+        AND p.role IN ('judge', 'head_judge')
+        AND (p.role = 'head_judge' OR p.contest_class_id = b.contest_class_id)
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM kodama.reviews r
+      WHERE r.bonsai_id = b.id AND r.judge_id = auth.uid()
+    )
+  ORDER BY b.created_at;
+$$;
+
 CREATE OR REPLACE FUNCTION kodama.best_in_show(p_contest_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -204,8 +242,7 @@ BEGIN
 
   SELECT COUNT(*) INTO v_total_verified
   FROM kodama.bonsai b
-  JOIN kodama.bonsai_metadata m ON b.id = m.id
-  WHERE b.contest_id = p_contest_id AND m.state = 'verified';
+  WHERE b.contest_id = p_contest_id AND b.state = 'verified';
 
   SELECT COUNT(DISTINCT r.bonsai_id) INTO v_total_reviewed
   FROM kodama.bonsai b

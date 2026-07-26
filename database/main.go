@@ -2,6 +2,8 @@ package main
 
 import (
 	supabase "github.com/supabase-community/supabase-go"
+	"github.com/supabase-community/gotrue-go/types"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"path/filepath"
@@ -132,9 +134,14 @@ func doTest(cmd *cobra.Command, args []string) {
 
 	// Set admin role (service role key bypasses RLS)
 	log.Print("[TESTING] Promoting admin user...")
-	if _, _, err := client.From("auth.users").Update(
-		map[string]interface{}{"raw_app_meta_data": map[string]string{"role": "admin"}}, "", "",
-	).Eq("id", adminID).Execute(); err != nil {
+	adminUUID, err := uuid.Parse(adminID)
+	if err != nil {
+		log.Fatal("Failed to parse admin UUID: ", err)
+	}
+	if _, err := client.Auth.AdminUpdateUser(types.AdminUpdateUserRequest{
+		UserID: adminUUID,
+		AppMetadata: map[string]interface{}{"role": "admin"},
+	}); err != nil {
 		log.Fatal("Failed to set admin role: ", err)
 	}
 	log.Println("[SUCCESS] Admin user promoted")
