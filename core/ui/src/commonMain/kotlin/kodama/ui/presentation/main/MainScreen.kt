@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +44,7 @@ internal class MainScreen : Screen() {
             ) { contentPadding ->
                 val tabNavigator = LocalTabNavigator.current
 
-                title = tabNavigator.current.options.title
+                if (title != tabNavigator.current.options.title) title = tabNavigator.current.options.title
 
                 Box(modifier = Modifier.padding(contentPadding)) {
                     CurrentTab()

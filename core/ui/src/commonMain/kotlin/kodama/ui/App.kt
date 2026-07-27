@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.CurrentScreen
 import io.github.jan.supabase.auth.Auth
@@ -44,9 +45,11 @@ fun App(
 //        onReady()
 //    }
 
-    val initialScreen = when (status) {
-        is SessionStatus.Authenticated -> MainScreen()
-        else -> AuthScreen()
+    val initialScreen = remember(status) {
+        when (status) {
+            is SessionStatus.Authenticated -> MainScreen()
+            else -> AuthScreen()
+        }
     }
 
     Navigator(initialScreen) { navigator ->
