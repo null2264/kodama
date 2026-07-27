@@ -817,6 +817,31 @@ private fun JudgeReviewingSheet(
             modifier = Modifier.padding(bottom = 12.dp),
         )
 
+        val votedCount = if (currentUserId != null) {
+            reviews.count { it.judge_id == currentUserId }
+        } else {
+            0
+        }
+        val totalBonsai = bonsaiList.size
+        val progress = if (totalBonsai > 0) {
+            votedCount.toFloat() / totalBonsai
+        } else {
+            0f
+        }
+
+        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "$votedCount/$totalBonsai rated",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         if (bonsaiList.isEmpty()) {
             Text(
                 text = "Tidak ada bonsai untuk dinilai",

@@ -65,6 +65,14 @@ data class Review(
 )
 
 @Serializable
+data class ReviewInsert(
+    val bonsai_id: String,
+    val scores: Map<String, Int>,
+    val total_score: Int,
+    val comments: String,
+)
+
+@Serializable
 data class ContestUser(
     val user_id: String,
     val email: String,
@@ -81,6 +89,7 @@ class ContestRepository(private val client: SupabaseClient) {
                     or {
                         eq("state", "accepting")
                         eq("state", "draft")
+                        eq("state", "reviewing")
                     }
                 }
             }
@@ -352,12 +361,12 @@ class ContestRepository(private val client: SupabaseClient) {
     suspend fun submitReview(bonsaiId: String, scores: Map<String, Int>, totalScore: Int, comments: String?) {
         client.from("kodama", "reviews")
             .insert(
-                buildMap {
-                    put("bonsai_id", bonsaiId)
-                    put("scores", scores)
-                    put("total_score", totalScore)
-                    if (comments != null) put("comments", comments)
-                }
+                ReviewInsert(
+                    bonsai_id = bonsaiId,
+                    scores = scores,
+                    total_score = totalScore,
+                    comments = comments.orEmpty(),
+                )
             )
     }
 
