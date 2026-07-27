@@ -43,9 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
-import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
 import io.github.jan.supabase.SupabaseClient
 import kodama.resources.Res
 import kodama.resources.change_banner
@@ -274,7 +272,7 @@ private fun BannerImagePicker(
                 contentDescription = stringResource(Res.string.change_banner),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                imageLoader = ImageLoader(LocalPlatformContext.current),
+                imageLoader = koinInject(),
             )
             Row(
                 modifier = Modifier

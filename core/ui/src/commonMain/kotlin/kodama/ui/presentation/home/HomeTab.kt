@@ -26,7 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,13 +41,10 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
 import io.github.jan.supabase.auth.Auth
 import kodama.resources.icons.add
 import kodama.core.data.Contest
-import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
 import kodama.core.util.kodamaRole
 import kodama.resources.Res
@@ -57,8 +54,7 @@ import kodama.resources.icons.home
 import kodama.resources.no_open_contests
 import kodama.ui.presentation.contest.ContestDetailScreen
 import kodama.ui.presentation.contest.CreateContestScreen
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
+import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -81,31 +77,17 @@ internal object HomeTab : Tab {
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
-        val contestRepository: ContestRepository = koinInject()
         val auth: Auth = koinInject()
         val navigator = LocalNavigator.current
+        val screenModel = rememberScreenModel<HomeTabScreenModel>()
+        val state by screenModel.state.collectAsState()
 
         val isAdmin = auth.currentUserOrNull()?.kodamaRole == "admin"
 
-        var contests by remember { mutableStateOf<List<Contest>>(emptyList()) }
-        var isLoading by remember { mutableStateOf(true) }
-        var error by remember { mutableStateOf<String?>(null) }
         var searchQuery by remember { mutableStateOf("") }
         var selectedFilter by remember { mutableStateOf("All") }
 
-        LaunchedEffect(Unit) {
-            isLoading = true
-            error = null
-            try {
-                contests = contestRepository.getOpenContests()
-            } catch (e: Exception) {
-                error = e.message ?: "Unknown error"
-            } finally {
-                isLoading = false
-            }
-        }
-
-        val visibleContests = if (isAdmin) contests else contests.filter { it.state != "draft" }
+        val visibleContests = if (isAdmin) state.contests else state.contests.filter { it.state != "draft" }
 
         val filteredContests = visibleContests.filter { contest ->
             val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
@@ -154,7 +136,7 @@ internal object HomeTab : Tab {
                 }
 
                 when {
-                    isLoading -> {
+                    state.isLoading -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -162,12 +144,25 @@ internal object HomeTab : Tab {
                             CircularProgressIndicator()
                         }
                     }
-                    error != null -> {
-                        Text(
-                            text = error ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                    state.error != null -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = state.error ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Retry",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.clickable { screenModel.loadContests() }
+                            )
+                        }
                     }
                     filteredContests.isEmpty() -> {
                         Text(
@@ -228,7 +223,7 @@ private fun ContestCard(contest: Contest, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentScale = ContentScale.Crop,
                 error = rememberVectorPainter(alternate_email),
-                imageLoader = ImageLoader(LocalPlatformContext.current),
+                imageLoader = koinInject(),
             )
 
             Column(

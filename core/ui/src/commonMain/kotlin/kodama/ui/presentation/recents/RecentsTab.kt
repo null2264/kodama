@@ -39,9 +39,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
@@ -187,7 +185,7 @@ private fun JoinedContestCard(contest: Contest, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentScale = ContentScale.Crop,
                 error = rememberVectorPainter(alternate_email),
-                imageLoader = ImageLoader(LocalPlatformContext.current),
+                imageLoader = koinInject(),
             )
 
             Column(

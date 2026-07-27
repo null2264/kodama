@@ -42,9 +42,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
-import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
 import kodama.resources.Res
 import kodama.resources.bonsai_name_label
 import kodama.resources.bonsai_name_placeholder
@@ -67,6 +65,7 @@ import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 internal class CreateBonsaiScreen(
     private val contestId: String,
@@ -207,7 +206,7 @@ private fun ImagePicker(
                 contentDescription = stringResource(Res.string.change_banner),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                imageLoader = ImageLoader(LocalPlatformContext.current),
+                imageLoader = koinInject(),
             )
             Row(
                 modifier = Modifier

@@ -140,7 +140,7 @@ internal class ContestDetailScreen(
                     ToolTipButton(
                         toolTipLabel = "Edit",
                         icon = edit,
-                        buttonClicked = { navigator?.parent?.push(EditContestScreen(contestId)) },
+                        buttonClicked = { navigator?.push(EditContestScreen(contestId)) },
                     )
                 }
             },
@@ -207,7 +207,7 @@ internal class ContestDetailScreen(
 
                         if (isAdmin && contest.state == "draft") {
                             AssistChip(
-                                onClick = { navigator?.parent?.push(AssignJudgesScreen(contestId)) },
+                                onClick = { navigator?.push(AssignJudgesScreen(contestId)) },
                                 label = { Text("Assign Judges") },
                                 colors = AssistChipDefaults.assistChipColors(
                                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -597,7 +597,7 @@ internal class ContestDetailScreen(
                                 currentUserId = currentUserId,
                                 contestId = contestId,
                                 onRateBonsai = { bonsaiId ->
-                                    navigator?.parent?.push(RatingScreen(contestId, bonsaiId))
+                                    navigator?.push(RatingScreen(contestId, bonsaiId))
                                 },
                             )
                         }

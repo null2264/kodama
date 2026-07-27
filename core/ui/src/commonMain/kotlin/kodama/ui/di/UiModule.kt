@@ -1,5 +1,6 @@
 package kodama.ui.di
 
+import coil3.ImageLoader
 import kodama.ui.UiPreferences
 import kodama.ui.presentation.auth.AuthScreenModel
 import kodama.ui.presentation.auth.OtpVerificationScreenModel
@@ -11,6 +12,7 @@ import kodama.ui.presentation.contest.CreateContestScreenModel
 import kodama.ui.presentation.contest.EditContestScreenModel
 import kodama.ui.presentation.contest.FinalizeEntryScreenModel
 import kodama.ui.presentation.contest.RatingScreenModel
+import kodama.ui.presentation.home.HomeTabScreenModel
 import kodama.ui.presentation.image.ImageUploaderScreenModel
 import kodama.ui.presentation.profile.EditProfileScreenModel
 import kodama.ui.presentation.settings.TotpSetupScreenModel
@@ -18,6 +20,8 @@ import kodama.ui.presentation.utils.screenModel
 import org.koin.dsl.module
 
 val uiModule = module {
+    single { ImageLoader(get()) }
+    screenModel { HomeTabScreenModel(get()) }
     screenModel { AuthScreenModel(get()) }
     screenModel { params -> OtpVerificationScreenModel(get(), params.get()) }
     screenModel { params -> TotpVerificationScreenModel(get(), params.get(), params.get()) }

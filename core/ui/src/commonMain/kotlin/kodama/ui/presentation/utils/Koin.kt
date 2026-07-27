@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.tab.Tab
 import org.koin.compose.currentKoinScope
 import org.koin.core.definition.Definition
 import org.koin.core.definition.KoinDefinition
@@ -32,6 +33,21 @@ inline fun <reified T : ScreenModel> Screen.rememberScreenModel(
     val currentParameters by rememberUpdatedState(parameters)
     val tag = remember(qualifier, scope) { qualifier?.value }
     return rememberScreenModel(tag = tag) {
+        scope.get(qualifier) {
+            currentParameters?.invoke() ?: emptyParametersHolder()
+        }
+    }
+}
+
+@Composable
+inline fun <reified T : ScreenModel> Tab.rememberScreenModel(
+    qualifier: Qualifier? = null,
+    scope: Scope = currentKoinScope(),
+    noinline parameters: ParametersDefinition? = null,
+): T {
+    val currentParameters by rememberUpdatedState(parameters)
+    val tag = remember(qualifier, scope) { qualifier?.value }
+    return remember(tag) {
         scope.get(qualifier) {
             currentParameters?.invoke() ?: emptyParametersHolder()
         }
