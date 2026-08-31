@@ -44,20 +44,16 @@ class MainActivity : ComponentActivity() {
                 }
                 App(
                     deepLinkParams = deepLinkParams,
+                    clearDeepLink = { deepLinkParams = null },
                     onReady = { composableReady = true },
                 )
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        deepLinkParams = parseDeepLink(intent?.data)
-    }
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
+        deepLinkParams = parseDeepLink(intent.data)
     }
 
     private fun parseDeepLink(uri: android.net.Uri?): DeepLinkParams? {

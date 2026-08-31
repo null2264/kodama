@@ -24,6 +24,7 @@ data class DeepLinkParams(
 fun App(
     supabaseAuth: Auth = koinInject(),
     deepLinkParams: DeepLinkParams? = null,
+    clearDeepLink: () -> Unit = {},
     onReady: () -> Unit = {},
 ) {
     val status by supabaseAuth.sessionStatus.collectAsState()
@@ -59,6 +60,7 @@ fun App(
         LaunchedEffect(deepLinkParams, isAuthenticated) {
             if (deepLinkParams != null && isAuthenticated) {
                 navigator.push(BonsaiDetailScreen(deepLinkParams.contestId, deepLinkParams.bonsaiId))
+                clearDeepLink()
             }
         }
 
