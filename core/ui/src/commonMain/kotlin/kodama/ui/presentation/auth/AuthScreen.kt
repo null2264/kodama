@@ -41,11 +41,12 @@ import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.component.LoadingButton
+import kodama.ui.presentation.utils.NotAuthenticatedScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.Font
 
-internal class AuthScreen : Screen() {
+internal class AuthScreen : Screen(), NotAuthenticatedScreen {
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<AuthScreenModel>()

@@ -12,6 +12,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import kodama.ui.presentation.auth.AuthScreen
 import kodama.ui.presentation.contest.BonsaiDetailScreen
 import kodama.ui.presentation.main.MainScreen
+import kodama.ui.presentation.utils.NotAuthenticatedScreen
 import org.koin.compose.koinInject
 
 data class DeepLinkParams(
@@ -40,13 +41,13 @@ fun App(
             when {
                 isAuthenticated -> {
                     val lastItem = navigator.lastItemOrNull
-                    if (lastItem == null || lastItem is AuthScreen) {
+                    if (lastItem == null || lastItem is NotAuthenticatedScreen) {
                         navigator.replace(MainScreen())
                     }
                     onReady()
                 }
                 status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
-                    if (navigator.lastItem !is AuthScreen) {
+                    if (navigator.lastItem !is NotAuthenticatedScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
                     onReady()
