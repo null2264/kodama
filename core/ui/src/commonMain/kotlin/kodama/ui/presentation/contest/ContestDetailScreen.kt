@@ -608,8 +608,16 @@ internal class ContestDetailScreen(
                             )
                         }
                         contestState == "reviewing" -> {
+                            val myAssignment = state.contestUsers.find { it.user_id == currentUserId }
+                            val filteredBonsai = if (myAssignment?.role == "judge" && myAssignment.contest_class_id != null) {
+                                state.bonsaiList.filter {
+                                    it.state == "verified" && it.contest_class_id == myAssignment.contest_class_id
+                                }
+                            } else {
+                                state.bonsaiList.filter { it.state == "verified" }
+                            }
                             JudgeReviewingSheet(
-                                bonsaiList = state.bonsaiList.filter { it.state == "verified" },
+                                bonsaiList = filteredBonsai,
                                 reviews = state.reviews,
                                 currentUserId = currentUserId,
                                 contestId = contestId,
