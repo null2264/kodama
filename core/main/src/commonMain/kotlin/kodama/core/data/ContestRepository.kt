@@ -284,6 +284,15 @@ class ContestRepository(private val client: SupabaseClient) {
         }
     }
 
+    suspend fun getBonsaiById(bonsaiId: String): Bonsai? {
+        return client.from("kodama", "bonsai")
+            .select {
+                filter { eq("id", bonsaiId) }
+            }
+            .decodeList<Bonsai>()
+            .firstOrNull()
+    }
+
     suspend fun getMyBonsaiForContest(contestId: String): List<Bonsai> {
         val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
         return getBonsaiWithMetadataForContest(contestId).filter { it.owner_id == userId }

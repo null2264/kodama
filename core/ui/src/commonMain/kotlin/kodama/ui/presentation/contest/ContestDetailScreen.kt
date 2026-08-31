@@ -1,5 +1,6 @@
 package kodama.ui.presentation.contest
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -317,7 +318,12 @@ internal class ContestDetailScreen(
 
                                 state.myBonsai.forEach { bonsai ->
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 8.dp)
+                                            .clickable {
+                                                navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
+                                            },
                                         shape = RoundedCornerShape(8.dp),
                                     ) {
                                         Column(

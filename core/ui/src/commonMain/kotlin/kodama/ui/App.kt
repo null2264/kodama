@@ -10,40 +10,22 @@ import cafe.adriel.voyager.navigator.CurrentScreen
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kodama.ui.presentation.auth.AuthScreen
+import kodama.ui.presentation.contest.BonsaiDetailScreen
 import kodama.ui.presentation.main.MainScreen
 import org.koin.compose.koinInject
+
+data class DeepLinkParams(
+    val contestId: String,
+    val bonsaiId: String,
+)
 
 @Composable
 fun App(
     supabaseAuth: Auth = koinInject(),
+    deepLinkParams: DeepLinkParams? = null,
     onReady: () -> Unit = {},
 ) {
     val status by supabaseAuth.sessionStatus.collectAsState()
-
-    // FIXME: TOTP is a bit complicated to implement at the moment
-//    try {
-//        var totpFactorId: String? = null
-//        var totpChallengeId: String? = null
-//        val aal = supabaseAuth.mfa.getAuthenticatorAssuranceLevel()
-//        if (aal.current == AuthenticatorAssuranceLevel.AAL1 && aal.next == AuthenticatorAssuranceLevel.AAL2) {
-//            val factors = supabaseAuth.mfa.verifiedFactors
-//            val totpFactor = factors.firstOrNull { it.factorType == FactorType.TOTP.value }
-//            if (totpFactor != null) {
-//                val challenge = supabaseAuth.mfa.createChallenge(totpFactor.id)
-//                totpFactorId = totpFactor.id
-//                totpChallengeId = challenge.id
-//            }
-//        }
-//        navigator.replace(
-//            if (totpFactorId != null && totpChallengeId != null)
-//                TotpVerificationScreen(totpFactorId, totpChallengeId)
-//            else
-//                MainScreen()
-//        )
-//    } catch (_: Exception) {
-//    } finally {
-//        onReady()
-//    }
 
     val initialScreen = remember(status) {
         when (status) {
@@ -70,6 +52,13 @@ fun App(
                 is SessionStatus.Initializing -> {}
             }
         }
+
+        LaunchedEffect(deepLinkParams) {
+            if (deepLinkParams != null && status is SessionStatus.Authenticated) {
+                navigator.push(BonsaiDetailScreen(deepLinkParams.contestId, deepLinkParams.bonsaiId))
+            }
+        }
+
         CurrentScreen()
     }
 }

@@ -80,4 +80,8 @@
     <string name="view_payment_proof">Lihat Bukti Bayar</string>
     <string name="payment_proof_label">Bukti Bayar</string>
     <string name="payment_proof_required">Bukti bayar wajib diunggah</string>
+    <string name="show_qr">Tampilkan QR</string>
+    <string name="qr_title">QR Code Bonsai</string>
+    <string name="scan_to_rate">Pindai untuk Menilai</string>
+    <string name="bonsai_detail">Detail Bonsai</string>
 </resources>
