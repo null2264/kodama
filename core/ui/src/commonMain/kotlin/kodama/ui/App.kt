@@ -39,7 +39,8 @@ fun App(
         LaunchedEffect(isAuthenticated) {
             when {
                 isAuthenticated -> {
-                    if (navigator.lastItem !is MainScreen) {
+                    val lastItem = navigator.lastItemOrNull
+                    if (lastItem == null || lastItem is AuthScreen) {
                         navigator.replace(MainScreen())
                     }
                     onReady()
