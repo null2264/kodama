@@ -9,7 +9,7 @@
     <string name="pref_system_theme">System</string>
     <string name="back">Back</string>
     <string name="otp_verification">Verifikasi Email</string>
-    <string name="otp_subtitle">Masukkan kode OTP yang dikirim ke %s</string>
+    <string name="otp_subtitle">Masukkan kode OTP yang dikirim ke %1$s</string>
     <string name="otp_hint">Kode OTP</string>
     <string name="otp_verify">Verifikasi</string>
     <string name="otp_resend">Kirim ulang kode</string>
@@ -19,7 +19,7 @@
     <string name="totp_verify">Verifikasi</string>
     <string name="totp_setup">Autentikator Dua Faktor</string>
     <string name="totp_setup_subtitle">Pindai kode QR dengan aplikasi authenticator</string>
-    <string name="totp_manual_secret">Atau masukkan kode manual: %s</string>
+    <string name="totp_manual_secret">Atau masukkan kode manual: %1$s</string>
     <string name="totp_code_hint">Masukkan kode verifikasi</string>
     <string name="totp_enable">Aktifkan</string>
     <string name="security_settings">Keamanan</string>
@@ -51,8 +51,8 @@
     <string name="contest_finalized_success">Pendaftaran lomba berhasil dibuka</string>
     <string name="bonsai_pending_verification">Bonsai Menunggu Verifikasi</string>
     <string name="bonsai_voting_progress">Progres Penilaian</string>
-    <string name="voting_progress_format">%d/%d penilaian</string>
-    <string name="judges_voted_format">%d/%d juri</string>
+    <string name="voting_progress_format">%1$d/%2$d penilaian</string>
+    <string name="judges_voted_format">%1$d/%2$d juri</string>
     <string name="voted">Sudah Dinilai</string>
     <string name="not_voted">Belum Dinilai</string>
     <string name="verify_bonsai">Verifikasi</string>
@@ -89,6 +89,6 @@
     <string name="best_in_show">Juara Umum</string>
     <string name="best_in_class">Juara Kelas</string>
     <string name="full_ranking">Ranking Lengkap</string>
-    <string name="avg_score_format">Rata-rata: %.1f/40</string>
-    <string name="rank_format">#%d</string>
+    <string name="avg_score_format">Rata-rata: %1$.1f/40</string>
+    <string name="rank_format">#%1$d</string>
 </resources>

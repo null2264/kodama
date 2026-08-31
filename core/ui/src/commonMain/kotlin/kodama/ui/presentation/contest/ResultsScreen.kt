@@ -198,7 +198,7 @@ private fun BestInShowCard(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(Res.string.avg_score_format, entry.avgScore),
+                text = stringResource(Res.string.avg_score_format).format(entry.avgScore),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -246,7 +246,7 @@ private fun ClassWinnerCard(
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = stringResource(Res.string.avg_score_format, entry.avgScore),
+                    text = stringResource(Res.string.avg_score_format).format(entry.avgScore),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -309,7 +309,7 @@ private fun RankingCard(
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        text = stringResource(Res.string.avg_score_format, entry.avgScore),
+                        text = stringResource(Res.string.avg_score_format).format(entry.avgScore),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
