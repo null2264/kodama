@@ -43,12 +43,14 @@ class ContestDetailScreenModel(
     }
 
     private suspend fun loadSheetData(contestState: String?) {
-        if (contestState != "accepting" && contestState != "reviewing") return
+        if (contestState != "accepting" && contestState != "reviewing" &&
+            contestState != "finished" && contestState != "ended"
+        ) return
         mutableState.update { it.copy(isSheetLoading = true) }
         try {
             val bonsai = contestRepository.getBonsaiWithMetadataForContest(contestId)
             val myBonsai = contestRepository.getMyBonsaiForContest(contestId)
-            val reviews = if (contestState == "reviewing") {
+            val reviews = if (contestState == "reviewing" || contestState == "finished" || contestState == "ended") {
                 contestRepository.getReviewsForContest(contestId)
             } else {
                 emptyList()

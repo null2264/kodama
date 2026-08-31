@@ -58,7 +58,7 @@ internal object RecentsTab : Tab {
             return remember {
                 TabOptions(
                     index = 1u,
-                    title = "Joined",
+                    title = "Terbaru",
                     icon = icon,
                 )
             }
@@ -100,7 +100,7 @@ internal object RecentsTab : Tab {
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
-                text = "Kontes Diikuti",
+                text = "Semua Kontes Diikuti",
                 style = MaterialTheme.typography.headlineSmall,
             )
 

@@ -77,6 +77,7 @@ import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.resources.voting_progress_format
 import kodama.resources.view_payment_proof
+import kodama.resources.view_results
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
@@ -267,6 +268,16 @@ internal class ContestDetailScreen(
                             ) {
                                 Text("End Contest")
                             }
+                        }
+
+                        if (isFinishedOrEnded) {
+                            AssistChip(
+                                onClick = { navigator?.push(ResultsScreen(contestId)) },
+                                label = { Text(stringResource(Res.string.view_results)) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                ),
+                            )
                         }
 
                         if (state.classes.isNotEmpty()) {

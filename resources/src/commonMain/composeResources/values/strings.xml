@@ -84,4 +84,11 @@
     <string name="qr_title">QR Code Bonsai</string>
     <string name="scan_to_rate">Pindai untuk Menilai</string>
     <string name="bonsai_detail">Detail Bonsai</string>
+    <string name="view_results">Lihat Hasil</string>
+    <string name="results_title">Hasil Lomba</string>
+    <string name="best_in_show">Juara Umum</string>
+    <string name="best_in_class">Juara Kelas</string>
+    <string name="full_ranking">Ranking Lengkap</string>
+    <string name="avg_score_format">Rata-rata: %.1f/40</string>
+    <string name="rank_format">#%d</string>
 </resources>

@@ -13,6 +13,7 @@ import kodama.ui.presentation.contest.EditContestScreenModel
 import kodama.ui.presentation.contest.FinalizeEntryScreenModel
 import kodama.ui.presentation.contest.BonsaiDetailScreenModel
 import kodama.ui.presentation.contest.RatingScreenModel
+import kodama.ui.presentation.contest.ResultsScreenModel
 import kodama.ui.presentation.home.HomeTabScreenModel
 import kodama.ui.presentation.image.ImageUploaderScreenModel
 import kodama.ui.presentation.profile.EditProfileScreenModel
@@ -36,6 +37,7 @@ val uiModule = module {
     screenModel { params -> AssignJudgesScreenModel(get(), params.get()) }
     screenModel { params -> BonsaiDetailScreenModel(get(), get(), params.get(), params.get()) }
     screenModel { params -> RatingScreenModel(get(), params.get(), params.get()) }
+    screenModel { params -> ResultsScreenModel(get(), params.get()) }
     screenModel { params -> FinalizeEntryScreenModel(get(), get(), params.get(), params.get()) }
     single { UiPreferences(get()) }
 }
