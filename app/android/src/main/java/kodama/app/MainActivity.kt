@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         splashScreen.setKeepOnScreenCondition {
-            auth.sessionStatus.value is SessionStatus.Initializing || !composableReady.value
+            !(auth.sessionStatus.value !is SessionStatus.Initializing || composableReady.value)
         }
 
         val deepLinkParams = parseDeepLink(intent?.data)
