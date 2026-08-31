@@ -347,7 +347,7 @@ private fun ScoreChips(avgScores: Map<String, Double>) {
                 onClick = {},
                 label = {
                     Text(
-                        text = "$label %.1f".format(score),
+                        text = "$label ${kotlin.math.round(score * 10) / 10}",
                         style = MaterialTheme.typography.labelSmall,
                     )
                 },
