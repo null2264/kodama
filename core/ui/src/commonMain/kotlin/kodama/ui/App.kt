@@ -56,8 +56,8 @@ fun App(
             }
         }
 
-        LaunchedEffect(deepLinkParams) {
-            if (deepLinkParams != null && status is SessionStatus.Authenticated) {
+        LaunchedEffect(deepLinkParams, isAuthenticated) {
+            if (deepLinkParams != null && isAuthenticated) {
                 navigator.push(BonsaiDetailScreen(deepLinkParams.contestId, deepLinkParams.bonsaiId))
             }
         }

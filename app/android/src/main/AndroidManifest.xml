@@ -25,6 +25,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="kodama"
+                    android:host="*"
                     android:pathPrefix="/" />
             </intent-filter>
         </activity>
