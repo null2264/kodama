@@ -26,30 +26,31 @@ fun App(
     onReady: () -> Unit = {},
 ) {
     val status by supabaseAuth.sessionStatus.collectAsState()
+    val isAuthenticated = status is SessionStatus.Authenticated
 
-    val initialScreen = remember(status) {
-        when (status) {
-            is SessionStatus.Authenticated -> MainScreen()
-            else -> AuthScreen()
+    val initialScreen = remember(isAuthenticated) {
+        when (isAuthenticated) {
+            true -> MainScreen()
+            false -> AuthScreen()
         }
     }
 
     Navigator(initialScreen) { navigator ->
-        LaunchedEffect(status) {
-            when (status) {
-                is SessionStatus.Authenticated -> {
+        LaunchedEffect(isAuthenticated) {
+            when {
+                isAuthenticated -> {
                     if (navigator.lastItem !is MainScreen) {
                         navigator.replace(MainScreen())
                     }
                     onReady()
                 }
-                is SessionStatus.NotAuthenticated, is SessionStatus.RefreshFailure -> {
+                status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
                     if (navigator.lastItem !is AuthScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
                     onReady()
                 }
-                is SessionStatus.Initializing -> {}
+                status is SessionStatus.Initializing -> {}
             }
         }
 
