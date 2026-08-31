@@ -27,15 +27,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
-import io.github.g0dkar.qrcode.QRCode
+import io.github.goquati.qr.QrCode
 import kodama.resources.Res
 import kodama.resources.bonsai_detail
 import kodama.resources.finalize_bonsai
+import kodama.resources.qr_title
 import kodama.resources.show_qr
 import kodama.ui.component.AppBarType
 import kodama.ui.component.BonsaiPict
@@ -177,11 +180,37 @@ internal class BonsaiDetailScreen(
 
         if (showQrDialog) {
             val qrBitmap = remember(state.qrUri) {
-                QRCode.ofSquares()
-                    .withSize(10)
-                    .build(state.qrUri)
-                    .render()
-                    .toComposeImageBitmap()
+                val qr = QrCode.encodeText(state.qrUri, QrCode.Ecc.MEDIUM)
+                val moduleSize = 10
+                val padding = 4
+                val size = qr.size
+                val totalSize = (size + padding * 2) * moduleSize
+                val bgPaint = androidx.compose.ui.graphics.Paint().apply {
+                    color = Color.White
+                }
+                val fgPaint = androidx.compose.ui.graphics.Paint().apply {
+                    color = Color.Black
+                }
+                ImageBitmap(totalSize, totalSize).apply {
+                    androidx.compose.ui.graphics.Canvas(this).apply {
+                        drawRect(
+                            androidx.compose.ui.geometry.Rect(0f, 0f, totalSize.toFloat(), totalSize.toFloat()),
+                            bgPaint,
+                        )
+                        for (y in 0 until size) {
+                            for (x in 0 until size) {
+                                if (qr[x, y]) {
+                                    val left = ((padding + x) * moduleSize).toFloat()
+                                    val top = ((padding + y) * moduleSize).toFloat()
+                                    drawRect(
+                                        androidx.compose.ui.geometry.Rect(left, top, left + moduleSize, top + moduleSize),
+                                        fgPaint,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             AlertDialog(

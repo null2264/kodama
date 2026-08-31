@@ -4,12 +4,12 @@ coil = "3.5.0"
 buildconfig = "6.0.10"
 koin = "4.2.2"
 ktor = "3.5.1"
-qrcode = "4.5.0"
+qrcode = "0.3.0"
 settings = "1.3.0"
 sqldelight = "2.3.2"
 
 [libraries]
-qrcode-kotlin = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcode" }
+qrcode = { module = "io.github.goquati:qr", version.ref = "qrcode" }
 coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
