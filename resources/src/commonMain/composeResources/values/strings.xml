@@ -89,6 +89,6 @@
     <string name="best_in_show">Juara Umum</string>
     <string name="best_in_class">Juara Kelas</string>
     <string name="full_ranking">Ranking Lengkap</string>
-    <string name="avg_score_format">Rata-rata: %1$.1f/40</string>
+    <string name="avg_score_format">Rata-rata: %1$.1f/400</string>
     <string name="rank_format">#%1$d</string>
 </resources>

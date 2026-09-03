@@ -1,4 +1,4 @@
-package kodama.ui.component
+package yokai.presentation.core
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.layout.Arrangement
@@ -42,10 +42,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 /**
- * Composable replacement for Jay's [eu.kanade.tachiyomi.ui.base.ExpandedAppBarLayout] from TachiyomiJ2K
+ * Composable replacement for Jay's [eu.kanade.tachiyomi.ui.base.ExpandedAppBarLayout]
  *
  * Based on (M3 v1.5.0's) [androidx.compose.material3.AppBarWithSearch] implementation with a mix of
  * [androidx.compose.material3.LargeTopAppBar] implementation
+ *
+ * if [useLargeToolbar] is enabled, [JayTopAppBar] should be used instead.
  */
 @Composable
 fun JayExpandedTopAppBar(

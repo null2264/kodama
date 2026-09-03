@@ -45,7 +45,7 @@ class RatingScreenModel(
 
     fun onScoreChanged(criteria: String, score: Int) {
         mutableState.update {
-            it.copy(scores = it.scores.toMutableMap().apply { put(criteria, score.coerceIn(1, 10)) })
+            it.copy(scores = it.scores.toMutableMap().apply { put(criteria, score.coerceIn(1, 100)) })
         }
     }
 
@@ -82,10 +82,10 @@ class RatingScreenModel(
         val contest: Contest? = null,
         val bonsai: Bonsai? = null,
         val scores: Map<String, Int> = mapOf(
-            "penampilan" to 5,
-            "gerak_dasar" to 5,
-            "keserasian" to 5,
-            "kematangan" to 5,
+            "penampilan" to 50,
+            "gerak_dasar" to 50,
+            "keserasian" to 50,
+            "kematangan" to 50,
         ),
         val comments: String = "",
         val isLoading: Boolean = false,

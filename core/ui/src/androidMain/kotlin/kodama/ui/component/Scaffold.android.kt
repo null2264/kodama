@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
+import yokai.presentation.core.JayAppBarScrollBehavior
 
 @Composable
 actual fun KodamaScaffold(

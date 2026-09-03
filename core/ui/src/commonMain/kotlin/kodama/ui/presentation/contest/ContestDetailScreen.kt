@@ -22,6 +22,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -69,6 +70,7 @@ import kodama.resources.finalize_contest
 import kodama.resources.finalize_contest_confirm_text
 import kodama.resources.finalize_contest_confirm_title
 import kodama.resources.icons.edit
+import kodama.resources.icons.flag
 import kodama.resources.judges_voted_format
 import kodama.resources.my_bonsai
 import kodama.resources.not_voted
@@ -407,7 +409,7 @@ internal class ContestDetailScreen(
                                                     )
                                                     bonsaiReviews.forEach { review ->
                                                         Text(
-                                                            text = "Total: ${review.total_score}/40",
+                                                            text = "Total: ${review.total_score}/400",
                                                             style = MaterialTheme.typography.bodySmall,
                                                             color = MaterialTheme.colorScheme.primary,
                                                         )
@@ -879,11 +881,18 @@ private fun JudgeReviewingSheet(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(bonsaiList, key = { it.id }) { bonsai ->
-                    val hasVoted = currentUserId != null &&
-                        reviews.any { it.bonsai_id == bonsai.id && it.judge_id == currentUserId }
+                    if (currentUserId == null) return@items
+                    val review = reviews.find { it.bonsai_id == bonsai.id && it.judge_id == currentUserId }
+                    val hasVoted = review != null
+                    val navigator = LocalNavigator.current
 
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    navigator?.push(BonsaiDetailScreen(contestId, bonsai.id, review))
+                                },
                         shape = RoundedCornerShape(8.dp),
                     ) {
                         Row(
@@ -904,6 +913,12 @@ private fun JudgeReviewingSheet(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
+                                if (review.total_score >= 350) {
+                                    Icon(
+                                        imageVector = flag,
+                                        contentDescription = "Bendera",
+                                    )
+                                }
                             } else {
                                 TextButton(
                                     onClick = { onRateBonsai(bonsai.id) },

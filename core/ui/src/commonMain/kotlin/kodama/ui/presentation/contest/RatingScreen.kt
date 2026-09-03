@@ -126,32 +126,32 @@ internal class RatingScreen(
                         }
 
                         Text(
-                            text = "Rate the entry (Score 1 to 10)",
+                            text = "Rate the entry (Score 1 to 100)",
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.padding(top = 8.dp),
                         )
 
                         RatingSlider(
                             label = "Penampilan",
-                            value = state.scores["penampilan"] ?: 5,
+                            value = state.scores["penampilan"] ?: 50,
                             onValueChange = { screenModel.onScoreChanged("penampilan", it) },
                         )
 
                         RatingSlider(
                             label = "Gerak Dasar",
-                            value = state.scores["gerak_dasar"] ?: 5,
+                            value = state.scores["gerak_dasar"] ?: 50,
                             onValueChange = { screenModel.onScoreChanged("gerak_dasar", it) },
                         )
 
                         RatingSlider(
                             label = "Keserasian",
-                            value = state.scores["keserasian"] ?: 5,
+                            value = state.scores["keserasian"] ?: 50,
                             onValueChange = { screenModel.onScoreChanged("keserasian", it) },
                         )
 
                         RatingSlider(
                             label = "Kematangan",
-                            value = state.scores["kematangan"] ?: 5,
+                            value = state.scores["kematangan"] ?: 50,
                             onValueChange = { screenModel.onScoreChanged("kematangan", it) },
                         )
 
@@ -165,7 +165,7 @@ internal class RatingScreen(
                         )
 
                         Text(
-                            text = "Current Total Score: ${state.scores.values.sum()}/40",
+                            text = "Current Total Score: ${state.scores.values.sum()}/400",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp),
@@ -227,8 +227,7 @@ private fun RatingSlider(
         Slider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toInt()) },
-            valueRange = 1f..10f,
-            steps = 8,
+            valueRange = 1f..100f,
             modifier = Modifier.fillMaxWidth(),
         )
     }

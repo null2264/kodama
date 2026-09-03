@@ -17,6 +17,10 @@ import kodama.resources.Res
 import kodama.resources.back
 import kodama.resources.icons.arrow_back
 import org.jetbrains.compose.resources.stringResource
+import yokai.presentation.core.JayAppBarScrollBehavior
+import yokai.presentation.core.JayExpandedTopAppBar
+import yokai.presentation.core.JayTopAppBar
+import yokai.presentation.core.enterAlwaysAppBarScrollBehavior
 
 @Composable
 expect fun KodamaScaffold(
