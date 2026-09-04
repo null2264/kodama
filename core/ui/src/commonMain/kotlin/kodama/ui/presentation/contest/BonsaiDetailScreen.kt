@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.goquati.qr.QrCode
 import kodama.core.data.Review
+import kodama.core.util.BonsaiConstants
 import kodama.resources.Res
 import kodama.resources.bonsai_detail
 import kodama.resources.finalize_bonsai
@@ -76,7 +77,7 @@ internal class BonsaiDetailScreen(
             appBarType = AppBarType.SMALL,
             actions = {
                 if (review == null) return@KodamaScaffold
-                if (review.total_score >= 350) {
+                if (review.total_score >= BonsaiConstants.RED_THRESHOLD) {
                     Icon(flag, "Bendera")
                 }
             },

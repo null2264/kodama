@@ -49,6 +49,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.Review
+import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
 import kodama.resources.Res
 import kodama.resources.bonsai_list
@@ -913,7 +914,7 @@ private fun JudgeReviewingSheet(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
-                                if (review.total_score >= 350) {
+                                if (review.total_score >= BonsaiConstants.RED_THRESHOLD) {
                                     Icon(
                                         imageVector = flag,
                                         contentDescription = "Bendera",
