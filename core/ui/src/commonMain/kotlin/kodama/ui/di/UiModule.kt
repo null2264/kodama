@@ -11,7 +11,7 @@ import kodama.ui.presentation.contest.CreateBonsaiScreenModel
 import kodama.ui.presentation.contest.CreateContestScreenModel
 import kodama.ui.presentation.contest.EditContestScreenModel
 import kodama.ui.presentation.contest.FinalizeEntryScreenModel
-import kodama.ui.presentation.contest.BonsaiDetailScreenModel
+import kodama.ui.presentation.bonsai.BonsaiDetailScreenModel
 import kodama.ui.presentation.contest.RatingScreenModel
 import kodama.ui.presentation.contest.ResultsScreenModel
 import kodama.ui.presentation.home.HomeTabScreenModel

@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.bonsai
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -28,14 +28,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.goquati.qr.QrCode
+import io.github.jan.supabase.SupabaseClient
 import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
 import kodama.resources.Res
@@ -48,10 +51,13 @@ import kodama.ui.component.AppBarType
 import kodama.ui.component.BonsaiPict
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
+import kodama.ui.presentation.contest.FinalizeEntryScreen
+import kodama.ui.presentation.contest.RatingScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 internal class BonsaiDetailScreen(
     private val contestId: String,
@@ -62,11 +68,11 @@ internal class BonsaiDetailScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<BonsaiDetailScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId, bonsaiId)
+            parametersOf(contestId, bonsaiId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
-        val supabaseClient: io.github.jan.supabase.SupabaseClient = koinInject()
+        val supabaseClient: SupabaseClient = koinInject()
         val supabaseUrl = supabaseClient.config.supabaseUrl
 
         var showQrDialog by remember { mutableStateOf(false) }
@@ -200,16 +206,16 @@ internal class BonsaiDetailScreen(
                 val padding = 4
                 val size = qr.size
                 val totalSize = (size + padding * 2) * moduleSize
-                val bgPaint = androidx.compose.ui.graphics.Paint().apply {
+                val bgPaint = Paint().apply {
                     color = Color.White
                 }
-                val fgPaint = androidx.compose.ui.graphics.Paint().apply {
+                val fgPaint = Paint().apply {
                     color = Color.Black
                 }
                 ImageBitmap(totalSize, totalSize).apply {
-                    androidx.compose.ui.graphics.Canvas(this).apply {
+                    Canvas(this).apply {
                         drawRect(
-                            androidx.compose.ui.geometry.Rect(0f, 0f, totalSize.toFloat(), totalSize.toFloat()),
+                            Rect(0f, 0f, totalSize.toFloat(), totalSize.toFloat()),
                             bgPaint,
                         )
                         for (y in 0 until size) {
@@ -218,7 +224,7 @@ internal class BonsaiDetailScreen(
                                     val left = ((padding + x) * moduleSize).toFloat()
                                     val top = ((padding + y) * moduleSize).toFloat()
                                     drawRect(
-                                        androidx.compose.ui.geometry.Rect(left, top, left + moduleSize, top + moduleSize),
+                                        Rect(left, top, left + moduleSize, top + moduleSize),
                                         fgPaint,
                                     )
                                 }

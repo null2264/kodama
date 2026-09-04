@@ -10,7 +10,7 @@ import cafe.adriel.voyager.navigator.CurrentScreen
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kodama.ui.presentation.auth.AuthScreen
-import kodama.ui.presentation.contest.BonsaiDetailScreen
+import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.main.MainScreen
 import kodama.ui.presentation.utils.NotAuthenticatedScreen
 import org.koin.compose.koinInject

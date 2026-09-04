@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.bonsai
 
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope

@@ -48,7 +48,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
-import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
 import kodama.resources.Res
@@ -74,7 +73,6 @@ import kodama.resources.icons.edit
 import kodama.resources.icons.flag
 import kodama.resources.judges_voted_format
 import kodama.resources.my_bonsai
-import kodama.resources.not_voted
 import kodama.resources.register_bonsai
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
@@ -86,6 +84,7 @@ import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
 import kodama.ui.component.ToolTipButton
+import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.launch
