@@ -20,10 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,6 +60,7 @@ import kodama.resources.icons.home
 import kodama.resources.no_open_contests
 import kodama.ui.component.Chip
 import kodama.ui.presentation.contest.ContestScreen
+import kodama.ui.presentation.contest.DateTimeFormat
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
 import kodama.ui.presentation.contest.slop.CreateContestScreen
 import kodama.ui.presentation.main.MainScreenModel
@@ -65,8 +68,12 @@ import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import kotlin.time.Instant
 
 internal object HomeTab : Tab {
 
@@ -84,7 +91,7 @@ internal object HomeTab : Tab {
             }
         }
 
-    @OptIn(ExperimentalLayoutApi::class)
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val auth: Auth = koinInject()
@@ -117,7 +124,7 @@ internal object HomeTab : Tab {
 
         val visibleContests = if (isAdmin) state.contests else state.contests.filter { it.state != "draft" }
 
-        val filteredContests = remember(visibleContests) {
+        val filteredContests = remember(visibleContests, selectedFilter) {
             visibleContests.filter { contest ->
                 val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
                 val matchesFilter = when (selectedFilter) {
@@ -133,48 +140,49 @@ internal object HomeTab : Tab {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        text = "Search contests",
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                item(key = "tab_contests_header") {
+                    Column(
+                        modifier = Modifier.padding(vertical = 8.dp),
                     ) {
-                        val filters = listOf("All", "Location", "Registration", "On-going", "Ended")
-                        filters.forEach { filter ->
-                            FilterChip(
-                                selected = selectedFilter == filter,
-                                onClick = { selectedFilter = filter },
-                                label = { Text(filter) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                ),
-                            )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            val filters = listOf("All", "Location", "Registration", "On-going", "Ended")
+                            filters.forEach { filter ->
+                                FilterChip(
+                                    selected = selectedFilter == filter,
+                                    onClick = { selectedFilter = filter },
+                                    label = { Text(filter) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    ),
+                                )
+                            }
                         }
                     }
                 }
 
-                when {
-                    state.isLoading -> {
+                if (state.isLoading) {
+                    item(key = "tab_contests_loading") {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
+                            LoadingIndicator()
                         }
                     }
-                    state.error != null -> {
+                    return@LazyColumn
+                }
+
+                if (state.error != null) {
+                    item(key = "tab_contests_error") {
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -194,24 +202,21 @@ internal object HomeTab : Tab {
                             )
                         }
                     }
-                    filteredContests.isEmpty() -> {
+                    return@LazyColumn
+                }
+
+                if (filteredContests.isEmpty()) {
+                    item(key = "tab_contests_empty") {
                         Text(
                             text = stringResource(Res.string.no_open_contests),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                        ) {
-                            items(filteredContests, key = { it.id }) { contest ->
-                                ContestCard(contest = contest) {
-                                    navigator?.parent?.push(ContestScreen(contest.id))
-                                }
-                            }
+                } else {
+                    items(filteredContests, key = { it.id }) { contest ->
+                        ContestCard(contest = contest) {
+                            navigator?.parent?.push(ContestScreen(contest.id))
                         }
                     }
                 }
@@ -259,26 +264,25 @@ private fun ContestCard(contest: Contest, imageRepository: ImageRepository = koi
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
 
                 Chip(contest.state.replaceFirstChar { it.uppercase() }, account_circle)
-
-                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = contest.name,
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                contest.description?.let { description ->
-                    Spacer(modifier = Modifier.height(8.dp))
+                contest.created_at?.let { createdAt ->
                     Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = Instant
+                                .parse(createdAt)
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                                .format(DateTimeFormat),
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
