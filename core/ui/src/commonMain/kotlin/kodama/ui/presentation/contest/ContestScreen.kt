@@ -43,9 +43,18 @@ import kodama.ui.component.KodamaScaffold
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import kotlin.random.Random
+import kotlin.time.Instant
 
 internal class ContestScreen(
     private val contestId: String,
@@ -115,7 +124,7 @@ internal class ContestScreen(
 
             val classVectors = remember(state.classes) {
                 state.classes.map {
-                    Pair(it, expressiveShapes.random())
+                    Pair(it, expressiveShapes.random(ContestRandomSeed))
                 }
             }
 
@@ -151,7 +160,12 @@ internal class ContestScreen(
                             style = MaterialTheme.typography.headlineMedium,
                         )
                         Text(
-                            text = contest.created_at ?: "",
+                            text = contest.created_at?.let {
+                                Instant
+                                    .parse(it)
+                                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                                    .format(DateTimeFormat)
+                            } ?: "",
                             style = MaterialTheme.typography.labelMedium,
                         )
                         Text(
@@ -178,3 +192,12 @@ internal class ContestScreen(
         }
     }
 }
+
+val DateTimeFormat = LocalDateTime.Format {
+    day()                         // Prints day without a leading zero (e.g., "1")
+    char(' ')                            // Space delimiter
+    monthName(MonthNames.ENGLISH_FULL)   // Prints full month name (e.g., "January")
+    char(' ')                            // Space delimiter
+    year()                               // Prints full year (e.g., "2024")
+}
+val ContestRandomSeed = Random(2264L)

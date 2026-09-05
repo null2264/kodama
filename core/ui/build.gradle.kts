@@ -37,6 +37,8 @@ kotlin {
 
             implementation(project.dependencies.platform(libs.supabase.bom))
             implementation(libs.bundles.supabase)
+
+            implementation(kotlinx.datetime)
         }
 
         commonTest.dependencies {
