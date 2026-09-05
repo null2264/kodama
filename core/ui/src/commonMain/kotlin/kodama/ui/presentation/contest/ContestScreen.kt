@@ -80,9 +80,14 @@ internal class ContestScreen(
             )
         }
 
+        val classVectors = remember(state.classes) {
+            state.classes.map {
+                Pair(it, expressiveShapes.random())
+            }
+        }
+
         KodamaScaffold(
             onNavigationIconClicked = { navigator?.pop() },
-            title = state.contest?.name ?: stringResource(Res.string.contest_detail_title),
             appBarType = AppBarType.SMALL,
 //            snackbarHost = { SnackbarHost(snackbarHostState) },
             actions = {
@@ -121,12 +126,6 @@ internal class ContestScreen(
             }
 
             val contest = state.contest ?: return@KodamaScaffold
-
-            val classVectors = remember(state.classes) {
-                state.classes.map {
-                    Pair(it, expressiveShapes.random(ContestRandomSeed))
-                }
-            }
 
             Box(
                 modifier = Modifier.fillMaxSize().padding(contentPadding),
@@ -200,4 +199,3 @@ val DateTimeFormat = LocalDateTime.Format {
     char(' ')                            // Space delimiter
     year()                               // Prints full year (e.g., "2024")
 }
-val ContestRandomSeed = Random(2264L)

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,11 +27,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,7 +60,11 @@ import kodama.ui.component.Chip
 import kodama.ui.presentation.contest.ContestScreen
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
 import kodama.ui.presentation.contest.slop.CreateContestScreen
+import kodama.ui.presentation.main.MainScreenModel
 import kodama.ui.presentation.utils.rememberScreenModel
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -84,23 +91,43 @@ internal object HomeTab : Tab {
         val navigator = LocalNavigator.current
         val screenModel = rememberScreenModel<HomeTabScreenModel>()
         val state by screenModel.state.collectAsState()
+        val mainScreenModel = rememberScreenModel<MainScreenModel>()
 
-        val isAdmin = auth.currentUserOrNull()?.kodamaRole == "admin"
+        val listState = rememberLazyListState()
+
+        LaunchedEffect(listState) {
+            combine(
+                snapshotFlow { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 },
+                snapshotFlow { listState.canScrollForward || listState.canScrollBackward },
+            ) {
+                Pair(it[0], it[1])
+            }
+                .distinctUntilChanged()
+                .collect { (atTop, canScroll) ->
+                    mainScreenModel.updateScrollBehaviour(atTop, canScroll)
+                }
+        }
+
+        val currentUser = auth.currentUserOrNull()
+
+        val isAdmin = remember(currentUser) { currentUser?.kodamaRole == "admin" }
 
         var searchQuery by remember { mutableStateOf("") }
         var selectedFilter by remember { mutableStateOf("All") }
 
         val visibleContests = if (isAdmin) state.contests else state.contests.filter { it.state != "draft" }
 
-        val filteredContests = visibleContests.filter { contest ->
-            val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
-            val matchesFilter = when (selectedFilter) {
-                "Registration" -> contest.state == "accepting"
-                "On-going" -> contest.state == "reviewing"
-                "Ended" -> contest.state == "ended" || contest.state == "finished"
-                else -> true
+        val filteredContests = remember(visibleContests) {
+            visibleContests.filter { contest ->
+                val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
+                val matchesFilter = when (selectedFilter) {
+                    "Registration" -> contest.state == "accepting"
+                    "On-going" -> contest.state == "reviewing"
+                    "Ended" -> contest.state == "ended" || contest.state == "finished"
+                    else -> true
+                }
+                matchesSearch && matchesFilter
             }
-            matchesSearch && matchesFilter
         }
 
         Box(
@@ -176,8 +203,9 @@ internal object HomeTab : Tab {
                     }
                     else -> {
                         LazyColumn(
+                            state = listState,
                             verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                         ) {
                             items(filteredContests, key = { it.id }) { contest ->
                                 ContestCard(contest = contest) {

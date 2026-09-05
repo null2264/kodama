@@ -17,6 +17,7 @@ import kodama.ui.presentation.contest.slop.RatingScreenModel
 import kodama.ui.presentation.contest.slop.ResultsScreenModel
 import kodama.ui.presentation.home.HomeTabScreenModel
 import kodama.ui.presentation.image.ImageUploaderScreenModel
+import kodama.ui.presentation.main.MainScreenModel
 import kodama.ui.presentation.profile.EditProfileScreenModel
 import kodama.ui.presentation.settings.TotpSetupScreenModel
 import kodama.ui.presentation.utils.screenModel
@@ -24,9 +25,12 @@ import org.koin.dsl.module
 
 val uiModule = module {
     single { ImageLoader(get()) }
+
     screenModel { HomeTabScreenModel(get()) }
     screenModel { AuthScreenModel(get()) }
     screenModel { params -> ContestScreenModel(get(), params.get()) }
+    screenModel { MainScreenModel() }
+
     single { UiPreferences(get()) }
 
     // Mostly slop

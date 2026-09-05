@@ -23,16 +23,24 @@ import kodama.ui.presentation.home.HomeTab
 import kodama.ui.presentation.profile.ProfileTab
 import kodama.ui.presentation.recents.RecentsTab
 import kodama.ui.presentation.utils.Screen
+import kodama.ui.presentation.utils.rememberScreenModel
+import yokai.presentation.core.enterAlwaysCollapsedAppBarScrollBehavior
 
 internal class MainScreen : Screen() {
 
     @Composable
     override fun Content() {
+        val screenModel = rememberScreenModel<MainScreenModel>()
+
         var title by remember { mutableStateOf("") }
         TabNavigator(HomeTab) {
             KodamaScaffold(
                 onNavigationIconClicked = null,
                 appBarType = AppBarType.LARGE,
+                scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
+                    canScroll = { screenModel.canScroll },
+                    isAtTop = { screenModel.isAtTop },
+                ),
                 bottomBar = {
                     NavigationBar {
                         TabNavigationItem(HomeTab)
@@ -43,6 +51,10 @@ internal class MainScreen : Screen() {
                 title = title,
             ) { contentPadding ->
                 val tabNavigator = LocalTabNavigator.current
+
+                LaunchedEffect(tabNavigator) {
+                    screenModel.updateScrollBehaviour(isAtTop = true, canScroll = true)
+                }
 
                 if (title != tabNavigator.current.options.title) title = tabNavigator.current.options.title
 
