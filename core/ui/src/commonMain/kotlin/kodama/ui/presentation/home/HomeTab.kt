@@ -49,9 +49,11 @@ import kodama.core.data.ImageRepository
 import kodama.core.util.kodamaRole
 import kodama.resources.Res
 import kodama.resources.add_contest
+import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.home
 import kodama.resources.no_open_contests
+import kodama.ui.component.Chip
 import kodama.ui.presentation.contest.ContestScreen
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
 import kodama.ui.presentation.contest.slop.CreateContestScreen
@@ -205,7 +207,7 @@ internal object HomeTab : Tab {
 }
 
 @Composable
-private fun ContestCard(contest: Contest, onClick: () -> Unit) {
+private fun ContestCard(contest: Contest, imageRepository: ImageRepository = koinInject(), onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
@@ -214,7 +216,6 @@ private fun ContestCard(contest: Contest, onClick: () -> Unit) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            val imageRepository: ImageRepository = koinInject()
             AsyncImage(
                 model = imageRepository.getPublicUrl(contest),
                 contentDescription = "Contest banner",
@@ -232,6 +233,11 @@ private fun ContestCard(contest: Contest, onClick: () -> Unit) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
+
+                Chip(contest.state.replaceFirstChar { it.uppercase() }, account_circle)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = contest.name,
                     style = MaterialTheme.typography.titleLarge
@@ -245,20 +251,6 @@ private fun ContestCard(contest: Contest, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = contest.state.replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

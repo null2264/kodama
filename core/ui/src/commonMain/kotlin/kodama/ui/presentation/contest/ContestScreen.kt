@@ -30,10 +30,12 @@ import kodama.core.data.ImageRepository
 import kodama.resources.Res
 import kodama.resources.add_contest
 import kodama.resources.contest_detail_title
+import kodama.resources.icons.account_circle
 import kodama.resources.icons.add
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.edit
 import kodama.ui.component.AppBarType
+import kodama.ui.component.Chip
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.ToolTipButton
 import kodama.ui.presentation.contest.slop.CreateContestScreen
@@ -115,9 +117,9 @@ internal class ContestScreen(
                         imageLoader = koinInject(),
                     )
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                     ) {
-                        // TODO: Information Chip
+                        Chip(contest.state, account_circle)
                         Text(contest.name)
                         Text(contest.description ?: "No description.")
                     }
