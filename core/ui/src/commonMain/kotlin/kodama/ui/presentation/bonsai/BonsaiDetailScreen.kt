@@ -51,8 +51,8 @@ import kodama.ui.component.AppBarType
 import kodama.ui.component.BonsaiPict
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
-import kodama.ui.presentation.contest.FinalizeEntryScreen
-import kodama.ui.presentation.contest.RatingScreen
+import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
+import kodama.ui.presentation.contest.slop.RatingScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.stringResource

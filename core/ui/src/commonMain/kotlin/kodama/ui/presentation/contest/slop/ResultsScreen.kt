@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
+import io.github.jan.supabase.SupabaseClient
 import kodama.resources.Res
 import kodama.resources.avg_score_format
 import kodama.resources.best_in_class
@@ -50,6 +50,9 @@ import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
+import kotlin.collections.iterator
+import kotlin.math.round
 
 internal class ResultsScreen(
     private val contestId: String,
@@ -59,11 +62,11 @@ internal class ResultsScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<ResultsScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId)
+            parametersOf(contestId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
-        val supabaseClient: io.github.jan.supabase.SupabaseClient = koinInject()
+        val supabaseClient: SupabaseClient = koinInject()
         val supabaseUrl = supabaseClient.config.supabaseUrl
 
         KodamaScaffold(
@@ -347,7 +350,7 @@ private fun ScoreChips(avgScores: Map<String, Double>) {
                 onClick = {},
                 label = {
                     Text(
-                        text = "$label ${kotlin.math.round(score * 10) / 100}",
+                        text = "$label ${round(score * 10) / 100}",
                         style = MaterialTheme.typography.labelSmall,
                     )
                 },

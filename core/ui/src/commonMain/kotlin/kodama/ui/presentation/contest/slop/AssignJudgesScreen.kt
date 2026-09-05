@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,7 +49,7 @@ import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
-import kotlinx.coroutines.launch
+import org.koin.core.parameter.parametersOf
 
 internal class AssignJudgesScreen(
     private val contestId: String,
@@ -59,7 +59,7 @@ internal class AssignJudgesScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<AssignJudgesScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId)
+            parametersOf(contestId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current

@@ -5,15 +5,16 @@ import kodama.ui.UiPreferences
 import kodama.ui.presentation.auth.AuthScreenModel
 import kodama.ui.presentation.auth.OtpVerificationScreenModel
 import kodama.ui.presentation.auth.TotpVerificationScreenModel
-import kodama.ui.presentation.contest.AssignJudgesScreenModel
-import kodama.ui.presentation.contest.ContestDetailScreenModel
-import kodama.ui.presentation.contest.CreateBonsaiScreenModel
-import kodama.ui.presentation.contest.CreateContestScreenModel
-import kodama.ui.presentation.contest.EditContestScreenModel
-import kodama.ui.presentation.contest.FinalizeEntryScreenModel
+import kodama.ui.presentation.contest.slop.AssignJudgesScreenModel
+import kodama.ui.presentation.contest.slop.ContestDetailScreenModel
+import kodama.ui.presentation.contest.slop.CreateBonsaiScreenModel
+import kodama.ui.presentation.contest.slop.CreateContestScreenModel
+import kodama.ui.presentation.contest.slop.EditContestScreenModel
+import kodama.ui.presentation.contest.slop.FinalizeEntryScreenModel
 import kodama.ui.presentation.bonsai.BonsaiDetailScreenModel
-import kodama.ui.presentation.contest.RatingScreenModel
-import kodama.ui.presentation.contest.ResultsScreenModel
+import kodama.ui.presentation.contest.ContestScreenModel
+import kodama.ui.presentation.contest.slop.RatingScreenModel
+import kodama.ui.presentation.contest.slop.ResultsScreenModel
 import kodama.ui.presentation.home.HomeTabScreenModel
 import kodama.ui.presentation.image.ImageUploaderScreenModel
 import kodama.ui.presentation.profile.EditProfileScreenModel
@@ -25,6 +26,10 @@ val uiModule = module {
     single { ImageLoader(get()) }
     screenModel { HomeTabScreenModel(get()) }
     screenModel { AuthScreenModel(get()) }
+    screenModel { params -> ContestScreenModel(get(), params.get()) }
+    single { UiPreferences(get()) }
+
+    // Mostly slop
     screenModel { params -> OtpVerificationScreenModel(get(), params.get()) }
     screenModel { params -> TotpVerificationScreenModel(get(), params.get(), params.get()) }
     screenModel { TotpSetupScreenModel(get()) }
@@ -39,5 +44,4 @@ val uiModule = module {
     screenModel { params -> RatingScreenModel(get(), params.get(), params.get()) }
     screenModel { params -> ResultsScreenModel(get(), params.get()) }
     screenModel { params -> FinalizeEntryScreenModel(get(), get(), params.get(), params.get()) }
-    single { UiPreferences(get()) }
 }

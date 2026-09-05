@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
@@ -28,6 +29,7 @@ import kodama.ui.component.rememberDocumentFilePicker
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.launch
+import org.koin.core.parameter.parametersOf
 
 internal class FinalizeEntryScreen(
     private val contestId: String,
@@ -37,7 +39,7 @@ internal class FinalizeEntryScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<FinalizeEntryScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId, bonsaiId)
+            parametersOf(contestId, bonsaiId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
@@ -113,7 +115,7 @@ internal class FinalizeEntryScreen(
         }
 
         if (showConfirmDialog) {
-            kodama.ui.component.AlertDialogBuilder().apply {
+            AlertDialogBuilder().apply {
                 title = "Apakah Anda yakin?"
                 text = "Finalisasi pendaftaran akan mengubah data menjadi read-only dan tidak dapat diedit lagi."
                 confirmText = "Ya, Finalisasi"
@@ -130,7 +132,7 @@ internal class FinalizeEntryScreen(
         }
 
         alertDialogMessage?.let { message ->
-            kodama.ui.component.AlertDialogBuilder().apply {
+            AlertDialogBuilder().apply {
                 title = "Terjadi kesalahan!"
                 text = message
                 onConfirm = { alertDialogMessage = null }

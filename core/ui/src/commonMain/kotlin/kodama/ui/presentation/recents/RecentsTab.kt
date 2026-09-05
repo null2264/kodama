@@ -45,7 +45,7 @@ import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.schedule
-import kodama.ui.presentation.contest.ContestDetailScreen
+import kodama.ui.presentation.contest.slop.ContestDetailScreen
 import org.koin.compose.koinInject
 
 internal object RecentsTab : Tab {

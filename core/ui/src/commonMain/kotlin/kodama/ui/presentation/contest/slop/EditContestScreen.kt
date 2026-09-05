@@ -1,11 +1,10 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -60,7 +60,9 @@ import kodama.resources.edit_contest_title
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.check
 import kodama.resources.icons.edit
+import kodama.resources.icons.upload
 import kodama.resources.pick_banner
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
@@ -70,9 +72,9 @@ import kodama.ui.component.rememberImageFilePicker
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 internal class EditContestScreen(
     private val contestId: String,
@@ -81,7 +83,7 @@ internal class EditContestScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<EditContestScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId)
+            parametersOf(contestId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
@@ -207,7 +209,7 @@ internal class EditContestScreen(
                             modifier = Modifier.fillMaxWidth(),
                             isLoading = false,
                             enabled = !state.isLoading,
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.errorContainer,
                                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                             ),
@@ -221,7 +223,7 @@ internal class EditContestScreen(
             }
 
             alertDialogMessage?.let { message ->
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Terjadi kesalahan!"
                     text = message
                     onConfirm = { alertDialogMessage = null }
@@ -230,7 +232,7 @@ internal class EditContestScreen(
             }
 
             if (showDeleteDialog) {
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     titleRes = Res.string.delete_contest_confirm_title
                     textRes = Res.string.delete_contest_confirm_text
                     confirmTextRes = Res.string.delete_contest
@@ -334,7 +336,7 @@ private fun BannerImagePicker(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    imageVector = kodama.resources.icons.upload,
+                    imageVector = upload,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -1,10 +1,8 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import kodama.core.data.BonsaiClass
 import kodama.core.data.BonsaiContestClass
-import kodama.core.data.ContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
 import kotlinx.coroutines.flow.update

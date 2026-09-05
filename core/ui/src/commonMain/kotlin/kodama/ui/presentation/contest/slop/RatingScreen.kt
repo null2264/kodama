@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
@@ -31,15 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
-import kodama.resources.Res
 import kodama.resources.icons.alternate_email
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
-import org.jetbrains.compose.resources.stringResource
+import org.koin.core.parameter.parametersOf
 
 internal class RatingScreen(
     private val contestId: String,
@@ -49,7 +48,7 @@ internal class RatingScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<RatingScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId, bonsaiId)
+            parametersOf(contestId, bonsaiId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
@@ -191,7 +190,7 @@ internal class RatingScreen(
             }
 
             alertDialogMessage?.let { message ->
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Terjadi kesalahan!"
                     text = message
                     onConfirm = { alertDialogMessage = null }

@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +48,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
+import kodama.core.data.ContestUser
+import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
 import kodama.resources.Res
@@ -79,6 +81,7 @@ import kodama.resources.voted
 import kodama.resources.voting_progress_format
 import kodama.resources.view_payment_proof
 import kodama.resources.view_results
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.ContestBanner
 import kodama.ui.component.KodamaScaffold
@@ -91,6 +94,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 internal class ContestDetailScreen(
     private val contestId: String,
@@ -101,7 +105,7 @@ internal class ContestDetailScreen(
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<ContestDetailScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId)
+            parametersOf(contestId)
         }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
@@ -451,7 +455,7 @@ internal class ContestDetailScreen(
             }
 
             if (showFinalizeDialog) {
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     titleRes = Res.string.finalize_contest_confirm_title
                     textRes = Res.string.finalize_contest_confirm_text
                     confirmText = "Ya, Buka"
@@ -473,7 +477,7 @@ internal class ContestDetailScreen(
             }
 
             if (showStateTransitionDialog) {
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Konfirmasi"
                     text = "Apakah Anda yakin ingin mengubah state lomba?"
                     confirmText = "Ya"
@@ -501,7 +505,7 @@ internal class ContestDetailScreen(
             }
 
             if (showFinishDialog) {
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Finish Contest"
                     text = "Semua review sudah selesai?"
                     confirmText = "Finish"
@@ -526,7 +530,7 @@ internal class ContestDetailScreen(
             }
 
             if (showForceCloseDialog) {
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Force Close"
                     text = "Force close akan menyelesaikan lomba meskipun semua review belum selesai. Yakin?"
                     confirmText = "Ya, Force Close"
@@ -548,7 +552,7 @@ internal class ContestDetailScreen(
             }
 
             bonsaiToFinalize?.let { bonsai ->
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     titleRes = Res.string.finalize_bonsai_confirm_title
                     textRes = Res.string.finalize_bonsai_confirm_text
                     confirmText = "Ya, Finalisasi"
@@ -562,7 +566,7 @@ internal class ContestDetailScreen(
             }
 
             bonsaiToDelete?.let { bonsai ->
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     titleRes = Res.string.delete_bonsai_confirm_title
                     textRes = Res.string.delete_bonsai_confirm_text
                     confirmText = "Hapus"
@@ -736,8 +740,8 @@ private fun AdminAcceptingSheet(
 @Composable
 private fun AdminReviewingSheet(
     bonsaiList: List<Bonsai>,
-    reviews: List<kodama.core.data.Review>,
-    contestUsers: List<kodama.core.data.ContestUser>,
+    reviews: List<Review>,
+    contestUsers: List<ContestUser>,
 ) {
     val totalJudges = contestUsers.count { it.role == "judge" || it.role == "head_judge" }
     val totalReviews = bonsaiList.size * totalJudges
@@ -826,7 +830,7 @@ private fun AdminReviewingSheet(
 @Composable
 private fun JudgeReviewingSheet(
     bonsaiList: List<Bonsai>,
-    reviews: List<kodama.core.data.Review>,
+    reviews: List<Review>,
     currentUserId: String?,
     contestId: String = "",
     onRateBonsai: (String) -> Unit = {},

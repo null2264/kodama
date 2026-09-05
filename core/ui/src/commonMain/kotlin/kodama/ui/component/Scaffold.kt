@@ -24,7 +24,7 @@ import yokai.presentation.core.enterAlwaysAppBarScrollBehavior
 
 @Composable
 expect fun KodamaScaffold(
-    onNavigationIconClicked: () -> Unit,
+    onNavigationIconClicked: (() -> Unit)?,
     modifier: Modifier = Modifier,
     title: String = "",
     scrollBehavior: JayAppBarScrollBehavior? = null,
@@ -42,7 +42,7 @@ expect fun KodamaScaffold(
 
 @Composable
 internal fun CommonScaffold(
-    onNavigationIconClicked: () -> Unit,
+    onNavigationIconClicked: (() -> Unit)?,
     modifier: Modifier = Modifier,
     title: String = "",
     scrollBehavior: JayAppBarScrollBehavior? = null,
@@ -67,7 +67,7 @@ internal fun CommonScaffold(
             when (appBarType) {
                 AppBarType.SMALL -> JayTopAppBar(
                     title = {
-                        Text(text = title)
+                        if (title.isNotEmpty()) Text(text = title)
                     },
                     // modifier = Modifier.statusBarsPadding(),
                     colors = topAppBarColors(
@@ -75,11 +75,13 @@ internal fun CommonScaffold(
                         scrolledContainerColor = scrolledColor,
                     ),
                     navigationIcon = {
-                        ToolTipButton(
-                            toolTipLabel = navigationIconLabel,
-                            icon = navigationIcon,
-                            buttonClicked = onNavigationIconClicked,
-                        )
+                        if (onNavigationIconClicked != null) {
+                            ToolTipButton(
+                                toolTipLabel = navigationIconLabel,
+                                icon = navigationIcon,
+                                buttonClicked = onNavigationIconClicked,
+                            )
+                        }
                     },
                     scrollBehavior = scrollBehaviorOrDefault,
                     actions = actions,
@@ -88,7 +90,7 @@ internal fun CommonScaffold(
                 )
                 AppBarType.LARGE -> JayExpandedTopAppBar(
                     title = {
-                        Text(text = title)
+                        if (title.isNotEmpty()) Text(text = title)
                     },
                     // modifier = Modifier.statusBarsPadding(),
                     colors = topAppBarColors(
@@ -96,11 +98,13 @@ internal fun CommonScaffold(
                         scrolledContainerColor = scrolledColor,
                     ),
                     navigationIcon = {
-                        ToolTipButton(
-                            toolTipLabel = navigationIconLabel,
-                            icon = navigationIcon,
-                            buttonClicked = onNavigationIconClicked,
-                        )
+                        if (onNavigationIconClicked != null) {
+                            ToolTipButton(
+                                toolTipLabel = navigationIconLabel,
+                                icon = navigationIcon,
+                                buttonClicked = onNavigationIconClicked,
+                            )
+                        }
                     },
                     scrollBehavior = scrollBehaviorOrDefault,
                     actions = actions,

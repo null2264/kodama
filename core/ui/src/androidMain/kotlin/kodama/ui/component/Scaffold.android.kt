@@ -20,7 +20,7 @@ import yokai.presentation.core.JayAppBarScrollBehavior
 
 @Composable
 actual fun KodamaScaffold(
-    onNavigationIconClicked: () -> Unit,
+    onNavigationIconClicked: (() -> Unit)?,
     modifier: Modifier,
     title: String,
     scrollBehavior: JayAppBarScrollBehavior?,

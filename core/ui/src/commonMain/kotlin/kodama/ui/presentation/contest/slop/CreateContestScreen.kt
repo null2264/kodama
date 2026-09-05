@@ -1,4 +1,4 @@
-package kodama.ui.presentation.contest
+package kodama.ui.presentation.contest.slop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,22 +43,25 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
+import kodama.resources.icons.upload
 import kodama.resources.Res
-import kodama.resources.bonsai_name_label
-import kodama.resources.bonsai_name_placeholder
 import kodama.resources.change_banner
 import kodama.resources.contest_classes_label
-import kodama.resources.create_bonsai_submit
-import kodama.resources.create_bonsai_title
+import kodama.resources.contest_desc_label
+import kodama.resources.contest_desc_placeholder
+import kodama.resources.contest_name_label
+import kodama.resources.contest_name_placeholder
+import kodama.resources.create_contest_submit
+import kodama.resources.create_contest_title
+import kodama.resources.pick_banner
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.check
 import kodama.resources.icons.edit
-import kodama.resources.pick_banner
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.component.LoadingButton
-import kodama.ui.component.rememberDocumentFilePicker
 import kodama.ui.component.rememberImageFilePicker
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
@@ -67,29 +70,23 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
-internal class CreateBonsaiScreen(
-    private val contestId: String,
-    private val availableClassIds: List<String>,
-) : Screen() {
+internal class CreateContestScreen : Screen() {
 
     @OptIn(ExperimentalResourceApi::class, ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel<CreateBonsaiScreenModel> {
-            org.koin.core.parameter.parametersOf(contestId, availableClassIds)
-        }
+        val screenModel = rememberScreenModel<CreateContestScreenModel>()
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
         val coroutineScope = rememberCoroutineScope()
         val filePicker = rememberImageFilePicker()
-        val documentPicker = rememberDocumentFilePicker()
         val keyboardController = LocalSoftwareKeyboardController.current
 
         var alertDialogMessage by remember { mutableStateOf<String?>(null) }
 
         KodamaScaffold(
             onNavigationIconClicked = { navigator?.pop() },
-            title = stringResource(Res.string.create_bonsai_title),
+            title = stringResource(Res.string.create_contest_title),
             appBarType = AppBarType.SMALL,
         ) { contentPadding ->
             Column(
@@ -102,13 +99,13 @@ internal class CreateBonsaiScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ImagePicker(
-                    previewBytes = state.imagePreviewBytes,
+                BannerImagePicker(
+                    previewBytes = state.bannerPreviewBytes,
                     onPick = {
                         coroutineScope.launch {
                             val bytes = filePicker.pick()
                             if (bytes != null) {
-                                screenModel.onImagePicked(bytes)
+                                screenModel.onBannerPicked(bytes)
                             }
                         }
                     },
@@ -117,9 +114,22 @@ internal class CreateBonsaiScreen(
                 KodamaTextField(
                     value = state.name,
                     onValueChange = { screenModel.onNameChanged(it) },
-                    label = stringResource(Res.string.bonsai_name_label),
-                    placeholder = stringResource(Res.string.bonsai_name_placeholder),
+                    label = stringResource(Res.string.contest_name_label),
+                    placeholder = stringResource(Res.string.contest_name_placeholder),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                    ),
+                    icon = { Icon(alternate_email, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                )
+
+                KodamaTextField(
+                    value = state.description,
+                    onValueChange = { screenModel.onDescriptionChanged(it) },
+                    label = stringResource(Res.string.contest_desc_label),
+                    placeholder = stringResource(Res.string.contest_desc_placeholder),
+                    singleLine = false,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done,
@@ -140,12 +150,12 @@ internal class CreateBonsaiScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         state.availableClasses.forEach { bonsaiClass ->
-                            val isSelected = bonsaiClass.id == state.selectedClassId
+                            val isSelected = bonsaiClass.id in state.selectedClassIds
                             FilterChip(
                                 selected = isSelected,
                                 leadingIcon = { if (isSelected) { Icon(check, "Selected") } },
-                                onClick = { screenModel.onClassSelected(bonsaiClass.id) },
-                                label = { Text(bonsaiClass.data.name) },
+                                onClick = { screenModel.toggleClass(bonsaiClass.id) },
+                                label = { Text(bonsaiClass.name) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -158,23 +168,25 @@ internal class CreateBonsaiScreen(
                 LoadingButton(
                     onClick = {
                         keyboardController?.hide()
-                        screenModel.createBonsai(
+                        screenModel.createContest(
                             onError = { alertDialogMessage = it },
-                            onSuccess = { navigator?.pop() },
+                            onSuccess = { contestId ->
+                                navigator?.replace(ContestDetailScreen(contestId, showCreatedSnackbar = true))
+                            },
                         )
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     isLoading = state.isLoading,
-                    enabled = state.name.isNotBlank() && state.selectedClassId != null && !state.isLoading,
+                    enabled = state.name.isNotBlank() && state.selectedClassIds.isNotEmpty() && !state.isLoading,
                 ) {
-                    Text(stringResource(Res.string.create_bonsai_submit))
+                    Text(stringResource(Res.string.create_contest_submit))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             alertDialogMessage?.let { message ->
-                kodama.ui.component.AlertDialogBuilder().apply {
+                AlertDialogBuilder().apply {
                     title = "Terjadi kesalahan!"
                     text = message
                     onConfirm = { alertDialogMessage = null }
@@ -186,7 +198,7 @@ internal class CreateBonsaiScreen(
 }
 
 @Composable
-private fun ImagePicker(
+private fun BannerImagePicker(
     previewBytes: ByteArray?,
     onPick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -238,7 +250,7 @@ private fun ImagePicker(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    imageVector = kodama.resources.icons.upload,
+                    imageVector = upload,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -252,4 +264,3 @@ private fun ImagePicker(
         }
     }
 }
-

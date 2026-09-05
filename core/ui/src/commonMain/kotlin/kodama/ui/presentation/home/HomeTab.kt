@@ -52,8 +52,9 @@ import kodama.resources.add_contest
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.home
 import kodama.resources.no_open_contests
-import kodama.ui.presentation.contest.ContestDetailScreen
-import kodama.ui.presentation.contest.CreateContestScreen
+import kodama.ui.presentation.contest.ContestScreen
+import kodama.ui.presentation.contest.slop.ContestDetailScreen
+import kodama.ui.presentation.contest.slop.CreateContestScreen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -178,7 +179,7 @@ internal object HomeTab : Tab {
                         ) {
                             items(filteredContests, key = { it.id }) { contest ->
                                 ContestCard(contest = contest) {
-                                    navigator?.parent?.push(ContestDetailScreen(contest.id))
+                                    navigator?.parent?.push(ContestScreen(contest.id))
                                 }
                             }
                         }

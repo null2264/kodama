@@ -31,7 +31,7 @@ internal class MainScreen : Screen() {
         var title by remember { mutableStateOf("") }
         TabNavigator(HomeTab) {
             KodamaScaffold(
-                onNavigationIconClicked = {},
+                onNavigationIconClicked = null,
                 appBarType = AppBarType.LARGE,
                 bottomBar = {
                     NavigationBar {
