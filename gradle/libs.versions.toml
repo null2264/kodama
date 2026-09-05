@@ -10,6 +10,9 @@ sqldelight = "2.3.2"
 
 [libraries]
 qrcode = { module = "io.github.goquati:qr", version.ref = "qrcode" }
+
+bottomsheet = { module = "com.github.skydoves:flexible-bottomsheet-material3", version = "0.3.0"}
+
 coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 

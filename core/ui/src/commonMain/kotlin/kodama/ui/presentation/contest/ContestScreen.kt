@@ -4,10 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomSheet
@@ -34,6 +38,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
+import com.skydoves.flexible.bottomsheet.material3.FlexibleBottomSheet
+import com.skydoves.flexible.core.FlexibleSheetValue
+import com.skydoves.flexible.core.rememberFlexibleBottomSheetState
 import kodama.core.data.ImageRepository
 import kodama.resources.Res
 import kodama.resources.add_contest
@@ -90,14 +97,27 @@ internal class ContestScreen(
             }
         }
 
-        val sheetState = rememberBottomSheetState(
-            enabledValues = setOf(SheetValue.PartiallyExpanded, SheetValue.Expanded),
-            initialValue = SheetValue.PartiallyExpanded,
-            confirmValueChange = { it != SheetValue.Hidden },
+        val sheetState = rememberFlexibleBottomSheetState(
+            skipHiddenState = true,
+            initialValue = FlexibleSheetValue.SlightlyExpanded,
+            isModal = false,
         )
 
         KodamaScaffold(
             onNavigationIconClicked = { navigator?.pop() },
+            fab = {
+                FloatingActionButton(
+                    onClick = {
+                        navigator?.push(CreateBonsaiScreen(contestId, state.classes.map { it.id }))
+                    },
+                    modifier = Modifier.padding(16.dp),
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(add),
+                        contentDescription = stringResource(Res.string.add_contest),
+                    )
+                }
+            },
             appBarType = AppBarType.SMALL,
 //            snackbarHost = { SnackbarHost(snackbarHostState) },
             actions = {
@@ -184,24 +204,13 @@ internal class ContestScreen(
                     }
                 }
 
-                BottomSheet(
-                    state = sheetState,
+                FlexibleBottomSheet(
+                    onDismissRequest = {},
+                    sheetState = sheetState,
                 ) {
-                    Text("Hello dingus")
-                }
-
-                FloatingActionButton(
-                    onClick = {
-                        navigator?.push(CreateBonsaiScreen(contestId, state.classes.map { it.id }))
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
-                ) {
-                    Icon(
-                        painter = rememberVectorPainter(add),
-                        contentDescription = stringResource(Res.string.add_contest),
-                    )
+                    Box(modifier = Modifier.height(240.dp)) {
+                        Text("Hello dingus")
+                    }
                 }
             }
         }

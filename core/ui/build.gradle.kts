@@ -32,6 +32,7 @@ kotlin {
             implementation(libs.icons.feather)
             implementation(kotlinx.serialization.json)
 
+            implementation(libs.bottomsheet)
             implementation(libs.koin.compose)
             implementation(libs.qrcode)
 
