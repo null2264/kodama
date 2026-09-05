@@ -8,19 +8,23 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -33,13 +37,10 @@ import kodama.resources.contest_detail_title
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.add
 import kodama.resources.icons.alternate_email
-import kodama.resources.icons.edit
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.KodamaScaffold
-import kodama.ui.component.ToolTipButton
-import kodama.ui.presentation.contest.slop.CreateContestScreen
-import kodama.ui.presentation.contest.slop.EditContestScreen
+import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
 import org.jetbrains.compose.resources.stringResource
@@ -49,6 +50,7 @@ import org.koin.core.parameter.parametersOf
 internal class ContestScreen(
     private val contestId: String,
 ) : Screen() {
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel<ContestScreenModel> {
@@ -57,6 +59,17 @@ internal class ContestScreen(
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.current
         val imageRepository: ImageRepository = koinInject()
+
+        val expressiveShapes = remember {
+            listOf(
+                MaterialShapes.Pentagon,
+                MaterialShapes.Flower,
+                MaterialShapes.Burst,
+                MaterialShapes.Cookie4Sided,
+                MaterialShapes.Clover4Leaf,
+                MaterialShapes.Ghostish,
+            )
+        }
 
         KodamaScaffold(
             onNavigationIconClicked = { navigator?.pop() },
@@ -100,6 +113,12 @@ internal class ContestScreen(
 
             val contest = state.contest ?: return@KodamaScaffold
 
+            val classVectors = remember(state.classes) {
+                state.classes.map {
+                    Pair(it, expressiveShapes.random())
+                }
+            }
+
             Box(
                 modifier = Modifier.fillMaxSize().padding(contentPadding),
             ) {
@@ -116,17 +135,36 @@ internal class ContestScreen(
                         error = rememberVectorPainter(alternate_email),
                         imageLoader = koinInject(),
                     )
+
                     Column(
                         modifier = Modifier.fillMaxSize().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Chip(contest.state, account_circle)
-                        Text(contest.name)
-                        Text(contest.description ?: "No description.")
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            item { Chip(contest.state.replaceFirstChar { it.uppercase() }, account_circle) }
+                            items(classVectors) {
+                                Chip(it.first.name, fallbackShape = it.second.toShape())
+                            }
+                        }
+                        Text(
+                            text = contest.name,
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                        Text(
+                            text = contest.created_at ?: "",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Text(
+                            text = contest.description ?: "No description.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
                 }
 
                 FloatingActionButton(
-                    onClick = { navigator?.parent?.push(CreateContestScreen()) },
+                    onClick = {
+                        navigator?.push(CreateBonsaiScreen(contestId, state.classes.map { it.id }))
+                    },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp),
