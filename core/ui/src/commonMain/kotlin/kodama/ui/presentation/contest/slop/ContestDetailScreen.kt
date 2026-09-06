@@ -203,13 +203,22 @@ internal class ContestDetailScreen(
                         }
 
                         if (isAdmin && contest.state == "draft") {
+                            val canFinalize = state.canFinalizeContest
                             LoadingButton(
                                 onClick = { showFinalizeDialog = true },
                                 modifier = Modifier.fillMaxWidth(),
                                 isLoading = state.isUpdatingState,
-                                enabled = !state.isUpdatingState,
+                                enabled = !state.isUpdatingState && canFinalize,
                             ) {
                                 Text(stringResource(Res.string.finalize_contest))
+                            }
+                            if (!canFinalize) {
+                                Text(
+                                    text = "Minimal satu juri per kelas atau satu ketua juri diperlukan.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
                             }
                         }
 

@@ -43,19 +43,28 @@ class ContestDetailScreenModel(
     }
 
     private suspend fun loadSheetData(contestState: String?) {
-        if (contestState != "accepting" && contestState != "reviewing" &&
-            contestState != "finished" && contestState != "ended"
+        if (contestState != "draft" && contestState != "accepting" &&
+            contestState != "reviewing" && contestState != "finished" &&
+            contestState != "ended"
         ) return
         mutableState.update { it.copy(isSheetLoading = true) }
         try {
-            val bonsai = contestRepository.getBonsaiWithMetadataForContest(contestId)
-            val myBonsai = contestRepository.getMyBonsaiForContest(contestId)
+            val bonsai = if (contestState != "draft") {
+                contestRepository.getBonsaiWithMetadataForContest(contestId)
+            } else {
+                emptyList()
+            }
+            val myBonsai = if (contestState != "draft") {
+                contestRepository.getMyBonsaiForContest(contestId)
+            } else {
+                emptyList()
+            }
             val reviews = if (contestState == "reviewing" || contestState == "finished" || contestState == "ended") {
                 contestRepository.getReviewsForContest(contestId)
             } else {
                 emptyList()
             }
-            val users = if (contestState == "reviewing") {
+            val users = if (contestState == "draft" || contestState == "reviewing") {
                 contestRepository.getContestUsers(contestId)
             } else {
                 emptyList()
@@ -80,6 +89,13 @@ class ContestDetailScreenModel(
         onSuccess: () -> Unit,
     ) {
         screenModelScope.launch {
+            if (newState == "accepting") {
+                val s = state.value
+                if (!s.canFinalizeContest) {
+                    onError("Setiap kelas harus memiliki minimal satu juri, atau lomba harus memiliki ketua juri.")
+                    return@launch
+                }
+            }
             mutableState.update { it.copy(isUpdatingState = true) }
             try {
                 contestRepository.updateContestState(contestId, newState)
@@ -164,5 +180,15 @@ class ContestDetailScreenModel(
         val reviews: List<Review> = emptyList(),
         val contestUsers: List<ContestUser> = emptyList(),
         val isSheetLoading: Boolean = false,
-    )
+    ) {
+        val canFinalizeContest: Boolean
+            get() {
+                val hasHeadJudge = contestUsers.any { it.role == "head_judge" }
+                if (hasHeadJudge) return true
+                val contestClassIds = classes.map { it.id }
+                return contestClassIds.all { classId ->
+                    contestUsers.any { it.role == "judge" && it.contest_class_id == classId }
+                }
+            }
+    }
 }

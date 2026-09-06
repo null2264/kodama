@@ -276,7 +276,24 @@ $$;
 CREATE OR REPLACE FUNCTION kodama.validate_contest_state_transition()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF OLD.state = 'draft' AND NEW.state = 'accepting' THEN RETURN NEW; END IF;
+  IF OLD.state = 'draft' AND NEW.state = 'accepting' THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM kodama.contest_participants
+      WHERE contest_id = NEW.id AND role = 'head_judge'
+    ) AND EXISTS (
+      SELECT 1 FROM kodama.contest_classes cc
+      WHERE cc.contest_id = NEW.id
+        AND NOT EXISTS (
+          SELECT 1 FROM kodama.contest_participants cp
+          WHERE cp.contest_id = NEW.id
+            AND cp.role = 'judge'
+            AND cp.contest_class_id = cc.id
+        )
+    ) THEN
+      RAISE EXCEPTION 'Each class must have at least one judge, or the contest must have a head judge.';
+    END IF;
+    RETURN NEW;
+  END IF;
   IF OLD.state = 'accepting' AND NEW.state = 'closed' THEN RETURN NEW; END IF;
   IF OLD.state = 'closed' AND NEW.state = 'reviewing' THEN RETURN NEW; END IF;
   IF OLD.state = 'reviewing' AND NEW.state = 'finished' THEN RETURN NEW; END IF;
