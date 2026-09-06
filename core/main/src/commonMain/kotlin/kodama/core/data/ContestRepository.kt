@@ -6,8 +6,6 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.flow.Flow
@@ -311,7 +309,7 @@ class ContestRepository(private val client: SupabaseClient) {
     }
 
     @OptIn(SupabaseExperimental::class)
-    fun subscribeMyBonsaiForContest(contestId: String): Flow<List<Bonsai>> {
+    fun subscribeBonsaiListForContest(contestId: String): Flow<List<Bonsai>> {
         return client.from("kodama", "bonsai").selectAsFlow(
             Bonsai::id,
         ) {

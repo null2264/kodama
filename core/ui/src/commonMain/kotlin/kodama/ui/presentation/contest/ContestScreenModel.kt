@@ -13,8 +13,6 @@ import kodama.core.util.isAdmin
 import kodama.ui.presentation.utils.inject
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
-import org.koin.mp.KoinPlatform
 
 class ContestScreenModel(
     private val contestRepository: ContestRepository,
@@ -65,7 +63,7 @@ class ContestScreenModel(
         }
     }
 
-    fun subscribeMyBonsai() = contestRepository.subscribeMyBonsaiForContest(contestId)
+    fun subscribeBonsaiList() = contestRepository.subscribeBonsaiListForContest(contestId)
 
     data class State(
         val contest: Contest? = null,
