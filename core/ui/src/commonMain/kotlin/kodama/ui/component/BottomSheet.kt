@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,26 +53,9 @@ fun KodamaBottomSheet(
     dragHandleToolTipString: String = "Bottom Sheet",
     sheetContent: @Composable () -> Unit
 ) {
-    val density = LocalDensity.current
-    val navBarHeightPx = WindowInsets.navigationBars.getBottom(density).toFloat()
-
-    BoxWithConstraints(
-        modifier = modifier
-            .layout { measurable, constraints ->
-                val calculatedHeight = (constraints.maxHeight + navBarHeightPx).toInt()
-                val placeable = measurable.measure(
-                    constraints.copy(
-                        minHeight = calculatedHeight,
-                        maxHeight = calculatedHeight,
-                    )
-                )
-                layout(placeable.width, placeable.height) {
-                    placeable.place(0, 0)
-                }
-            }
-    ) {
-
-        val layoutHeight = with(density) { maxHeight.toPx() } + navBarHeightPx
+    BoxWithConstraints(modifier = modifier.statusBarsPadding().fillMaxSize()) {
+        val density = LocalDensity.current
+        val layoutHeight = with(density) { maxHeight.toPx() }
 
         val state = remember {
             AnchoredDraggableState(
@@ -84,7 +68,6 @@ fun KodamaBottomSheet(
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                     val delta = available.y
-                    // Lift the sheet up first before allowing LazyColumn to scroll its items
                     return if (delta < 0 && state.currentValue != SheetPosition.Expanded) {
                         val consumed = state.dispatchRawDelta(delta)
                         Offset(0f, consumed)
@@ -100,22 +83,15 @@ fun KodamaBottomSheet(
                 ): Offset {
                     val delta = available.y
                     return if (delta > 0) {
-                        // Drag the sheet down when list hits top boundary
                         val consumedDelta = state.dispatchRawDelta(delta)
                         Offset(0f, consumedDelta)
                     } else {
-                        // --- THE CRITICAL FIX ---
-                        // Forcefully consume any leftover scrolling when moving UP.
-                        // This blocks the gesture from escaping to your Scaffold/App Bar.
                         available
                     }
                 }
 
                 override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                     state.anchoredDrag {
-                        // The ScrollScope's lifecycle is tied to the AnchoredDragScope we receive
-                        //  from anchoredDrag. It is used to bridge AnchoredDraggable and
-                        //  FlingBehavior.
                         val scrollFlingScope =
                             object : ScrollScope {
                                 override fun scrollBy(pixels: Float): Float {
@@ -123,7 +99,6 @@ fun KodamaBottomSheet(
                                     return pixels
                                 }
                             }
-                        // Perform a fling with the fling behavior and scroll scope
                         with(flingBehavior) { scrollFlingScope.performFling(available.y) }
                     }
                     return available
@@ -134,14 +109,14 @@ fun KodamaBottomSheet(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(maxHeight + with(density) { navBarHeightPx.toDp() })
+                .height(maxHeight)
                 .onSizeChanged { size ->
                     val sheetHeight = size.height.toFloat()
                     state.updateAnchors(
                         DraggableAnchors {
-                            SheetPosition.Collapsed at (layoutHeight - peekHeightPx - (navBarHeightPx * 0.6f))
+                            SheetPosition.Collapsed at (layoutHeight - peekHeightPx)
                             SheetPosition.HalfExpanded at (layoutHeight - (sheetHeight * 0.6f))
-                            SheetPosition.Expanded at (layoutHeight - sheetHeight - (navBarHeightPx * 0.6f))
+                            SheetPosition.Expanded at (layoutHeight - sheetHeight)
                         }
                     )
                 }
