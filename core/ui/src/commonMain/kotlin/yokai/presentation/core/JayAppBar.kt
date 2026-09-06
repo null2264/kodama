@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
  *
  * if [useLargeToolbar] is enabled, [JayTopAppBar] should be used instead.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JayExpandedTopAppBar(
     modifier: Modifier = Modifier,
@@ -109,13 +112,12 @@ fun JayExpandedTopAppBar(
                         .windowInsetsPadding(windowInsets)
             ) {
                 Row(
-                    modifier = Modifier.padding(contentPadding),
+                    modifier = Modifier.padding(start = 4.dp, end = 4.dp).padding(contentPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     navigationIcon?.let {
                         Box(
                             Modifier
-                                .padding(start = 4.dp)
                                 .then(if (bottomCollapsedFractionOrZero() >= 1f) Modifier.alpha(titleAlpha()) else Modifier)
                         ) {
                             it()
@@ -143,7 +145,7 @@ fun JayExpandedTopAppBar(
                                     content = it,
                                 )
                             }
-                        Box(Modifier.padding(end = 4.dp)) {
+                        Box {
                             CompositionLocalProvider(
                                 LocalContentColor provides colors.actionIconContentColor,
                                 content = actionsRow,
@@ -225,6 +227,7 @@ fun JayExpandedTopAppBar(
  * Based on (M3 v1.5.0's) [androidx.compose.material3.AppBarWithSearch] implementation with a mix of
  * [androidx.compose.material3.LargeTopAppBar] implementation
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JayTopAppBar(
     modifier: Modifier = Modifier,
@@ -295,11 +298,11 @@ fun JayTopAppBar(
                         .windowInsetsPadding(windowInsets)
             ) {
                 Row(
-                    modifier = Modifier.padding(contentPadding),
+                    modifier = Modifier.padding(contentPadding).padding(start = 4.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     navigationIcon?.let {
-                        Box(Modifier.padding(start = 4.dp)) {
+                        Box {
                             it()
                         }
                     }
@@ -320,7 +323,7 @@ fun JayTopAppBar(
                                     content = it,
                                 )
                             }
-                        Box(Modifier.padding(end = 4.dp)) {
+                        Box {
                             CompositionLocalProvider(
                                 LocalContentColor provides colors.actionIconContentColor,
                                 content = actionsRow,

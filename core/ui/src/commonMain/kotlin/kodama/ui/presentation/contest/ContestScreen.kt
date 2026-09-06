@@ -4,17 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeightIn
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.BottomSheet
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -23,9 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,33 +32,31 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
-import com.skydoves.flexible.bottomsheet.material3.FlexibleBottomSheet
 import com.skydoves.flexible.core.FlexibleSheetValue
 import com.skydoves.flexible.core.rememberFlexibleBottomSheetState
 import kodama.core.data.ImageRepository
 import kodama.resources.Res
 import kodama.resources.add_contest
-import kodama.resources.contest_detail_title
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.add
 import kodama.resources.icons.alternate_email
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.KodamaScaffold
+import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
-import kotlin.random.Random
 import kotlin.time.Instant
 
 internal class ContestScreen(
@@ -99,7 +91,9 @@ internal class ContestScreen(
 
         val sheetState = rememberFlexibleBottomSheetState(
             skipHiddenState = true,
+            skipSlightlyExpanded = false,
             initialValue = FlexibleSheetValue.SlightlyExpanded,
+            confirmValueChange = { it != FlexibleSheetValue.Hidden },
             isModal = false,
         )
 
@@ -204,10 +198,7 @@ internal class ContestScreen(
                     }
                 }
 
-                FlexibleBottomSheet(
-                    onDismissRequest = {},
-                    sheetState = sheetState,
-                ) {
+                KodamaBottomSheet {
                     Box(modifier = Modifier.height(240.dp)) {
                         Text("Hello dingus")
                     }
@@ -218,7 +209,7 @@ internal class ContestScreen(
 }
 
 val DateTimeFormat = LocalDateTime.Format {
-    day()                         // Prints day without a leading zero (e.g., "1")
+    day(Padding.NONE)                         // Prints day without a leading zero (e.g., "1")
     char(' ')                            // Space delimiter
     monthName(MonthNames.ENGLISH_FULL)   // Prints full month name (e.g., "January")
     char(' ')                            // Space delimiter

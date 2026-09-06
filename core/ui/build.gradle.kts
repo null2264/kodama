@@ -1,7 +1,10 @@
 import com.android.build.api.dsl.ManagedVirtualDevice
+import org.gradle.kotlin.dsl.provideDelegate
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
 plugins {
     alias(androidx.plugins.kodama.kmp.library)
@@ -32,7 +35,6 @@ kotlin {
             implementation(libs.icons.feather)
             implementation(kotlinx.serialization.json)
 
-            implementation(libs.bottomsheet)
             implementation(libs.koin.compose)
             implementation(libs.qrcode)
 

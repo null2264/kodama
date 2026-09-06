@@ -3,6 +3,7 @@ package kodama.ui.component
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -74,15 +75,17 @@ internal fun CommonScaffold(
                         containerColor = color,
                         scrolledContainerColor = scrolledColor,
                     ),
-                    navigationIcon = {
+                    navigationIcon =
                         if (onNavigationIconClicked != null) {
-                            ToolTipButton(
-                                toolTipLabel = navigationIconLabel,
-                                icon = navigationIcon,
-                                buttonClicked = onNavigationIconClicked,
-                            )
+                            {
+                                ToolTipButton(
+                                    toolTipLabel = navigationIconLabel,
+                                    icon = navigationIcon,
+                                    buttonClicked = onNavigationIconClicked,
+                                )
+                            }
                         }
-                    },
+                        else null,
                     scrollBehavior = scrollBehaviorOrDefault,
                     actions = actions,
                     textFieldState = textFieldState,
@@ -97,15 +100,17 @@ internal fun CommonScaffold(
                         containerColor = color,
                         scrolledContainerColor = scrolledColor,
                     ),
-                    navigationIcon = {
+                    navigationIcon =
                         if (onNavigationIconClicked != null) {
-                            ToolTipButton(
-                                toolTipLabel = navigationIconLabel,
-                                icon = navigationIcon,
-                                buttonClicked = onNavigationIconClicked,
-                            )
+                            {
+                                ToolTipButton(
+                                    toolTipLabel = navigationIconLabel,
+                                    icon = navigationIcon,
+                                    buttonClicked = onNavigationIconClicked,
+                                )
+                            }
                         }
-                    },
+                        else null,
                     scrollBehavior = scrollBehaviorOrDefault,
                     actions = actions,
                     textFieldState = textFieldState,
