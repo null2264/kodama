@@ -1,10 +1,16 @@
 package kodama.core.data
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.realtime.selectAsFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -294,8 +300,23 @@ class ContestRepository(private val client: SupabaseClient) {
     }
 
     suspend fun getMyBonsaiForContest(contestId: String): List<Bonsai> {
-        val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
-        return getBonsaiWithMetadataForContest(contestId).filter { it.owner_id == userId }
+        return client.from("kodama", "bonsai").select(Columns.list(
+            "id", "name", "owner_id", "contest_id", "contest_class_id",
+            "created_at", "pict_path", "state", "payment_proof_path"
+        )) {
+            filter {
+                Bonsai::contest_id eq contestId
+            }
+        }.decodeList()
+    }
+
+    @OptIn(SupabaseExperimental::class)
+    fun subscribeMyBonsaiForContest(contestId: String): Flow<List<Bonsai>> {
+        return client.from("kodama", "bonsai").selectAsFlow(
+            Bonsai::id,
+        ) {
+            eq("contest_id", contestId)
+        }
     }
 
     suspend fun getAllContests(): List<Contest> {

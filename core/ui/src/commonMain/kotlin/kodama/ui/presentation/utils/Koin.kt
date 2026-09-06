@@ -16,6 +16,7 @@ import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.parameter.emptyParametersHolder
 import org.koin.core.qualifier.Qualifier
 import org.koin.core.scope.Scope
+import org.koin.mp.KoinPlatform
 
 inline fun <reified T : ScreenModel> Module.screenModel(
     qualifier: Qualifier? = null,
@@ -52,4 +53,8 @@ inline fun <reified T : ScreenModel> Tab.rememberScreenModel(
             currentParameters?.invoke() ?: emptyParametersHolder()
         }
     }
+}
+
+inline fun <reified T : Any> inject(): T {
+    return KoinPlatform.getKoin().get<T>()
 }

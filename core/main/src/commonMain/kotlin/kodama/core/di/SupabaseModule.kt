@@ -8,6 +8,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 import kodama.core.data.ContestRepository
@@ -27,6 +28,7 @@ val supabaseModule = module {
             }
             install(Storage)
             install(Postgrest)
+            install(Realtime)
         }
     }
 
