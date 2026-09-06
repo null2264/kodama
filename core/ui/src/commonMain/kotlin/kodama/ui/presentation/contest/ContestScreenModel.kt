@@ -31,12 +31,14 @@ class ContestScreenModel(
                 val classIds = contestRepository.getContestClassIds(contestId)
                 val allClasses = contestRepository.getBonsaiClasses()
                 val selectedClasses = allClasses.filter { it.id in classIds }
+                val users = contestRepository.getContestUsers(contestId)
                 loadSheet()
                 mutableState.update {
                     it.copy(
                         contest = contest,
                         classes = selectedClasses,
                         isLoading = false,
+                        contestUsers = users,
                     )
                 }
             } catch (_: Exception) {
@@ -70,10 +72,10 @@ class ContestScreenModel(
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isSheetLoading: Boolean = false,
+        val contestUsers: List<ContestUser> = emptyList(),
 
         val isUpdatingState: Boolean = false,
         val bonsaiList: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),
-        val contestUsers: List<ContestUser> = emptyList(),
     )
 }

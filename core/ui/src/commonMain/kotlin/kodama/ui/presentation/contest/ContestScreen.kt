@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,12 +18,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,13 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
+import io.github.jan.supabase.auth.Auth
 import kodama.core.data.ImageRepository
-import kodama.core.util.BonsaiConstants
-import kodama.resources.Res
+import kodama.core.util.isAdmin
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
-import kodama.resources.icons.flag
-import kodama.resources.voted
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.KodamaScaffold
@@ -60,7 +55,6 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import kotlin.time.Instant
@@ -95,7 +89,7 @@ internal class ContestScreen(
             }
         }
 
-        val myBonsai by screenModel.subscribeBonsaiList().collectAsState(listOf())
+        val bonsaiList by screenModel.subscribeBonsaiList().collectAsState(null)
 
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
@@ -190,6 +184,14 @@ internal class ContestScreen(
             }
 
             state.contest?.let { contest ->
+                if (contest.state == "draft") return@let
+
+                val auth: Auth = koinInject()
+                val currentUser = auth.currentUserOrNull()
+                val contestUser = state.contestUsers.find { it.user_id == currentUser?.id }
+                // Wouldn't be fair to have judge able to join the contest now is it?
+                if (contest.state == "accepting" && (contestUser?.role?.contains("judge") ?: false)) return@let
+
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     dragHandleToolTipString = "Bonsai List",
@@ -198,7 +200,8 @@ internal class ContestScreen(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
                     ) {
-                        if (contest.state == "accepting") {
+                        // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
+                        if (contest.state == "accepting" && currentUser.isAdmin) {
                             item(key = "bottom_sheet_add") {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
@@ -213,11 +216,11 @@ internal class ContestScreen(
                         }
 
                         // FIXME: Find a better check
-                        if (myBonsai.isEmpty()) {
-                            item(key = "bottom_sheet_loading") { LoadingIndicator() }
+                        if (bonsaiList == null) {
+                            item(key = "bottom_sheet_loading") { Box(Modifier.fillMaxWidth().padding(top = 16.dp)) { LoadingIndicator() } }
                         }
 
-                        items(myBonsai) { bonsai ->
+                        items(bonsaiList!!) { bonsai ->
                             Card(
                                 modifier = Modifier.fillMaxWidth()
                                     .clickable {
