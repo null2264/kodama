@@ -32,8 +32,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
-import com.skydoves.flexible.core.FlexibleSheetValue
-import com.skydoves.flexible.core.rememberFlexibleBottomSheetState
 import kodama.core.data.ImageRepository
 import kodama.resources.Res
 import kodama.resources.add_contest
@@ -88,14 +86,6 @@ internal class ContestScreen(
                 Pair(it, expressiveShapes.random())
             }
         }
-
-        val sheetState = rememberFlexibleBottomSheetState(
-            skipHiddenState = true,
-            skipSlightlyExpanded = false,
-            initialValue = FlexibleSheetValue.SlightlyExpanded,
-            confirmValueChange = { it != FlexibleSheetValue.Hidden },
-            isModal = false,
-        )
 
         KodamaScaffold(
             onNavigationIconClicked = { navigator?.pop() },
@@ -198,9 +188,19 @@ internal class ContestScreen(
                     }
                 }
 
-                KodamaBottomSheet {
-                    Box(modifier = Modifier.height(240.dp)) {
-                        Text("Hello dingus")
+                KodamaBottomSheet(
+                    dragHandleToolTipString = "Bonsai List",
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                navigator?.push(CreateBonsaiScreen(contestId, state.classes.map { it.id }))
+                            },
+                            content = {
+                                Text("Daftarkan Bonsai")
+                            },
+                        )
                     }
                 }
             }
