@@ -11,4 +11,5 @@ object BonsaiConstants {
      */
     const val GREEN_THRESHOLD = 280
     const val RED_THRESHOLD = 350
+    const val FULL_THRESHOLD = 400
 }

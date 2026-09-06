@@ -7,6 +7,7 @@ import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
+import kodama.core.data.Review
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,6 +20,7 @@ class BonsaiDetailScreenModel(
 
     init {
         loadData()
+        loadReview()
     }
 
     private fun loadData() {
@@ -62,6 +64,23 @@ class BonsaiDetailScreenModel(
         }
     }
 
+    fun loadReview() {
+        screenModelScope.launch {
+            mutableState.update { it.copy(isReviewLoading = true) }
+            try {
+                val reviews = contestRepository.getReviewsForBonsai(bonsaiId)
+                mutableState.update {
+                    it.copy(
+                        reviews = reviews,
+                        isReviewLoading = false,
+                    )
+                }
+            } catch (e: Exception) {
+                mutableState.update { it.copy(isReviewLoading = false) }
+            }
+        }
+    }
+
     data class State(
         val bonsai: Bonsai? = null,
         val contest: Contest? = null,
@@ -71,5 +90,8 @@ class BonsaiDetailScreenModel(
         val qrUri: String = "",
         val isLoading: Boolean = false,
         val error: String? = null,
+
+        val reviews: List<Review>? = null,
+        val isReviewLoading: Boolean = false,
     )
 }

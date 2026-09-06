@@ -378,6 +378,22 @@ class ContestRepository(private val client: SupabaseClient) {
         }.decodeAs<String?>()
     }
 
+    suspend fun getJudgesCount(contestId: String, contestClassId: String): Long? {
+        return client.from("kodama", "contest_participants")
+            .select {
+                filter {
+                    eq("contest_id", contestId)
+                    or {
+                        eq("role", "head_judge")
+                        and {
+                            eq("role", "judge")
+                            eq("contest_class_id", contestClassId)
+                        }
+                    }
+                }
+            }.countOrNull()
+    }
+
     suspend fun getReviewsForBonsai(bonsaiId: String): List<Review> {
         return client.from("kodama", "reviews")
             .select {

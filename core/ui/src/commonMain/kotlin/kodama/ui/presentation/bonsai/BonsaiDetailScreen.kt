@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.goquati.qr.QrCode
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
+import kodama.core.data.Bonsai
+import kodama.core.data.ContestRepository
 import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
 import kodama.resources.Res
@@ -54,7 +57,9 @@ import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
 import kodama.ui.presentation.contest.slop.RatingScreen
 import kodama.ui.presentation.utils.Screen
+import kodama.ui.presentation.utils.inject
 import kodama.ui.presentation.utils.rememberScreenModel
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
@@ -62,7 +67,6 @@ import org.koin.core.parameter.parametersOf
 internal class BonsaiDetailScreen(
     private val contestId: String,
     private val bonsaiId: String,
-    private val review: Review? = null,
 ) : Screen() {
 
     @Composable
@@ -74,6 +78,7 @@ internal class BonsaiDetailScreen(
         val navigator = LocalNavigator.current
         val supabaseClient: SupabaseClient = koinInject()
         val supabaseUrl = supabaseClient.config.supabaseUrl
+        val auth: Auth = koinInject()
 
         var showQrDialog by remember { mutableStateOf(false) }
 
@@ -82,8 +87,14 @@ internal class BonsaiDetailScreen(
             title = stringResource(Res.string.bonsai_detail),
             appBarType = AppBarType.SMALL,
             actions = {
-                if (review == null) return@KodamaScaffold
-                if (review.total_score >= BonsaiConstants.RED_THRESHOLD) {
+                if (state.reviews.isNullOrEmpty()) return@KodamaScaffold
+
+                if (state.bonsai == null) return@KodamaScaffold
+
+                val flagPotential = runBlocking { state.reviews?.getFlagPotential(contestId, state.bonsai!!.contest_class_id) }
+                if (flagPotential == null) return@KodamaScaffold
+
+                if (flagPotential >= BonsaiConstants.RED_THRESHOLD) {
                     Icon(flag, "Bendera")
                 }
             },
@@ -172,6 +183,7 @@ internal class BonsaiDetailScreen(
                                 }
                             }
                             state.isJudge -> {
+                                val review = state.reviews?.find { it.judge_id == auth.currentUserOrNull()!!.id }
                                 if (review == null) {
                                     LoadingButton(
                                         onClick = {
@@ -268,4 +280,17 @@ internal class BonsaiDetailScreen(
             )
         }
     }
+}
+
+fun List<Review>.getTotalReview(): Int {
+    return sumOf { it.total_score }
+}
+
+suspend fun List<Review>.getFlagPotential(contestId: String, contestClassId: String): Long {
+    val contestRepository: ContestRepository = inject()
+    val totalReview = getTotalReview()
+    val judgesCount = contestRepository.getJudgesCount(contestId, contestClassId)
+    requireNotNull(judgesCount) { "judgesCount must not be null" }
+
+    return totalReview / (400 * judgesCount)
 }

@@ -895,7 +895,8 @@ private fun JudgeReviewingSheet(
             ) {
                 items(bonsaiList, key = { it.id }) { bonsai ->
                     if (currentUserId == null) return@items
-                    val review = reviews.find { it.bonsai_id == bonsai.id && it.judge_id == currentUserId }
+                    val filteredReviews = reviews.filter { it.bonsai_id == bonsai.id }
+                    val review = filteredReviews.find { it.judge_id == currentUserId }
                     val hasVoted = review != null
                     val navigator = LocalNavigator.current
 
@@ -904,7 +905,7 @@ private fun JudgeReviewingSheet(
                             Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    navigator?.push(BonsaiDetailScreen(contestId, bonsai.id, review))
+                                    navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                 },
                         shape = RoundedCornerShape(8.dp),
                     ) {

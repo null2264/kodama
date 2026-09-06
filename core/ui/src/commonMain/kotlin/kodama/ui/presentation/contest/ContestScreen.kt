@@ -224,7 +224,7 @@ internal class ContestScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth()
                                     .clickable {
-                                        navigator?.push(BonsaiDetailScreen(contestId, bonsai.id, null))
+                                        navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                     },
                                 shape = RoundedCornerShape(8.dp),
                             ) {
