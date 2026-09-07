@@ -29,8 +29,13 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        val startTime = System.currentTimeMillis()
         splashScreen.setKeepOnScreenCondition {
-            !(auth.sessionStatus.value !is SessionStatus.Initializing || composableReady)
+            val probablyReady = auth.sessionStatus.value !is SessionStatus.Initializing || composableReady
+
+            val elapsed = System.currentTimeMillis() - startTime
+
+            !probablyReady || elapsed <= 5000
         }
 
         deepLinkParams = parseDeepLink(intent?.data)
