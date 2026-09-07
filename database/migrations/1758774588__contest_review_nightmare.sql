@@ -140,7 +140,7 @@ USING (
       AND b.owner_id = auth.uid()
       AND EXISTS (
         SELECT 1 FROM kodama.contests c
-        WHERE c.id = b.contest_id AND c.state IN ('finished', 'ended')
+        WHERE c.id = b.contest_id AND c.state IN ('reviewing', 'finished', 'ended')
       )
   )
 );
