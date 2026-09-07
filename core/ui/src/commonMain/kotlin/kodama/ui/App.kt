@@ -11,6 +11,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kodama.ui.presentation.auth.AuthScreen
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
+import kodama.ui.presentation.main.EmptyScreen
 import kodama.ui.presentation.main.MainScreen
 import kodama.ui.presentation.utils.NotAuthenticatedScreen
 import org.koin.compose.koinInject
@@ -30,30 +31,31 @@ fun App(
     val status by supabaseAuth.sessionStatus.collectAsState()
     val isAuthenticated = status is SessionStatus.Authenticated
 
-    val initialScreen = remember(isAuthenticated) {
-        when (isAuthenticated) {
-            true -> MainScreen()
-            false -> AuthScreen()
+    val initialScreen = remember(status) {
+        when(status) {
+            is SessionStatus.Authenticated -> MainScreen()
+            is SessionStatus.NotAuthenticated, is SessionStatus.RefreshFailure -> AuthScreen()
+            is SessionStatus.Initializing -> EmptyScreen
         }
     }
 
     Navigator(initialScreen) { navigator ->
-        LaunchedEffect(isAuthenticated) {
-            when {
-                isAuthenticated -> {
+        LaunchedEffect(status) {
+            when(status) {
+                is SessionStatus.Authenticated -> {
                     val lastItem = navigator.lastItemOrNull
                     if (lastItem == null || lastItem is NotAuthenticatedScreen) {
                         navigator.replace(MainScreen())
                     }
                     onReady()
                 }
-                status is SessionStatus.NotAuthenticated || status is SessionStatus.RefreshFailure -> {
+                is SessionStatus.NotAuthenticated, is SessionStatus.RefreshFailure -> {
                     if (navigator.lastItem !is NotAuthenticatedScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
                     onReady()
                 }
-                status is SessionStatus.Initializing -> {}
+                is SessionStatus.Initializing -> {}
             }
         }
 
