@@ -14,13 +14,17 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -35,17 +39,27 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.Auth
+import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
+import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
+import kodama.core.util.isJudge
+import kodama.resources.Res
+import kodama.resources.finalize_bonsai
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
+import kodama.resources.icons.flag
+import kodama.resources.voted
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
+import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
 import kodama.ui.presentation.utils.Screen
+import kotlinx.coroutines.flow.associateBy
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -53,6 +67,7 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -88,7 +103,20 @@ internal class ContestScreen(
             }
         }
 
+        val auth: Auth = koinInject()
+        val currentUser = auth.currentUserOrNull()
+        val isJudge = currentUser?.isJudge(state.contestUsers) ?: false
+
         val bonsaiList by viewModel.subscribeBonsaiList().collectAsState(null)
+//        val sortedBonsaiList = remember(bonsaiList) {
+//            if (state.contest?.state == "reviewing" && isJudge) bonsaiList?.sortedBy { it.id }
+//
+//            bonsaiList?.sortedBy { it.created_at }
+//        }
+        val reviews by viewModel.subscribeReviews().collectAsState(null)
+        val mappedReviews = remember(reviews) {
+            reviews?.associateBy { it.bonsai_id }
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
@@ -184,12 +212,8 @@ internal class ContestScreen(
 
             state.contest?.let { contest ->
                 if (contest.state == "draft") return@let
-
-                val auth: Auth = koinInject()
-                val currentUser = auth.currentUserOrNull()
-                val contestUser = state.contestUsers.find { it.user_id == currentUser?.id }
                 // Wouldn't be fair to have judge able to join the contest now is it?
-                if (contest.state == "accepting" && (contestUser?.role?.contains("judge") ?: false)) return@let
+                if (contest.state == "accepting" && isJudge) return@let
 
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -200,7 +224,7 @@ internal class ContestScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
                     ) {
                         // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
-                        if (contest.state == "accepting" && currentUser.isAdmin) {
+                        if (contest.state == "accepting" && !currentUser.isAdmin) {
                             item(key = "bottom_sheet_add") {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
@@ -215,10 +239,18 @@ internal class ContestScreen(
                         }
 
                         // FIXME: Find a better check
-                        if (bonsaiList == null) {
-                            item(key = "bottom_sheet_loading") { Box(Modifier.fillMaxWidth().padding(top = 16.dp)) { LoadingIndicator() } }
+                        val isReviewing = contest.state == "reviewing"
+                        val isReviewingButReviewsIsLoading = contest.state == "reviewing" && isJudge && reviews == null
+                        if (bonsaiList == null || isReviewingButReviewsIsLoading) {
+                            item(key = "bottom_sheet_loading") {
+                                Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                                    LoadingIndicator(Modifier.align(Alignment.Center))
+                                }
+                            }
                         } else {
                             items(bonsaiList ?: listOf()) { bonsai ->
+                                val review = mappedReviews?.get(bonsai.id)
+                                val hasBeenReviewed = review != null
                                 Card(
                                     modifier = Modifier.fillMaxWidth()
                                         .clickable {
@@ -238,25 +270,7 @@ internal class ContestScreen(
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.Medium,
                                         )
-//                                    if (hasVoted) {
-//                                        Text(
-//                                            text = stringResource(Res.string.voted),
-//                                            style = MaterialTheme.typography.bodySmall,
-//                                            color = MaterialTheme.colorScheme.primary,
-//                                        )
-//                                        if (review.total_score >= BonsaiConstants.RED_THRESHOLD) {
-//                                            Icon(
-//                                                imageVector = flag,
-//                                                contentDescription = "Bendera",
-//                                            )
-//                                        }
-//                                    } else {
-//                                        TextButton(
-//                                            onClick = { onRateBonsai(bonsai.id) },
-//                                        ) {
-//                                            Text("Rate")
-//                                        }
-//                                    }
+                                        bonsai.Action(isJudge, isReviewing, hasBeenReviewed)
                                     }
                                 }
                             }
@@ -264,6 +278,52 @@ internal class ContestScreen(
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    fun Bonsai.Action(isJudge: Boolean, isReviewing: Boolean, hasBeenReviewed: Boolean) {
+        val navigator = LocalNavigator.current
+
+        if (!isReviewing) {
+            if (state == "draft" && !isJudge) {
+                ButtonGroup(
+                    overflowIndicator = { menuState ->
+                        ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
+                    },
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    // FIXME: Should be connected
+                    clickableItem(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }, label = "Finalize")
+                    clickableItem(
+                        onClick = {}, label = "",
+                        icon = {
+                            Icon(
+                                imageVector = flag,
+                                contentDescription = "Bendera",
+                            )
+                        }
+                    )
+                }
+
+                return
+            }
+
+            if (hasBeenReviewed) {
+                Text(
+                    text = stringResource(Res.string.voted),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                TextButton(
+                    onClick = { /*onRateBonsai(bonsai.id)*/ },
+                ) {
+                    Text("Rate")
+                }
+            }
+
+            return
         }
     }
 }

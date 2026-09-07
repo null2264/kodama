@@ -75,20 +75,9 @@ class ContestViewModel(
 
     fun subscribeBonsaiList() = contestRepository.subscribeBonsaiListForContest(contestId)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun subscribeReviews(): Flow<List<Review>> {
-        val currentUser = auth.currentUserOrNull()
-        if (currentUser == null || !currentUser.isJudge(state.value.contestUsers)) return flowOf(listOf())
-
-        return state.map { it.contestUsers }
-            .distinctUntilChanged()
-            .flatMapLatest { contestUsers ->
-                if (currentUser.isJudge(contestUsers)) {
-                    contestRepository.subscribeMyReviews(currentUser.id)
-                } else {
-                    flowOf(emptyList())
-                }
-            }
+        val currentUser = auth.currentUserOrNull() ?: return flowOf(listOf())
+        return contestRepository.subscribeMyReviews(currentUser.id)
     }
 
     data class State(
