@@ -1,7 +1,6 @@
 package kodama.ui.presentation.contest
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
@@ -10,21 +9,22 @@ import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
 import kodama.core.util.isAdmin
+import kodama.ui.presentation.utils.StateViewModel
 import kodama.ui.presentation.utils.inject
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ContestScreenModel(
-    private val contestRepository: ContestRepository,
+class ContestViewModel(
     private val contestId: String,
-) : StateScreenModel<ContestScreenModel.State>(State()) {
+    private val contestRepository: ContestRepository,
+) : StateViewModel<ContestViewModel.State>(State()) {
 
     init {
         loadContest()
     }
 
     fun loadContest() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
                 val contest = contestRepository.getContestById(contestId)

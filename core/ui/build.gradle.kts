@@ -12,6 +12,7 @@ plugins {
     alias(kotlinx.plugins.compose.compiler)
     alias(kotlinx.plugins.serialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.koin)
 }
 
 kotlin {
@@ -25,6 +26,8 @@ kotlin {
             implementation(projects.core.preferences)
             implementation(projects.resources)
 
+            api(androidx.lifecycle.viewmodel)
+
             implementation(androidx.compose.material3)
             implementation(kotlinx.bundles.compose)
             implementation(kotlinx.bundles.compose.ui.tooling)
@@ -36,6 +39,9 @@ kotlin {
             implementation(kotlinx.serialization.json)
 
             implementation(libs.koin.compose)
+            implementation(libs.koin.core.viewmodel)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.annotations)
             implementation(libs.qrcode)
 
             implementation(project.dependencies.platform(libs.supabase.bom))

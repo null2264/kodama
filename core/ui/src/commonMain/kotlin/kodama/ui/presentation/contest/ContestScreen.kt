@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -47,7 +46,6 @@ import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.utils.Screen
-import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -56,6 +54,7 @@ import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.time.Instant
 
@@ -65,10 +64,10 @@ internal class ContestScreen(
     @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel<ContestScreenModel> {
+        val viewModel = koinViewModel<ContestViewModel> {
             parametersOf(contestId)
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
         val navigator = LocalNavigator.current
         val imageRepository: ImageRepository = koinInject()
 
@@ -89,7 +88,7 @@ internal class ContestScreen(
             }
         }
 
-        val bonsaiList by screenModel.subscribeBonsaiList().collectAsState(null)
+        val bonsaiList by viewModel.subscribeBonsaiList().collectAsState(null)
 
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
@@ -124,7 +123,7 @@ internal class ContestScreen(
                     ) {
                         Text("Unable to load contest")
                         Button(
-                            onClick = { screenModel.loadContest() },
+                            onClick = { viewModel.loadContest() },
                         ) {
                             Text("Try again")
                         }
@@ -144,7 +143,7 @@ internal class ContestScreen(
                             contentDescription = "Contest banner",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .aspectRatio(215f / 54f),
+                                .aspectRatio(ContestBannerRatio),
                             contentScale = ContentScale.Crop,
                             error = rememberVectorPainter(alternate_email),
                             imageLoader = koinInject(),
@@ -218,28 +217,27 @@ internal class ContestScreen(
                         // FIXME: Find a better check
                         if (bonsaiList == null) {
                             item(key = "bottom_sheet_loading") { Box(Modifier.fillMaxWidth().padding(top = 16.dp)) { LoadingIndicator() } }
-                        }
-
-                        items(bonsaiList!!) { bonsai ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth()
-                                    .clickable {
-                                        navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
-                                    },
-                                shape = RoundedCornerShape(8.dp),
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
+                        } else {
+                            items(bonsaiList ?: listOf()) { bonsai ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .clickable {
+                                            navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
+                                        },
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
-                                    Text(
-                                        text = bonsai.name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Medium,
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = bonsai.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium,
+                                        )
 //                                    if (hasVoted) {
 //                                        Text(
 //                                            text = stringResource(Res.string.voted),
@@ -259,6 +257,7 @@ internal class ContestScreen(
 //                                            Text("Rate")
 //                                        }
 //                                    }
+                                    }
                                 }
                             }
                         }
@@ -276,3 +275,5 @@ val DateTimeFormat = LocalDateTime.Format {
     char(' ')                            // Space delimiter
     year()                               // Prints full year (e.g., "2024")
 }
+
+val ContestBannerRatio = 16f / 9f

@@ -40,7 +40,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import io.github.goquati.qr.QrCode
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
-import kodama.core.data.Bonsai
 import kodama.core.data.ContestRepository
 import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
@@ -58,10 +57,10 @@ import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
 import kodama.ui.presentation.contest.slop.RatingScreen
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.inject
-import kodama.ui.presentation.utils.rememberScreenModel
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 internal class BonsaiDetailScreen(
@@ -71,10 +70,10 @@ internal class BonsaiDetailScreen(
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel<BonsaiDetailScreenModel> {
+        val viewModel = koinViewModel<BonsaiDetailViewModel> {
             parametersOf(contestId, bonsaiId)
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
         val navigator = LocalNavigator.current
         val supabaseClient: SupabaseClient = koinInject()
         val supabaseUrl = supabaseClient.config.supabaseUrl
@@ -292,5 +291,5 @@ suspend fun List<Review>.getFlagPotential(contestId: String, contestClassId: Str
     val judgesCount = contestRepository.getJudgesCount(contestId, contestClassId)
     requireNotNull(judgesCount) { "judgesCount must not be null" }
 
-    return totalReview / (400 * judgesCount)
+    return totalReview / judgesCount
 }

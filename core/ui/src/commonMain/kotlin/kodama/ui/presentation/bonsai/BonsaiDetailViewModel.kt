@@ -1,31 +1,30 @@
 package kodama.ui.presentation.bonsai
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.Review
+import kodama.ui.presentation.utils.StateViewModel
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class BonsaiDetailScreenModel(
-    private val contestRepository: ContestRepository,
-    private val auth: Auth,
+class BonsaiDetailViewModel(
     private val contestId: String,
     private val bonsaiId: String,
-) : StateScreenModel<BonsaiDetailScreenModel.State>(State()) {
+    private val contestRepository: ContestRepository,
+    private val auth: Auth,
+) : StateViewModel<BonsaiDetailViewModel.State>(State()) {
 
     init {
         loadData()
-        loadReview()
     }
 
     private fun loadData() {
-        screenModelScope.launch {
-            mutableState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            mutableState.update { it.copy(isLoading = true, isReviewLoading = true) }
             try {
                 val currentUserId = auth.currentUserOrNull()?.id
                 val bonsai = contestRepository.getBonsaiById(bonsaiId)
@@ -41,6 +40,7 @@ class BonsaiDetailScreenModel(
                         it.user_id == currentUserId &&
                             (it.role == "judge" || it.role == "head_judge")
                     }
+                val reviews = getReviews()
 
                 mutableState.update {
                     it.copy(
@@ -51,12 +51,15 @@ class BonsaiDetailScreenModel(
                         isJudge = isJudge,
                         qrUri = "kodama://$contestId/$bonsaiId",
                         isLoading = false,
+                        reviews = reviews,
+                        isReviewLoading = false,
                     )
                 }
             } catch (e: Exception) {
                 mutableState.update {
                     it.copy(
                         isLoading = false,
+                        isReviewLoading = false,
                         error = e.message ?: "Gagal memuat data",
                     )
                 }
@@ -65,10 +68,10 @@ class BonsaiDetailScreenModel(
     }
 
     fun loadReview() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             mutableState.update { it.copy(isReviewLoading = true) }
             try {
-                val reviews = contestRepository.getReviewsForBonsai(bonsaiId)
+                val reviews = getReviews()
                 mutableState.update {
                     it.copy(
                         reviews = reviews,
@@ -80,6 +83,8 @@ class BonsaiDetailScreenModel(
             }
         }
     }
+
+    suspend fun getReviews() = contestRepository.getReviewsForBonsai(bonsaiId)
 
     data class State(
         val bonsai: Bonsai? = null,

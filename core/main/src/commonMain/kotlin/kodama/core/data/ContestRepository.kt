@@ -402,6 +402,14 @@ class ContestRepository(private val client: SupabaseClient) {
             .decodeList<Review>()
     }
 
+    suspend fun getMyReviews(userId: String): List<Review> {
+        return client.from("kodama", "reviews")
+            .select {
+                filter { eq("judge_id", userId) }
+            }
+            .decodeList<Review>()
+    }
+
     suspend fun submitReview(bonsaiId: String, scores: Map<String, Int>, totalScore: Int, comments: String?) {
         client.from("kodama", "reviews")
             .insert(
