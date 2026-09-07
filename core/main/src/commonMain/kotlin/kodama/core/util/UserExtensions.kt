@@ -1,6 +1,7 @@
 package kodama.core.util
 
 import io.github.jan.supabase.auth.user.UserInfo
+import kodama.core.data.ContestUser
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
@@ -9,3 +10,8 @@ import kotlinx.serialization.json.contentOrNull
  */
 val UserInfo.kodamaRole: String? get() = (appMetadata?.get("role") as? JsonPrimitive)?.contentOrNull
 val UserInfo?.isAdmin: Boolean get() = this?.kodamaRole == "admin"
+
+fun UserInfo.isJudge(contestUsers: List<ContestUser>): Boolean {
+    val contestUser = contestUsers.find { it.user_id == id }
+    return contestUser?.role?.contains("judge") == true
+}

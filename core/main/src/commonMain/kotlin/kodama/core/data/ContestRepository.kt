@@ -410,6 +410,13 @@ class ContestRepository(private val client: SupabaseClient) {
             .decodeList<Review>()
     }
 
+    @OptIn(SupabaseExperimental::class)
+    fun subscribeMyReviews(userId: String): Flow<List<Review>> {
+        return client.from("kodama", "reviews").selectAsFlow(Review::id) {
+            eq("judge_id", userId)
+        }
+    }
+
     suspend fun submitReview(bonsaiId: String, scores: Map<String, Int>, totalScore: Int, comments: String?) {
         client.from("kodama", "reviews")
             .insert(

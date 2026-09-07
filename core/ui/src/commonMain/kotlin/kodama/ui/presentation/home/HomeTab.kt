@@ -59,6 +59,7 @@ import kodama.resources.icons.alternate_email
 import kodama.resources.icons.home
 import kodama.resources.no_open_contests
 import kodama.ui.component.Chip
+import kodama.ui.presentation.contest.ContestBannerRatio
 import kodama.ui.presentation.contest.ContestScreen
 import kodama.ui.presentation.contest.DateTimeFormat
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
@@ -254,7 +255,7 @@ private fun ContestCard(contest: Contest, imageRepository: ImageRepository = koi
                 contentDescription = "Contest banner",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(215f / 54f)
+                    .aspectRatio(ContestBannerRatio)
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentScale = ContentScale.Crop,
                 error = rememberVectorPainter(alternate_email),
