@@ -50,7 +50,7 @@ fun App(
                     onReady()
                 }
                 is SessionStatus.NotAuthenticated, is SessionStatus.RefreshFailure -> {
-                    if (navigator.lastItem !is NotAuthenticatedScreen) {
+                    if (navigator.lastItem !is NotAuthenticatedScreen || navigator.lastItem is EmptyScreen) {
                         navigator.replaceAll(AuthScreen())
                     }
                     onReady()
