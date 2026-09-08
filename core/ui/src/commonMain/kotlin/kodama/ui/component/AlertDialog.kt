@@ -32,8 +32,12 @@ class AlertDialogBuilder {
         get() = onDismissAction ?: onCancel
 
     @Suppress("ComposableNaming")
+    @Deprecated("Use Builder.Content() instead")
     @Composable
-    fun build() {
+    fun build() { Content() }
+
+    @Composable
+    fun Content() {
         AlertDialog(
             containerColor = MaterialTheme.colorScheme.surface,
             title = {

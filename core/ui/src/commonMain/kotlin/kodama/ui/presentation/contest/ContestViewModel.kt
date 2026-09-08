@@ -1,6 +1,7 @@
 package kodama.ui.presentation.contest
 
 import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
@@ -72,6 +73,25 @@ class ContestViewModel(
 //            mutableState.update { it.copy(isSheetLoading = false) }
 //        }
 //    }
+
+    fun transitionContestState(
+        newState: String,
+        onError: (String) -> Unit = {},
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            mutableState.update { it.copy(isUpdatingState = true) }
+            try {
+                contestRepository.updateContestState(contestId, newState)
+                loadContest()
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
 
     fun subscribeBonsaiList() = contestRepository.subscribeBonsaiListForContest(contestId)
 

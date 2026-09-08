@@ -5,17 +5,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonGroup
-import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -23,13 +25,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -41,25 +50,29 @@ import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
-import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.resources.Res
 import kodama.resources.finalize_bonsai
+import kodama.resources.finalize_contest
+import kodama.resources.finalize_contest_confirm_text
+import kodama.resources.finalize_contest_confirm_title
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
+import kodama.resources.icons.delete
+import kodama.resources.icons.edit
 import kodama.resources.icons.flag
 import kodama.resources.voted
+import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
-import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaBottomSheet
+import kodama.ui.component.KodamaScaffold
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
 import kodama.ui.presentation.utils.Screen
-import kotlinx.coroutines.flow.associateBy
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -105,6 +118,7 @@ internal class ContestScreen(
 
         val auth: Auth = koinInject()
         val currentUser = auth.currentUserOrNull()
+        val isAdmin = currentUser.isAdmin
         val isJudge = currentUser?.isJudge(state.contestUsers) ?: false
 
         val bonsaiList by viewModel.subscribeBonsaiList().collectAsState(null)
@@ -118,19 +132,66 @@ internal class ContestScreen(
             reviews?.associateBy { it.bonsai_id }
         }
 
+        val coroutineScope = rememberCoroutineScope()
+        var dialog by remember { mutableStateOf<AlertDialogBuilder?>(null) }
+
+        val snackbarHostState = remember { SnackbarHostState() }
+
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
                 onNavigationIconClicked = { navigator?.pop() },
                 appBarType = AppBarType.SMALL,
-//            snackbarHost = { SnackbarHost(snackbarHostState) },
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 actions = {
-//                if (isAdmin && state.contest?.state == "draft") {
-//                    ToolTipButton(
-//                        toolTipLabel = "Edit",
-//                        icon = edit,
-//                        buttonClicked = { navigator?.push(EditContestScreen(contestId)) },
-//                    )
-//                }
+                    if (state.isLoading) return@KodamaScaffold
+
+                    if (isAdmin && state.contest?.state == "draft" && !state.isUpdatingState) {
+                        SplitButtonLayout(
+                            leadingButton = {
+                                SplitButtonDefaults.LeadingButton(onClick = {
+                                    dialog = AlertDialogBuilder().apply {
+                                        titleRes = Res.string.finalize_contest_confirm_title
+                                        textRes = Res.string.finalize_contest_confirm_text
+                                        confirmText = "Ya, Buka"
+                                        cancelText = "Batal"
+                                        onConfirm = {
+                                            dialog = null
+                                            viewModel.transitionContestState(
+                                                newState = "accepting",
+                                                onError = { error ->
+                                                    coroutineScope.launch {
+                                                        snackbarHostState.showSnackbar(error)
+                                                    }
+                                                },
+                                                onSuccess = {},
+                                            )
+                                        }
+                                        onCancel = { dialog = null }
+                                    }
+                                }) {
+                                    Icon(
+                                        flag,
+                                        modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
+                                        contentDescription = "Localized description"
+                                    )
+                                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                    Text(stringResource(Res.string.finalize_contest))
+                                }
+                            },
+                            trailingButton = {
+                                SplitButtonDefaults.TrailingButton(
+                                    checked = false,
+                                    onCheckedChange = {},
+                                ) {
+                                    Icon(
+                                        edit,
+                                        modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize),
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            }
+                        )
+                    }
                 },
             ) { contentPadding ->
                 if (state.isLoading) {
@@ -210,6 +271,8 @@ internal class ContestScreen(
                 }
             }
 
+            dialog?.Content()
+
             state.contest?.let { contest ->
                 if (contest.state == "draft") return@let
                 // Wouldn't be fair to have judge able to join the contest now is it?
@@ -285,45 +348,49 @@ internal class ContestScreen(
     fun Bonsai.Action(isJudge: Boolean, isReviewing: Boolean, hasBeenReviewed: Boolean) {
         val navigator = LocalNavigator.current
 
-        if (!isReviewing) {
-            if (state == "draft" && !isJudge) {
-                ButtonGroup(
-                    overflowIndicator = { menuState ->
-                        ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
-                    },
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    // FIXME: Should be connected
-                    clickableItem(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }, label = "Finalize")
-                    clickableItem(
-                        onClick = {}, label = "",
-                        icon = {
+        when {
+            !isReviewing && state == "draft" && !isJudge -> {
+                SplitButtonLayout(
+                    leadingButton = {
+                        SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
                             Icon(
-                                imageVector = flag,
-                                contentDescription = "Bendera",
+                                flag,
+                                modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
+                                contentDescription = "Finalize"
+                            )
+                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                            Text(stringResource(Res.string.finalize_bonsai))
+                        }
+                    },
+                    trailingButton = {
+                        SplitButtonDefaults.TrailingButton(
+                            checked = false,
+                            onCheckedChange = {},
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
+                        ) {
+                            Icon(
+                                delete,
+                                modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize),
+                                contentDescription = "Hapus"
                             )
                         }
-                    )
-                }
-
-                return
+                    }
+                )
             }
-
-            if (hasBeenReviewed) {
+            !isReviewing && hasBeenReviewed -> {
                 Text(
                     text = stringResource(Res.string.voted),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
-            } else {
+            }
+            !isReviewing && !hasBeenReviewed -> {
                 TextButton(
                     onClick = { /*onRateBonsai(bonsai.id)*/ },
                 ) {
                     Text("Rate")
                 }
             }
-
-            return
         }
     }
 }
