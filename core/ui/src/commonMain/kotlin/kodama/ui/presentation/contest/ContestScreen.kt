@@ -169,12 +169,6 @@ internal class ContestScreen(
                                         onCancel = { dialog = null }
                                     }
                                 }) {
-                                    Icon(
-                                        flag,
-                                        modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
-                                        contentDescription = "Localized description"
-                                    )
-                                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                                     Text(stringResource(Res.string.finalize_contest))
                                 }
                             },
@@ -301,9 +295,8 @@ internal class ContestScreen(
                             }
                         }
 
-                        // FIXME: Find a better check
                         val isReviewing = contest.state == "reviewing"
-                        val isReviewingButReviewsIsLoading = contest.state == "reviewing" && isJudge && reviews == null
+                        val isReviewingButReviewsIsLoading = isReviewing && isJudge && reviews == null
                         if (bonsaiList == null || isReviewingButReviewsIsLoading) {
                             item(key = "bottom_sheet_loading") {
                                 Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
@@ -353,12 +346,6 @@ internal class ContestScreen(
                 SplitButtonLayout(
                     leadingButton = {
                         SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
-                            Icon(
-                                flag,
-                                modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
-                                contentDescription = "Finalize"
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                             Text(stringResource(Res.string.finalize_bonsai))
                         }
                     },
