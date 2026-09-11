@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -100,6 +101,33 @@ class ContestViewModel(
         return contestRepository.subscribeMyReviews(currentUser.id)
     }
 
+    fun verifyBonsai(
+        bonsaiId: String,
+        onError: (String) -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            mutableState.update {
+                val verifying = it.bonsaiIsVerifying.toMutableMap().apply {
+                    put(bonsaiId, true)
+                }
+                it.copy(bonsaiIsVerifying = verifying)
+            }
+
+            try {
+                contestRepository.verifyBonsai(bonsaiId)
+            } catch (e: Exception) {
+                onError(e.message ?: "Terjadi kesalahan")
+            } finally {
+                mutableState.update {
+                    val verifying = it.bonsaiIsVerifying.toMutableMap().apply {
+                        remove(bonsaiId)
+                    }
+                    it.copy(bonsaiIsVerifying = verifying)
+                }
+            }
+        }
+    }
+
     data class State(
         val contest: Contest? = null,
         val classes: List<BonsaiClass> = emptyList(),
@@ -110,5 +138,6 @@ class ContestViewModel(
         val isUpdatingState: Boolean = false,
 //        val bonsaiList: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),
+        val bonsaiIsVerifying: Map<String, Boolean> = emptyMap()
     )
 }

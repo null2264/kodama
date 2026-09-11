@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.user.UserInfo
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
 import kodama.core.util.isAdmin
@@ -61,13 +60,14 @@ import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
-import kodama.resources.icons.flag
+import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.component.KodamaScaffold
+import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
@@ -312,7 +312,7 @@ internal class ContestScreen(
                                         .clickable {
                                             navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                         },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -326,7 +326,13 @@ internal class ContestScreen(
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.Medium,
                                         )
-                                        bonsai.Action(isJudge, isReviewing, hasBeenReviewed)
+                                        bonsai.Action(
+                                            viewModelState = state,
+                                            currentUser = currentUser,
+                                            isReviewing = isReviewing,
+                                            hasBeenReviewed = hasBeenReviewed,
+                                            onBonsaiVerify = { bonsai -> viewModel.verifyBonsai(bonsai.id) },
+                                        )
                                     }
                                 }
                             }
@@ -338,11 +344,17 @@ internal class ContestScreen(
     }
 
     @Composable
-    fun Bonsai.Action(isJudge: Boolean, isReviewing: Boolean, hasBeenReviewed: Boolean) {
+    fun Bonsai.Action(
+        viewModelState: ContestViewModel.State,
+        currentUser: UserInfo?,
+        isReviewing: Boolean,
+        hasBeenReviewed: Boolean,
+        onBonsaiVerify: (Bonsai) -> Unit,
+    ) {
         val navigator = LocalNavigator.current
 
         when {
-            !isReviewing && state == "draft" && !isJudge -> {
+            !isReviewing && state == "draft" && currentUser?.isJudge(viewModelState.contestUsers) != true -> {
                 SplitButtonLayout(
                     leadingButton = {
                         SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
@@ -363,6 +375,14 @@ internal class ContestScreen(
                         }
                     }
                 )
+            }
+            !isReviewing && state == "waiting_verify" && currentUser?.isAdmin == true -> {
+                LoadingButton(
+                    onClick = { onBonsaiVerify(this) },
+                    isLoading = viewModelState.bonsaiIsVerifying.getOrDefault(id, false),
+                ) {
+                    Text(stringResource(Res.string.verify_bonsai))
+                }
             }
             !isReviewing && hasBeenReviewed -> {
                 Text(
