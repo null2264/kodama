@@ -24,6 +24,7 @@ import kodama.ui.presentation.profile.ProfileTab
 import kodama.ui.presentation.recents.RecentsTab
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
+import yokai.presentation.core.JayAppBarScrollBehavior
 import yokai.presentation.core.enterAlwaysCollapsedAppBarScrollBehavior
 
 internal class MainScreen : Screen() {
@@ -33,19 +34,20 @@ internal class MainScreen : Screen() {
         val screenModel = rememberScreenModel<MainScreenModel>()
 
         var title by remember { mutableStateOf("") }
+        val scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
+            canScroll = { screenModel.canScroll },
+            isAtTop = { screenModel.isAtTop },
+        )
         TabNavigator(HomeTab) {
             KodamaScaffold(
                 onNavigationIconClicked = null,
                 appBarType = AppBarType.LARGE,
-                scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
-                    canScroll = { screenModel.canScroll },
-                    isAtTop = { screenModel.isAtTop },
-                ),
+                scrollBehavior = scrollBehavior,
                 bottomBar = {
                     NavigationBar {
-                        TabNavigationItem(HomeTab)
-                        TabNavigationItem(RecentsTab)
-                        TabNavigationItem(ProfileTab)
+                        TabNavigationItem(HomeTab, scrollBehavior = scrollBehavior)
+                        TabNavigationItem(RecentsTab, scrollBehavior = scrollBehavior)
+                        TabNavigationItem(ProfileTab, scrollBehavior = scrollBehavior)
                     }
                 },
                 title = title,
@@ -67,12 +69,19 @@ internal class MainScreen : Screen() {
 }
 
 @Composable
-private fun RowScope.TabNavigationItem(tab: Tab) {
+private fun RowScope.TabNavigationItem(tab: Tab, scrollBehavior: JayAppBarScrollBehavior) {
     val tabNavigator = LocalTabNavigator.current
 
     NavigationBarItem(
         selected = tabNavigator.current == tab,
-        onClick = { tabNavigator.current = tab },
+        onClick = {
+            val isChanged = tabNavigator.current != tab
+            tabNavigator.current = tab
+            if (isChanged) {
+                scrollBehavior.scrollOffset = 0f
+                scrollBehavior.contentOffset = 0f
+            }
+        },
         icon = { Icon(tab.options.icon!!, tab.options.title) }
     )
 }
