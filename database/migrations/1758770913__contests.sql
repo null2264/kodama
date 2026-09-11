@@ -8,6 +8,8 @@ CREATE TABLE kodama.contests (
     state kodama.contest_state NOT NULL DEFAULT 'draft'
 );
 
+ALTER TABLE kodama.contests REPLICA IDENTITY FULL;
+
 ALTER TABLE kodama.contests ENABLE ROW LEVEL SECURITY;
 
 -- Admins can do anything on contests.
@@ -39,6 +41,8 @@ CREATE TABLE kodama.contest_classes (
     class_id uuid NOT NULL REFERENCES kodama.bonsai_classes(id) ON DELETE RESTRICT,
     UNIQUE(contest_id, class_id)
 );
+
+ALTER TABLE kodama.contest_classes REPLICA IDENTITY FULL;
 
 ALTER TABLE kodama.contest_classes ENABLE ROW LEVEL SECURITY;
 
@@ -72,6 +76,8 @@ CREATE TABLE kodama.contest_participants (
         (role <> 'judge') OR (contest_class_id IS NOT NULL)
     )
 );
+
+ALTER TABLE kodama.contest_participants REPLICA IDENTITY FULL;
 
 CREATE UNIQUE INDEX contest_participants_idx
 ON kodama.contest_participants (user_id, contest_id, role, contest_class_id) NULLS NOT DISTINCT;

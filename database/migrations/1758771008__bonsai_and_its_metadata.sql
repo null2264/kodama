@@ -16,6 +16,8 @@ CREATE TABLE kodama.bonsai (
     UNIQUE(name, contest_id)
 );
 
+ALTER TABLE kodama.bonsai REPLICA IDENTITY FULL;
+
 ALTER TABLE kodama.bonsai ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE kodama.contests ADD COLUMN banner_path text;

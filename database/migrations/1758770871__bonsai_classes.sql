@@ -10,6 +10,8 @@ CREATE TABLE kodama.bonsai_classes (
     -- updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE kodama.bonsai_classes REPLICA IDENTITY FULL;
+
 ALTER TABLE kodama.bonsai_classes ENABLE ROW LEVEL SECURITY;
 
 INSERT INTO kodama.bonsai_classes (id, name)

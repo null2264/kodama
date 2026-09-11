@@ -18,6 +18,8 @@ CREATE TABLE kodama.reviews (
     UNIQUE(bonsai_id, judge_id)
 );
 
+ALTER TABLE kodama.reviews REPLICA IDENTITY FULL;
+
 -- Add the updated_at trigger
 CREATE TRIGGER set_reviews_updated_at
 BEFORE UPDATE ON kodama.reviews
