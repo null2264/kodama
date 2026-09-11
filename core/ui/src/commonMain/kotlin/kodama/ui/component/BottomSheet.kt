@@ -122,7 +122,7 @@ fun KodamaBottomSheet(
                     state.updateAnchors(
                         DraggableAnchors {
                             SheetPosition.Collapsed at (layoutHeight - peekHeightPx)
-                            SheetPosition.HalfExpanded at (layoutHeight - (sheetHeight * 0.6f))
+                            SheetPosition.HalfExpanded at (layoutHeight - (sheetHeight * 0.5f))
                             SheetPosition.Expanded at (layoutHeight - sheetHeight)
                         }
                     )
