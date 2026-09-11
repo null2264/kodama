@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -54,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.user.UserInfo
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
 import kodama.core.util.isAdmin
@@ -344,26 +342,33 @@ internal class ContestScreen(
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.Medium,
                                         )
-                                        bonsai.Action(
-                                            viewModelState = state,
-                                            currentUser = currentUser,
-                                            isReviewing = isReviewing,
-                                            hasBeenReviewed = hasBeenReviewed,
-                                            onBonsaiVerify = { bonsai -> viewModel.verifyBonsai(bonsai.id) },
-                                            onBonsaiDelete = { bonsai ->
-                                                dialog = AlertDialogBuilder().apply {
-                                                    titleRes = Res.string.delete_bonsai_confirm_title
-                                                    textRes = Res.string.delete_bonsai_confirm_text
-                                                    confirmText = "Hapus"
-                                                    cancelText = "Batal"
-                                                    onConfirm = {
-                                                        viewModel.deleteBonsai(bonsai.id)
-                                                        dialog = null
+                                        when {
+                                            isAdmin -> bonsai.AdminAction(
+                                                viewModelState = state,
+                                                isReviewing = isReviewing,
+                                                onBonsaiVerify = { bonsai -> viewModel.verifyBonsai(bonsai.id) },
+                                            )
+                                            isJudge -> bonsai.JudgeAction(
+                                                isReviewing = isReviewing,
+                                                hasBeenReviewed = hasBeenReviewed,
+                                            )
+                                            else -> bonsai.UserAction(
+                                                isReviewing = isReviewing,
+                                                onBonsaiDelete = { bonsai ->
+                                                    dialog = AlertDialogBuilder().apply {
+                                                        titleRes = Res.string.delete_bonsai_confirm_title
+                                                        textRes = Res.string.delete_bonsai_confirm_text
+                                                        confirmText = "Hapus"
+                                                        cancelText = "Batal"
+                                                        onConfirm = {
+                                                            viewModel.deleteBonsai(bonsai.id)
+                                                            dialog = null
+                                                        }
+                                                        onCancel = { dialog = null }
                                                     }
-                                                    onCancel = { dialog = null }
-                                                }
-                                            },
-                                        )
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -375,19 +380,15 @@ internal class ContestScreen(
     }
 
     @Composable
-    fun Bonsai.Action(
-        viewModelState: ContestViewModel.State,
-        currentUser: UserInfo?,
+    fun Bonsai.UserAction(
         isReviewing: Boolean,
-        hasBeenReviewed: Boolean,
-        onBonsaiVerify: (Bonsai) -> Unit,
         onBonsaiDelete: (Bonsai) -> Unit,
     ) {
         val navigator = LocalNavigator.current
         var dropdownExpanded by remember { mutableStateOf(false) }
 
         when {
-            !isReviewing && state == "draft" && currentUser?.isJudge(viewModelState.contestUsers) != true -> {
+            !isReviewing && state == "draft" -> {
                 Box {
                     SplitButtonLayout(
                         leadingButton = {
@@ -430,14 +431,24 @@ internal class ContestScreen(
                             text = { Text(stringResource(Res.string.delete_bonsai)) },
                             onClick = {
                                 dropdownExpanded = false
-                                onBonsaiDelete(this@Action)
+                                onBonsaiDelete(this@UserAction)
                             },
                             leadingIcon = { Icon(delete, contentDescription = null) },
                         )
                     }
                 }
             }
-            !isReviewing && state == "waiting_verify" && currentUser?.isAdmin == true -> {
+        }
+    }
+
+    @Composable
+    fun Bonsai.AdminAction(
+        viewModelState: ContestViewModel.State,
+        isReviewing: Boolean,
+        onBonsaiVerify: (Bonsai) -> Unit,
+    ) {
+        when {
+            !isReviewing && state == "waiting_verify" -> {
                 LoadingButton(
                     onClick = { onBonsaiVerify(this) },
                     isLoading = viewModelState.bonsaiIsVerifying.getOrDefault(id, false),
@@ -445,6 +456,15 @@ internal class ContestScreen(
                     Text(stringResource(Res.string.verify_bonsai))
                 }
             }
+        }
+    }
+
+    @Composable
+    fun Bonsai.JudgeAction(
+        isReviewing: Boolean,
+        hasBeenReviewed: Boolean,
+    ) {
+        when {
             !isReviewing && hasBeenReviewed -> {
                 Text(
                     text = stringResource(Res.string.voted),
