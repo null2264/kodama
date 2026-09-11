@@ -1,7 +1,6 @@
 package kodama.ui.presentation.contest
 
 import androidx.lifecycle.viewModelScope
-import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
@@ -9,18 +8,10 @@ import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
-import kodama.core.util.isAdmin
-import kodama.core.util.isJudge
 import kodama.ui.presentation.utils.StateViewModel
-import kodama.ui.presentation.utils.inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,7 +23,7 @@ class ContestViewModel(
 
     init {
         loadContest()
-        subscribeBonsaiList()
+        subscribeRealtime()
     }
 
     fun loadContest() {
@@ -96,24 +87,27 @@ class ContestViewModel(
         }
     }
 
-    fun subscribeBonsaiList() {
+    /**
+     * Subscribe to realtime changes for bonsai list and reviews
+     */
+    fun subscribeRealtime() {
         viewModelScope.launch {
             mutableState.update { it.copy(isSheetLoading = true) }
-            contestRepository.subscribeBonsaiListForContest(contestId)
-                .collect { bonsaiList ->
-                    mutableState.update {
-                        it.copy(
-                            bonsaiList = bonsaiList,
-                            isSheetLoading = false,
-                        )
-                    }
+            val currentUser = auth.currentUserOrNull()
+            contestRepository.subscribeBonsaiListForContest(contestId).combine(
+                currentUser?.let { contestRepository.subscribeMyReviews(it.id) } ?: flowOf()
+            ) { bonsaiList, review ->
+                Pair(bonsaiList, review)
+            }.collect { (bonsaiList, reviews) ->
+                mutableState.update {
+                    it.copy(
+                        bonsaiList = bonsaiList,
+                        reviews = reviews,
+                        isSheetLoading = false,
+                    )
                 }
+            }
         }
-    }
-
-    fun subscribeReviews(): Flow<List<Review>> {
-        val currentUser = auth.currentUserOrNull() ?: return flowOf(listOf())
-        return contestRepository.subscribeMyReviews(currentUser.id)
     }
 
     fun deleteBonsai(

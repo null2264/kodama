@@ -139,9 +139,9 @@ internal class ContestScreen(
 //
 //            bonsaiList?.sortedBy { it.created_at }
 //        }
-        val reviews by viewModel.subscribeReviews().collectAsState(null)
+        val reviews = state.reviews
         val mappedReviews = remember(reviews) {
-            reviews?.associateBy { it.bonsai_id }
+            reviews.associateBy { it.bonsai_id }
         }
 
         val coroutineScope = rememberCoroutineScope()
@@ -309,16 +309,15 @@ internal class ContestScreen(
                         }
 
                         val isReviewing = contest.state == "reviewing"
-                        val isReviewingButReviewsIsLoading = isReviewing && isJudge && reviews == null
-                        if (state.isSheetLoading || isReviewingButReviewsIsLoading) {
+                        if (state.isSheetLoading) {
                             item(key = "bottom_sheet_loading") {
                                 Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
                                     LoadingIndicator(Modifier.align(Alignment.Center))
                                 }
                             }
                         } else {
-                            itemsIndexed(bonsaiList.orEmpty()) { index, bonsai ->
-                                val review = mappedReviews?.get(bonsai.id)
+                            itemsIndexed(bonsaiList) { index, bonsai ->
+                                val review = mappedReviews[bonsai.id]
                                 val hasBeenReviewed = review != null
                                 Card(
                                     modifier = Modifier.fillMaxWidth()
@@ -326,9 +325,9 @@ internal class ContestScreen(
                                             navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                         },
                                     shape = when {
-                                        bonsaiList.orEmpty().size == 1 -> RoundedCornerShape(16.dp)
+                                        bonsaiList.size == 1 -> RoundedCornerShape(16.dp)
                                         index <= 0 -> RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp, topStart = 16.dp, topEnd = 16.dp)
-                                        index >= bonsaiList.orEmpty().size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp, topStart = 4.dp, topEnd = 4.dp)
+                                        index >= bonsaiList.size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp, topStart = 4.dp, topEnd = 4.dp)
                                         else -> RoundedCornerShape(4.dp)
                                     },
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -336,7 +335,7 @@ internal class ContestScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(12.dp),
+                                            .padding(16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
