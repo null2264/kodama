@@ -5,18 +5,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -278,7 +282,7 @@ internal class ContestScreen(
                 ) {
                     LazyColumn(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                     ) {
                         // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
                         if (contest.state == "accepting" && !currentUser.isAdmin) {
@@ -293,6 +297,7 @@ internal class ContestScreen(
                                     },
                                 )
                             }
+                            item { Spacer(Modifier.height(4.dp)) }
                         }
 
                         val isReviewing = contest.state == "reviewing"
@@ -304,7 +309,7 @@ internal class ContestScreen(
                                 }
                             }
                         } else {
-                            items(bonsaiList ?: listOf()) { bonsai ->
+                            itemsIndexed(bonsaiList.orEmpty()) { index, bonsai ->
                                 val review = mappedReviews?.get(bonsai.id)
                                 val hasBeenReviewed = review != null
                                 Card(
@@ -312,7 +317,13 @@ internal class ContestScreen(
                                         .clickable {
                                             navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                         },
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = when {
+                                        bonsaiList.orEmpty().size == 1 -> RoundedCornerShape(16.dp)
+                                        index <= 0 -> RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp, topStart = 16.dp, topEnd = 16.dp)
+                                        index >= bonsaiList.orEmpty().size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp, topStart = 4.dp, topEnd = 4.dp)
+                                        else -> RoundedCornerShape(4.dp)
+                                    },
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                 ) {
                                     Row(
                                         modifier = Modifier
