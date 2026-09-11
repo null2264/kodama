@@ -29,6 +29,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -61,7 +62,9 @@ fun KodamaBottomSheet(
         val density = LocalDensity.current
         val layoutHeight = with(density) { maxHeight.toPx() }
 
-        val state = remember {
+        val state = rememberSaveable(
+            saver = AnchoredDraggableState.Saver()
+        ) {
             AnchoredDraggableState(
                 initialValue = SheetPosition.Collapsed,
             )
