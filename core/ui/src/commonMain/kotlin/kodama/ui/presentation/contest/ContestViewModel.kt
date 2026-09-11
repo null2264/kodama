@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -31,6 +32,7 @@ class ContestViewModel(
 
     init {
         loadContest()
+        subscribeBonsaiList()
     }
 
     fun loadContest() {
@@ -94,7 +96,20 @@ class ContestViewModel(
         }
     }
 
-    fun subscribeBonsaiList() = contestRepository.subscribeBonsaiListForContest(contestId)
+    fun subscribeBonsaiList() {
+        viewModelScope.launch {
+            mutableState.update { it.copy(isSheetLoading = true) }
+            contestRepository.subscribeBonsaiListForContest(contestId)
+                .collect { bonsaiList ->
+                    mutableState.update {
+                        it.copy(
+                            bonsaiList = bonsaiList,
+                            isSheetLoading = false,
+                        )
+                    }
+                }
+        }
+    }
 
     fun subscribeReviews(): Flow<List<Review>> {
         val currentUser = auth.currentUserOrNull() ?: return flowOf(listOf())
@@ -150,7 +165,7 @@ class ContestViewModel(
         val contestUsers: List<ContestUser> = emptyList(),
 
         val isUpdatingState: Boolean = false,
-//        val bonsaiList: List<Bonsai> = emptyList(),
+        val bonsaiList: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),
         val bonsaiIsVerifying: Map<String, Boolean> = emptyMap()
     )

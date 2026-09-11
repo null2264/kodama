@@ -133,7 +133,7 @@ internal class ContestScreen(
         val isAdmin = currentUser.isAdmin
         val isJudge = currentUser?.isJudge(state.contestUsers) ?: false
 
-        val bonsaiList by viewModel.subscribeBonsaiList().collectAsState(null)
+        val bonsaiList = state.bonsaiList
 //        val sortedBonsaiList = remember(bonsaiList) {
 //            if (state.contest?.state == "reviewing" && isJudge) bonsaiList?.sortedBy { it.id }
 //
@@ -310,7 +310,7 @@ internal class ContestScreen(
 
                         val isReviewing = contest.state == "reviewing"
                         val isReviewingButReviewsIsLoading = isReviewing && isJudge && reviews == null
-                        if (bonsaiList == null || isReviewingButReviewsIsLoading) {
+                        if (state.isSheetLoading || isReviewingButReviewsIsLoading) {
                             item(key = "bottom_sheet_loading") {
                                 Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
                                     LoadingIndicator(Modifier.align(Alignment.Center))
