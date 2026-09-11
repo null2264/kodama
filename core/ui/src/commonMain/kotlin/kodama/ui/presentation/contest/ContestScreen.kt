@@ -351,7 +351,19 @@ internal class ContestScreen(
                                             isReviewing = isReviewing,
                                             hasBeenReviewed = hasBeenReviewed,
                                             onBonsaiVerify = { bonsai -> viewModel.verifyBonsai(bonsai.id) },
-                                            onBonsaiDelete = { bonsai -> viewModel.deleteBonsai(bonsai.id) },
+                                            onBonsaiDelete = { bonsai ->
+                                                dialog = AlertDialogBuilder().apply {
+                                                    titleRes = Res.string.delete_bonsai_confirm_title
+                                                    textRes = Res.string.delete_bonsai_confirm_text
+                                                    confirmText = "Hapus"
+                                                    cancelText = "Batal"
+                                                    onConfirm = {
+                                                        viewModel.deleteBonsai(bonsai.id)
+                                                        dialog = null
+                                                    }
+                                                    onCancel = { dialog = null }
+                                                }
+                                            },
                                         )
                                     }
                                 }
@@ -374,7 +386,6 @@ internal class ContestScreen(
     ) {
         val navigator = LocalNavigator.current
         var dropdownExpanded by remember { mutableStateOf(false) }
-        var showDeleteDialog by remember { mutableStateOf(false) }
 
         when {
             !isReviewing && state == "draft" && currentUser?.isJudge(viewModelState.contestUsers) != true -> {
@@ -420,7 +431,7 @@ internal class ContestScreen(
                             text = { Text(stringResource(Res.string.delete_bonsai)) },
                             onClick = {
                                 dropdownExpanded = false
-                                showDeleteDialog = true
+                                onBonsaiDelete(this@Action)
                             },
                             leadingIcon = { Icon(delete, contentDescription = null) },
                         )
@@ -449,20 +460,6 @@ internal class ContestScreen(
                     Text("Rate")
                 }
             }
-        }
-
-        if (showDeleteDialog) {
-            AlertDialogBuilder().apply {
-                titleRes = Res.string.delete_bonsai_confirm_title
-                textRes = Res.string.delete_bonsai_confirm_text
-                confirmText = "Hapus"
-                cancelText = "Batal"
-                onConfirm = {
-                    showDeleteDialog = false
-                    onBonsaiDelete(this@Action)
-                }
-                onCancel = { showDeleteDialog = false }
-            }.Content()
         }
     }
 }
