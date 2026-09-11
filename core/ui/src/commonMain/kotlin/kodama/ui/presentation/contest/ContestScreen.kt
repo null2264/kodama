@@ -1,5 +1,6 @@
 package kodama.ui.presentation.contest
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -43,6 +46,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -56,12 +60,16 @@ import kodama.core.data.ImageRepository
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.resources.Res
+import kodama.resources.delete_bonsai
+import kodama.resources.delete_bonsai_confirm_text
+import kodama.resources.delete_bonsai_confirm_title
 import kodama.resources.finalize_bonsai
 import kodama.resources.finalize_contest
 import kodama.resources.finalize_contest_confirm_text
 import kodama.resources.finalize_contest_confirm_title
 import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
+import kodama.resources.icons.chevron
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
 import kodama.resources.verify_bonsai
@@ -343,6 +351,7 @@ internal class ContestScreen(
                                             isReviewing = isReviewing,
                                             hasBeenReviewed = hasBeenReviewed,
                                             onBonsaiVerify = { bonsai -> viewModel.verifyBonsai(bonsai.id) },
+                                            onBonsaiDelete = { bonsai -> viewModel.deleteBonsai(bonsai.id) },
                                         )
                                     }
                                 }
@@ -361,31 +370,62 @@ internal class ContestScreen(
         isReviewing: Boolean,
         hasBeenReviewed: Boolean,
         onBonsaiVerify: (Bonsai) -> Unit,
+        onBonsaiDelete: (Bonsai) -> Unit,
     ) {
         val navigator = LocalNavigator.current
+        var dropdownExpanded by remember { mutableStateOf(false) }
+        var showDeleteDialog by remember { mutableStateOf(false) }
 
         when {
             !isReviewing && state == "draft" && currentUser?.isJudge(viewModelState.contestUsers) != true -> {
-                SplitButtonLayout(
-                    leadingButton = {
-                        SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
-                            Text(stringResource(Res.string.finalize_bonsai))
+                Box {
+                    SplitButtonLayout(
+                        leadingButton = {
+                            SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
+                                Text(stringResource(Res.string.finalize_bonsai))
+                            }
+                        },
+                        trailingButton = {
+                            SplitButtonDefaults.TrailingButton(
+                                checked = dropdownExpanded,
+                                onCheckedChange = { dropdownExpanded = true },
+                            ) {
+                                val rotation: Float by animateFloatAsState(
+                                    targetValue = if (dropdownExpanded) 180f else 0f,
+                                    label = "Trailing Icon Rotation"
+                                )
+                                Icon(
+                                    chevron,
+                                    modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize).graphicsLayer { rotationZ = rotation },
+                                    contentDescription = "More action"
+                                )
+                            }
                         }
-                    },
-                    trailingButton = {
-                        SplitButtonDefaults.TrailingButton(
-                            checked = false,
-                            onCheckedChange = {},
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
-                        ) {
-                            Icon(
-                                delete,
-                                modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize),
-                                contentDescription = "Hapus"
-                            )
-                        }
+                    )
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false },
+                        shape = RoundedCornerShape(16.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                dropdownExpanded = false
+                                // TODO: Navigate to edit screen
+                            },
+                            leadingIcon = { Icon(edit, contentDescription = null) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.delete_bonsai)) },
+                            onClick = {
+                                dropdownExpanded = false
+                                showDeleteDialog = true
+                            },
+                            leadingIcon = { Icon(delete, contentDescription = null) },
+                        )
                     }
-                )
+                }
             }
             !isReviewing && state == "waiting_verify" && currentUser?.isAdmin == true -> {
                 LoadingButton(
@@ -409,6 +449,20 @@ internal class ContestScreen(
                     Text("Rate")
                 }
             }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialogBuilder().apply {
+                titleRes = Res.string.delete_bonsai_confirm_title
+                textRes = Res.string.delete_bonsai_confirm_text
+                confirmText = "Hapus"
+                cancelText = "Batal"
+                onConfirm = {
+                    showDeleteDialog = false
+                    onBonsaiDelete(this@Action)
+                }
+                onCancel = { showDeleteDialog = false }
+            }.Content()
         }
     }
 }

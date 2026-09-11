@@ -101,6 +101,20 @@ class ContestViewModel(
         return contestRepository.subscribeMyReviews(currentUser.id)
     }
 
+    fun deleteBonsai(
+        bonsaiId: String,
+        onError: (String) -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            try {
+                contestRepository.deleteBonsai(bonsaiId)
+                loadContest()
+            } catch (e: Exception) {
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
     fun verifyBonsai(
         bonsaiId: String,
         onError: (String) -> Unit = {},
