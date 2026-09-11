@@ -90,7 +90,7 @@ internal object RecentsTab : Tab {
         val filteredContests = contests.filter { contest ->
             when (selectedFilter) {
                 "Registration" -> contest.state == "accepting"
-                "On-going" -> contest.state == "reviewing"
+                "On-going" -> contest.state == "reviewing" || contest.state == "review_done"
                 "Ended" -> contest.state == "ended" || contest.state == "finished"
                 else -> true
             }

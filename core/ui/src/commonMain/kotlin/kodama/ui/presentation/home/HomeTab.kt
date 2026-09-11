@@ -130,7 +130,7 @@ internal object HomeTab : Tab {
                 val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
                 val matchesFilter = when (selectedFilter) {
                     "Registration" -> contest.state == "accepting"
-                    "On-going" -> contest.state == "reviewing"
+                    "On-going" -> contest.state == "reviewing" || contest.state == "review_done"
                     "Ended" -> contest.state == "ended" || contest.state == "finished"
                     else -> true
                 }

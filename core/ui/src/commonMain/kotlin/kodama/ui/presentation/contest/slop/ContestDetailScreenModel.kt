@@ -44,8 +44,8 @@ class ContestDetailScreenModel(
 
     private suspend fun loadSheetData(contestState: String?) {
         if (contestState != "draft" && contestState != "accepting" &&
-            contestState != "reviewing" && contestState != "finished" &&
-            contestState != "ended"
+            contestState != "reviewing" && contestState != "review_done" &&
+            contestState != "finished" && contestState != "ended"
         ) return
         mutableState.update { it.copy(isSheetLoading = true) }
         try {
@@ -59,12 +59,12 @@ class ContestDetailScreenModel(
             } else {
                 emptyList()
             }
-            val reviews = if (contestState == "reviewing" || contestState == "finished" || contestState == "ended") {
+            val reviews = if (contestState == "reviewing" || contestState == "review_done" || contestState == "finished" || contestState == "ended") {
                 contestRepository.getReviewsForContest(contestId)
             } else {
                 emptyList()
             }
-            val users = if (contestState == "draft" || contestState == "reviewing") {
+            val users = if (contestState == "draft" || contestState == "reviewing" || contestState == "review_done") {
                 contestRepository.getContestUsers(contestId)
             } else {
                 emptyList()
@@ -121,6 +121,24 @@ class ContestDetailScreenModel(
                 loadContest()
                 mutableState.update { it.copy(isUpdatingState = false) }
                 onSuccess(winnerId)
+            } catch (e: Exception) {
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onError(e.message ?: "Terjadi kesalahan")
+            }
+        }
+    }
+
+    fun revealContestResults(
+        onError: (String) -> Unit = {},
+        onSuccess: () -> Unit,
+    ) {
+        screenModelScope.launch {
+            mutableState.update { it.copy(isUpdatingState = true) }
+            try {
+                contestRepository.revealContestResults(contestId)
+                loadContest()
+                mutableState.update { it.copy(isUpdatingState = false) }
+                onSuccess()
             } catch (e: Exception) {
                 mutableState.update { it.copy(isUpdatingState = false) }
                 onError(e.message ?: "Terjadi kesalahan")

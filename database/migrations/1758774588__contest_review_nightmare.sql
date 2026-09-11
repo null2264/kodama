@@ -264,10 +264,40 @@ BEGIN
   LIMIT 1;
 
   UPDATE kodama.contests
-  SET state = 'finished'
+  SET state = 'review_done'
   WHERE id = p_contest_id;
 
   RETURN v_winner_id;
+END;
+$$;
+
+-- ================================================================
+-- Reveal results (review_done -> finished)
+-- ================================================================
+
+CREATE OR REPLACE FUNCTION kodama.reveal_results(p_contest_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'kodama'
+AS $$
+BEGIN
+  IF NOT (kodama.is_admin() OR EXISTS (
+    SELECT 1 FROM kodama.contest_participants
+    WHERE user_id = auth.uid()
+      AND contest_id = p_contest_id
+      AND role = 'head_judge'
+  )) THEN
+    RAISE EXCEPTION 'User does not have permission to reveal results.';
+  END IF;
+
+  IF (SELECT state FROM kodama.contests WHERE id = p_contest_id) <> 'review_done' THEN
+    RAISE EXCEPTION 'Contest is not in review_done phase.';
+  END IF;
+
+  UPDATE kodama.contests
+  SET state = 'finished'
+  WHERE id = p_contest_id;
 END;
 $$;
 
@@ -298,7 +328,8 @@ BEGIN
   END IF;
   IF OLD.state = 'accepting' AND NEW.state = 'closed' THEN RETURN NEW; END IF;
   IF OLD.state = 'closed' AND NEW.state = 'reviewing' THEN RETURN NEW; END IF;
-  IF OLD.state = 'reviewing' AND NEW.state = 'finished' THEN RETURN NEW; END IF;
+  IF OLD.state = 'reviewing' AND NEW.state = 'review_done' THEN RETURN NEW; END IF;
+  IF OLD.state = 'review_done' AND NEW.state = 'finished' THEN RETURN NEW; END IF;
   IF OLD.state = 'finished' AND NEW.state = 'ended' THEN
     IF kodama.is_admin() THEN RETURN NEW; END IF;
     RAISE EXCEPTION 'Only admins can end a contest.';
@@ -323,7 +354,7 @@ LANGUAGE sql
 STABLE
 SET search_path = ''
 AS $$
-  SELECT state NOT IN ('finished', 'ended') FROM kodama.contests WHERE id = p_contest_id;
+  SELECT state NOT IN ('review_done', 'finished', 'ended') FROM kodama.contests WHERE id = p_contest_id;
 $$;
 
 -- ================================================================

@@ -378,6 +378,15 @@ class ContestRepository(private val client: SupabaseClient) {
         }.decodeAs<String?>()
     }
 
+    suspend fun revealContestResults(contestId: String) {
+        client.postgrest.rpc(
+            "reveal_results",
+            mapOf("p_contest_id" to contestId),
+        ) {
+            schema = "kodama"
+        }
+    }
+
     suspend fun getJudgesCount(contestId: String, contestClassId: String): Long? {
         return client.from("kodama", "contest_participants")
             .select {

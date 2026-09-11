@@ -86,6 +86,9 @@
     <string name="bonsai_detail">Detail Bonsai</string>
     <string name="view_results">Lihat Hasil</string>
     <string name="results_title">Hasil Lomba</string>
+    <string name="reveal_results">Umumkan Hasil</string>
+    <string name="reveal_results_confirm_title">Umumkan Hasil?</string>
+    <string name="reveal_results_confirm_text">Hasil akan ditampilkan ke semua peserta. Kamu yakin ingin mengumumkan?</string>
     <string name="best_in_show">Juara Umum</string>
     <string name="best_in_class">Juara Kelas</string>
     <string name="full_ranking">Ranking Lengkap</string>

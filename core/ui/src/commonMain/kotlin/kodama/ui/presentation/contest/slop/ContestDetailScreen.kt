@@ -52,6 +52,7 @@ import kodama.core.data.ContestUser
 import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
+import kodama.core.util.isJudge
 import kodama.resources.Res
 import kodama.resources.bonsai_list
 import kodama.resources.bonsai_pending_verification
@@ -76,6 +77,7 @@ import kodama.resources.icons.flag
 import kodama.resources.judges_voted_format
 import kodama.resources.my_bonsai
 import kodama.resources.register_bonsai
+import kodama.resources.reveal_results
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.resources.voting_progress_format
@@ -116,21 +118,26 @@ internal class ContestDetailScreen(
         val auth: Auth = koinInject()
         val currentUser = auth.currentUserOrNull()
         val isAdmin = currentUser.isAdmin
+        val isJudge = currentUser?.isJudge(state.contestUsers) ?: false
         val currentUserId = currentUser?.id
         var showFinalizeDialog by remember { mutableStateOf(false) }
         var showStateTransitionDialog by remember { mutableStateOf(false) }
         var pendingTransitionState by remember { mutableStateOf<String?>(null) }
         var showFinishDialog by remember { mutableStateOf(false) }
         var showForceCloseDialog by remember { mutableStateOf(false) }
+        var showRevealDialog by remember { mutableStateOf(false) }
         var showBottomSheet by remember { mutableStateOf(false) }
         var bonsaiToFinalize by remember { mutableStateOf<Bonsai?>(null) }
         var bonsaiToDelete by remember { mutableStateOf<Bonsai?>(null) }
         val sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
         val isFinishedOrEnded = state.contest?.state == "finished" || state.contest?.state == "ended"
-        val isReadOnly = isFinishedOrEnded
+        val isReviewDone = state.contest?.state == "review_done"
+        val canViewResults = isFinishedOrEnded || (isReviewDone && (isAdmin || isJudge))
+        val isReadOnly = isFinishedOrEnded || isReviewDone
 
-        val canShowSheet = state.contest?.state == "accepting" || state.contest?.state == "reviewing"
+        val canShowSheet = state.contest?.state == "accepting" || state.contest?.state == "reviewing" ||
+            (state.contest?.state == "review_done" && (isAdmin || isJudge))
 
         LaunchedEffect(showCreatedSnackbar) {
             if (showCreatedSnackbar) {
@@ -271,6 +278,17 @@ internal class ContestDetailScreen(
                             }
                         }
 
+                        if (isAdmin && contest.state == "review_done") {
+                            LoadingButton(
+                                onClick = { showRevealDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = state.isUpdatingState,
+                                enabled = !state.isUpdatingState,
+                            ) {
+                                Text(stringResource(Res.string.reveal_results))
+                            }
+                        }
+
                         if (isAdmin && contest.state == "finished") {
                             LoadingButton(
                                 onClick = {
@@ -285,7 +303,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isFinishedOrEnded) {
+                        if (canViewResults) {
                             AssistChip(
                                 onClick = { navigator?.push(ResultsScreen(contestId)) },
                                 label = { Text(stringResource(Res.string.view_results)) },
@@ -411,7 +429,9 @@ internal class ContestDetailScreen(
                                                 }
                                             }
 
-                                            if (contest.state == "finished" || contest.state == "ended") {
+                                            if (contest.state == "finished" || contest.state == "ended" ||
+                                                (contest.state == "review_done" && (isAdmin || isJudge))
+                                            ) {
                                                 val bonsaiReviews = state.reviews.filter { it.bonsai_id == bonsai.id }
                                                 if (bonsaiReviews.isNotEmpty()) {
                                                     Spacer(modifier = Modifier.height(8.dp))
@@ -560,6 +580,27 @@ internal class ContestDetailScreen(
                 }.build()
             }
 
+            if (showRevealDialog) {
+                AlertDialogBuilder().apply {
+                    titleRes = Res.string.reveal_results_confirm_title
+                    textRes = Res.string.reveal_results_confirm_text
+                    confirmText = "Ya, Reveal"
+                    cancelText = "Batal"
+                    onConfirm = {
+                        showRevealDialog = false
+                        screenModel.revealContestResults(
+                            onError = { error ->
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(error)
+                                }
+                            },
+                            onSuccess = { },
+                        )
+                    }
+                    onCancel = { showRevealDialog = false }
+                }.build()
+            }
+
             bonsaiToFinalize?.let { bonsai ->
                 AlertDialogBuilder().apply {
                     titleRes = Res.string.finalize_bonsai_confirm_title
@@ -639,6 +680,29 @@ internal class ContestDetailScreen(
                                 onRateBonsai = { bonsaiId ->
                                     navigator?.push(RatingScreen(contestId, bonsaiId))
                                 },
+                            )
+                        }
+                        contestState == "review_done" && isAdmin -> {
+                            AdminReviewingSheet(
+                                bonsaiList = state.bonsaiList.filter { it.state == "verified" },
+                                reviews = state.reviews,
+                                contestUsers = state.contestUsers,
+                            )
+                        }
+                        contestState == "review_done" && isJudge -> {
+                            val myAssignment = state.contestUsers.find { it.user_id == currentUserId }
+                            val filteredBonsai = if (myAssignment?.role == "judge" && myAssignment.contest_class_id != null) {
+                                state.bonsaiList.filter {
+                                    it.state == "verified" && it.contest_class_id == myAssignment.contest_class_id
+                                }
+                            } else {
+                                state.bonsaiList.filter { it.state == "verified" }
+                            }
+                            JudgeReviewingSheet(
+                                bonsaiList = filteredBonsai,
+                                reviews = state.reviews,
+                                currentUserId = currentUserId,
+                                contestId = contestId,
                             )
                         }
                         else -> {
