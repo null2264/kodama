@@ -447,6 +447,13 @@ class ContestRepository(private val client: SupabaseClient) {
         }.decodeList<ContestUser>()
     }
 
+    suspend fun searchUsers(query: String): List<ContestUser> {
+        if (query.isBlank()) return emptyList()
+        return getUsers().filter {
+            it.email.contains(query, ignoreCase = true)
+        }
+    }
+
     suspend fun findUserIdByEmail(email: String): String? {
         return try {
             client.postgrest.rpc(

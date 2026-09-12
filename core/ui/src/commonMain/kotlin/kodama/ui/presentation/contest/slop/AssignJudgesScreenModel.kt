@@ -6,6 +6,8 @@ import kodama.core.data.BonsaiClass
 import kodama.core.data.BonsaiContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -18,6 +20,8 @@ class AssignJudgesScreenModel(
         loadData()
     }
 
+    private var searchJob: Job? = null
+
     private fun loadData() {
         screenModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
@@ -27,11 +31,13 @@ class AssignJudgesScreenModel(
                 val allClasses = contestRepository.getBonsaiClasses()
                 val classIds = contestRepository.getContestClassIds(contestId)
                 val classes = allClasses.filter { it.id in classIds }
+                val allUsers = contestRepository.getUsers()
                 mutableState.update {
                     it.copy(
                         contestClasses = contestClasses,
                         existingUsers = existingUsers,
                         classes = classes,
+                        allUsers = allUsers,
                         isLoading = false,
                     )
                 }
@@ -44,6 +50,25 @@ class AssignJudgesScreenModel(
                 }
             }
         }
+    }
+
+    fun searchUsers(query: String) {
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            mutableState.update { it.copy(suggestions = emptyList()) }
+            return
+        }
+        searchJob = screenModelScope.launch {
+            delay(300)
+            val results = state.value.allUsers.filter {
+                it.email.contains(query, ignoreCase = true)
+            }
+            mutableState.update { it.copy(suggestions = results) }
+        }
+    }
+
+    fun clearSuggestions() {
+        mutableState.update { it.copy(suggestions = emptyList()) }
     }
 
     fun assignJudge(email: String, classId: String, role: String = "judge") {
@@ -97,6 +122,8 @@ class AssignJudgesScreenModel(
     data class State(
         val contestClasses: List<BonsaiContestClass> = emptyList(),
         val existingUsers: List<ContestUser> = emptyList(),
+        val allUsers: List<ContestUser> = emptyList(),
+        val suggestions: List<ContestUser> = emptyList(),
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isAssigning: Boolean = false,

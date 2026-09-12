@@ -20,6 +20,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -159,18 +161,39 @@ internal class AssignJudgesScreen(
                                 modifier = Modifier.padding(bottom = 8.dp),
                             )
 
-                            KodamaTextField(
-                                value = judgeEmail,
-                                onValueChange = { judgeEmail = it },
-                                label = "Judge Email",
-                                placeholder = "judge@example.com",
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Email,
-                                    imeAction = ImeAction.Done,
-                                ),
-                                icon = { Icon(alternate_email, contentDescription = null, modifier = Modifier.size(24.dp)) },
-                            )
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                KodamaTextField(
+                                    value = judgeEmail,
+                                    onValueChange = {
+                                        judgeEmail = it
+                                        screenModel.searchUsers(it)
+                                    },
+                                    label = "Judge Email",
+                                    placeholder = "judge@example.com",
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Email,
+                                        imeAction = ImeAction.Done,
+                                    ),
+                                    icon = { Icon(alternate_email, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                                )
+
+                                DropdownMenu(
+                                    expanded = state.suggestions.isNotEmpty() && judgeEmail.isNotBlank(),
+                                    onDismissRequest = { screenModel.clearSuggestions() },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    state.suggestions.forEach { user ->
+                                        DropdownMenuItem(
+                                            text = { Text(user.email) },
+                                            onClick = {
+                                                judgeEmail = user.email
+                                                screenModel.clearSuggestions()
+                                            },
+                                        )
+                                    }
+                                }
+                            }
 
                             if (state.classes.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -207,6 +230,7 @@ internal class AssignJudgesScreen(
                                         showAddForm = false
                                         judgeEmail = ""
                                         selectedClassId = null
+                                        screenModel.clearSuggestions()
                                     },
                                 ) {
                                     Text("Cancel")
@@ -219,6 +243,7 @@ internal class AssignJudgesScreen(
                                             showAddForm = false
                                             judgeEmail = ""
                                             selectedClassId = null
+                                            screenModel.clearSuggestions()
                                         }
                                     },
                                     enabled = judgeEmail.isNotBlank() && selectedClassId != null && !state.isAssigning,
