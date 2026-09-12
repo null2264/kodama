@@ -70,15 +70,18 @@ import kodama.resources.icons.alternate_email
 import kodama.resources.icons.chevron
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
+import kodama.resources.icons.flag
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
+import kodama.ui.component.DropdownSplitButton
 import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
+import kodama.ui.presentation.contest.slop.AssignJudgesScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
 import kodama.ui.presentation.utils.Screen
@@ -156,7 +159,7 @@ internal class ContestScreen(
                     if (state.isLoading) return@KodamaScaffold
 
                     if (isAdmin && state.contest?.state == "draft" && !state.isUpdatingState) {
-                        SplitButtonLayout(
+                        DropdownSplitButton(
                             leadingButton = {
                                 SplitButtonDefaults.LeadingButton(onClick = {
                                     dialog = AlertDialogBuilder().apply {
@@ -182,18 +185,30 @@ internal class ContestScreen(
                                     Text(stringResource(Res.string.finalize_contest))
                                 }
                             },
-                            trailingButton = {
-                                SplitButtonDefaults.TrailingButton(
-                                    checked = false,
-                                    onCheckedChange = {},
-                                ) {
-                                    Icon(
-                                        edit,
-                                        modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize),
-                                        contentDescription = "Localized description"
-                                    )
-                                }
-                            }
+                            dropdownItems = { dismiss ->
+                                DropdownMenuItem(
+                                    text = { Text("Edit") },
+                                    onClick = {
+                                        dismiss()
+                                    },
+                                    leadingIcon = { Icon(edit, contentDescription = null) },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Assign Judge") },
+                                    onClick = {
+                                        dismiss()
+                                        navigator?.push(AssignJudgesScreen(contestId))
+                                    },
+                                    leadingIcon = { Icon(flag, contentDescription = null) },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(Res.string.delete_bonsai)) },
+                                    onClick = {
+                                        dismiss()
+                                    },
+                                    leadingIcon = { Icon(delete, contentDescription = null) },
+                                )
+                            },
                         )
                     }
                 },
@@ -385,58 +400,33 @@ internal class ContestScreen(
         onBonsaiDelete: (Bonsai) -> Unit,
     ) {
         val navigator = LocalNavigator.current
-        var dropdownExpanded by remember { mutableStateOf(false) }
-
         when {
             !isReviewing && state == "draft" -> {
-                Box {
-                    SplitButtonLayout(
-                        leadingButton = {
-                            SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
-                                Text(stringResource(Res.string.finalize_bonsai))
-                            }
-                        },
-                        trailingButton = {
-                            SplitButtonDefaults.TrailingButton(
-                                checked = dropdownExpanded,
-                                onCheckedChange = { dropdownExpanded = true },
-                            ) {
-                                val rotation: Float by animateFloatAsState(
-                                    targetValue = if (dropdownExpanded) 180f else 0f,
-                                    label = "Trailing Icon Rotation"
-                                )
-                                Icon(
-                                    chevron,
-                                    modifier = Modifier.size(SplitButtonDefaults.TrailingIconSize).graphicsLayer { rotationZ = rotation },
-                                    contentDescription = "More action"
-                                )
-                            }
+                DropdownSplitButton(
+                    leadingButton = {
+                        SplitButtonDefaults.LeadingButton(onClick = { navigator?.push(FinalizeEntryScreen(contestId, id)) }) {
+                            Text(stringResource(Res.string.finalize_bonsai))
                         }
-                    )
-                    DropdownMenu(
-                        expanded = dropdownExpanded,
-                        onDismissRequest = { dropdownExpanded = false },
-                        shape = RoundedCornerShape(16.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ) {
+                    },
+                    dropdownItems = { dismiss ->
                         DropdownMenuItem(
                             text = { Text("Edit") },
                             onClick = {
-                                dropdownExpanded = false
                                 // TODO: Navigate to edit screen
+                                dismiss()
                             },
                             leadingIcon = { Icon(edit, contentDescription = null) },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.delete_bonsai)) },
                             onClick = {
-                                dropdownExpanded = false
                                 onBonsaiDelete(this@UserAction)
+                                dismiss()
                             },
                             leadingIcon = { Icon(delete, contentDescription = null) },
                         )
-                    }
-                }
+                    },
+                )
             }
         }
     }
