@@ -460,6 +460,12 @@ internal class ContestScreen(
                     },
                 )
             }
+            !isReviewing && state == "waiting_verify" -> {
+                Chip("Waiting to be verified", flag)
+            }
+            !isReviewing -> {
+                Chip("Verified", flag)
+            }
         }
     }
 

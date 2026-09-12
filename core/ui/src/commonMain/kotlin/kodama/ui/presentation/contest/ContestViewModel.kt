@@ -68,6 +68,8 @@ class ContestViewModel(
 
                     it.mapNotNull { user -> users[user.user_id] }
                 } else flowOf(try {
+                    // Not the best, but nothing can be done at the moment, subscribeContestUsers wouldn't work for
+                    // non-admin. Maybe I can lax the RLS a bit so that non-admin can use subscribeContestUsers.
                     contestRepository.getContestUsers(contestId)
                 } catch (e: Exception) {
                     null
