@@ -1,20 +1,21 @@
 package kodama.ui.presentation.contest.slop
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import kodama.core.data.BonsaiClass
 import kodama.core.data.BonsaiContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
+import kodama.core.data.User
+import kodama.ui.presentation.utils.StateViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AssignJudgesScreenModel(
-    private val contestRepository: ContestRepository,
+class AssignJudgesViewModel(
     private val contestId: String,
-) : StateScreenModel<AssignJudgesScreenModel.State>(State()) {
+    private val contestRepository: ContestRepository,
+) : StateViewModel<AssignJudgesViewModel.State>(State()) {
 
     init {
         loadData()
@@ -23,7 +24,7 @@ class AssignJudgesScreenModel(
     private var searchJob: Job? = null
 
     private fun loadData() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
                 val contestClasses = contestRepository.getBonsaiContestClasses(contestId)
@@ -58,7 +59,7 @@ class AssignJudgesScreenModel(
             mutableState.update { it.copy(suggestions = emptyList()) }
             return
         }
-        searchJob = screenModelScope.launch {
+        searchJob = viewModelScope.launch {
             delay(300)
             val results = state.value.allUsers.filter {
                 it.email.contains(query, ignoreCase = true)
@@ -72,7 +73,7 @@ class AssignJudgesScreenModel(
     }
 
     fun assignJudge(email: String, classId: String, role: String = "judge") {
-        screenModelScope.launch {
+        viewModelScope.launch {
             mutableState.update { it.copy(isAssigning = true, error = null) }
             try {
                 val userId = contestRepository.findUserIdByEmail(email)
@@ -102,7 +103,7 @@ class AssignJudgesScreenModel(
     }
 
     fun removeJudge(userId: String) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             mutableState.update { it.copy(error = null) }
             try {
                 contestRepository.removeJudge(contestId, userId)
@@ -122,8 +123,8 @@ class AssignJudgesScreenModel(
     data class State(
         val contestClasses: List<BonsaiContestClass> = emptyList(),
         val existingUsers: List<ContestUser> = emptyList(),
-        val allUsers: List<ContestUser> = emptyList(),
-        val suggestions: List<ContestUser> = emptyList(),
+        val allUsers: List<User> = emptyList(),
+        val suggestions: List<User> = emptyList(),
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isAssigning: Boolean = false,

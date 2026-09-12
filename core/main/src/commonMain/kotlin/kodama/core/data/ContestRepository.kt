@@ -77,6 +77,14 @@ data class ReviewInsert(
 )
 
 @Serializable
+data class User(
+    val user_id: String,
+    val email: String,
+    val role: String,
+    val created_at: String,
+)
+
+@Serializable
 data class ContestUser(
     val user_id: String,
     val email: String,
@@ -438,16 +446,13 @@ class ContestRepository(private val client: SupabaseClient) {
             )
     }
 
-    suspend fun getUsers(): List<ContestUser> {
-        return client.postgrest.rpc(
-            "get_contest_users",
-            mapOf("p_contest_id" to ""),
-        ) {
+    suspend fun getUsers(): List<User> {
+        return client.postgrest.rpc("get_all_users") {
             schema = "kodama"
-        }.decodeList<ContestUser>()
+        }.decodeList<User>()
     }
 
-    suspend fun searchUsers(query: String): List<ContestUser> {
+    suspend fun searchUsers(query: String): List<User> {
         if (query.isBlank()) return emptyList()
         return getUsers().filter {
             it.email.contains(query, ignoreCase = true)

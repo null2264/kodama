@@ -5,7 +5,7 @@ import kodama.ui.UiPreferences
 import kodama.ui.presentation.auth.AuthScreenModel
 import kodama.ui.presentation.auth.OtpVerificationScreenModel
 import kodama.ui.presentation.auth.TotpVerificationScreenModel
-import kodama.ui.presentation.contest.slop.AssignJudgesScreenModel
+import kodama.ui.presentation.contest.slop.AssignJudgesViewModel
 import kodama.ui.presentation.contest.slop.ContestDetailScreenModel
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreenModel
 import kodama.ui.presentation.contest.slop.CreateContestScreenModel
@@ -44,7 +44,7 @@ val uiModule = module {
     screenModel { params -> EditContestScreenModel(get(), get(), params.get()) }
     screenModel { params -> CreateBonsaiScreenModel(get(), get(), params.get(), params.get()) }
     screenModel { EditProfileScreenModel(get()) }
-    screenModel { params -> AssignJudgesScreenModel(get(), params.get()) }
+    viewModel<AssignJudgesViewModel>()
     viewModel<BonsaiDetailViewModel>()
     screenModel { params -> RatingScreenModel(get(), params.get(), params.get()) }
     screenModel { params -> ResultsScreenModel(get(), params.get()) }

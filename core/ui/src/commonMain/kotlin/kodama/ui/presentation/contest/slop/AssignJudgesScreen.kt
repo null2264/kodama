@@ -51,16 +51,16 @@ import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.KodamaTextField
 import kodama.ui.presentation.utils.Screen
 import kodama.ui.presentation.utils.rememberScreenModel
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 internal class AssignJudgesScreen(
     private val contestId: String,
 ) : Screen() {
 
-    @OptIn(ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel<AssignJudgesScreenModel> {
+        val screenModel = koinViewModel<AssignJudgesViewModel> {
             parametersOf(contestId)
         }
         val state by screenModel.state.collectAsState()
