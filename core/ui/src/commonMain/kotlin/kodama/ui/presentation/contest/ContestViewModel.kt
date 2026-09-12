@@ -26,12 +26,11 @@ class ContestViewModel(
 ) : StateViewModel<ContestViewModel.State>(State()) {
 
     init {
-        subscribeUsers()
-        loadContest()
+        loadContest(true)
         subscribeRealtime()
     }
 
-    fun loadContest() {
+    fun loadContest(cold: Boolean = false) {
         viewModelScope.launch {
             mutableState.update { it.copy(isLoading = true) }
             try {
@@ -40,28 +39,33 @@ class ContestViewModel(
                 val contestClassesActualIds = contestClasses.map { it.class_id }
                 val allClasses = contestRepository.getBonsaiClasses()
                 val selectedClasses = allClasses.filter { it.id in contestClassesActualIds }
-//                loadSheet()
+                val users = contestRepository.getContestUsers(contestId)
                 mutableState.update {
                     it.copy(
                         contest = contest,
                         contestClasses = contestClasses,
                         classes = selectedClasses,
+                        contestUsers = users,
                         isLoading = false,
                     )
                 }
+
             } catch (_: Exception) {
                 mutableState.update { it.copy(isLoading = false) }
             }
-        }
-    }
 
-    fun subscribeUsers() {
-        viewModelScope.launch {
+            if (!cold) return@launch
+
             val currentUser = auth.currentUserOrNull()
             val isAdmin = currentUser.isAdmin
             val flow =
                 if (isAdmin) contestRepository.subscribeContestUsers(contestId).map {
-                    val users = contestRepository.getContestUsers(contestId).associateBy { u -> u.user_id }
+                    val users = try {
+                        contestRepository.getContestUsers(contestId)
+                    } catch (_: Exception) {
+                        state.value.contestUsers.orEmpty()
+                    }.associateBy { u -> u.user_id }
+
                     it.mapNotNull { user -> users[user.user_id] }
                 } else flowOf(try {
                     contestRepository.getContestUsers(contestId)
@@ -91,24 +95,6 @@ class ContestViewModel(
             }
         }
     }
-
-//    suspend fun loadSheet() {
-//        val auth = inject<Auth>()
-//        val currentUser = auth.currentUserOrNull()
-//        val isAdmin = currentUser.isAdmin
-//        mutableState.update { it.copy(isSheetLoading = true) }
-//        try {
-//            val bonsaiList =
-//                if (!isAdmin) {
-//                    contestRepository.getMyBonsaiForContest(contestId)
-//                } else {
-//                    contestRepository.getBonsaiWithMetadataForContest(contestId)
-//                }
-//            mutableState.update { it.copy(isSheetLoading = false, bonsaiList = bonsaiList) }
-//        } catch (_: Exception) {
-//            mutableState.update { it.copy(isSheetLoading = false) }
-//        }
-//    }
 
     fun transitionContestState(
         newState: String,
