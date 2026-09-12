@@ -78,6 +78,8 @@ import kodama.resources.judges_voted_format
 import kodama.resources.my_bonsai
 import kodama.resources.register_bonsai
 import kodama.resources.reveal_results
+import kodama.resources.reveal_results_confirm_text
+import kodama.resources.reveal_results_confirm_title
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.resources.voting_progress_format
