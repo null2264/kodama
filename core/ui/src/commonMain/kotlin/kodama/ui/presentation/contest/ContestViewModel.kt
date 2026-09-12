@@ -5,13 +5,17 @@ import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.BonsaiClass
 import kodama.core.data.Contest
+import kodama.core.data.ContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
+import kodama.core.util.isAdmin
 import kodama.ui.presentation.utils.StateViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,6 +26,7 @@ class ContestViewModel(
 ) : StateViewModel<ContestViewModel.State>(State()) {
 
     init {
+        subscribeUsers()
         loadContest()
         subscribeRealtime()
     }
@@ -31,21 +36,58 @@ class ContestViewModel(
             mutableState.update { it.copy(isLoading = true) }
             try {
                 val contest = contestRepository.getContestById(contestId)
-                val classIds = contestRepository.getContestClassIds(contestId)
+                val contestClasses = contestRepository.getContestClasses(contestId)
+                val contestClassesActualIds = contestClasses.map { it.class_id }
                 val allClasses = contestRepository.getBonsaiClasses()
-                val selectedClasses = allClasses.filter { it.id in classIds }
-                val users = contestRepository.getContestUsers(contestId)
+                val selectedClasses = allClasses.filter { it.id in contestClassesActualIds }
 //                loadSheet()
                 mutableState.update {
                     it.copy(
                         contest = contest,
+                        contestClasses = contestClasses,
                         classes = selectedClasses,
                         isLoading = false,
-                        contestUsers = users,
                     )
                 }
             } catch (_: Exception) {
                 mutableState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun subscribeUsers() {
+        viewModelScope.launch {
+            val currentUser = auth.currentUserOrNull()
+            val isAdmin = currentUser.isAdmin
+            val flow =
+                if (isAdmin) contestRepository.subscribeContestUsers(contestId).map {
+                    val users = contestRepository.getContestUsers(contestId).associateBy { u -> u.user_id }
+                    it.mapNotNull { user -> users[user.user_id] }
+                } else flowOf(try {
+                    contestRepository.getContestUsers(contestId)
+                } catch (e: Exception) {
+                    null
+                })
+            flow.collect { users ->
+                mutableState.update {
+                    it.copy(
+                        contestUsers = users,
+                    )
+                }
+            }
+        }
+    }
+
+    fun refreshUsers() {
+        viewModelScope.launch {
+            try {
+                val users = contestRepository.getContestUsers(contestId)
+                mutableState.update {
+                    it.copy(
+                        contestUsers = users,
+                    )
+                }
+            } catch (e: Exception) {
             }
         }
     }
@@ -153,14 +195,23 @@ class ContestViewModel(
 
     data class State(
         val contest: Contest? = null,
+        val contestClasses: List<ContestClass> = emptyList(),
         val classes: List<BonsaiClass> = emptyList(),
         val isLoading: Boolean = false,
         val isSheetLoading: Boolean = false,
-        val contestUsers: List<ContestUser> = emptyList(),
+        val contestUsers: List<ContestUser>? = emptyList(),
 
         val isUpdatingState: Boolean = false,
         val bonsaiList: List<Bonsai> = emptyList(),
         val reviews: List<Review> = emptyList(),
-        val bonsaiIsVerifying: Map<String, Boolean> = emptyMap()
-    )
+        val bonsaiIsVerifying: Map<String, Boolean> = emptyMap(),
+    ) {
+        val canFinalizeContest: Boolean
+            get() {
+                val hasHeadJudge = contestUsers?.any { it.role == "head_judge" }
+                return hasHeadJudge == true || contestClasses.all { contestClass ->
+                    contestUsers?.any { it.role == "judge" && it.contest_class_id == contestClass.id } ?: false
+                }
+            }
+    }
 }

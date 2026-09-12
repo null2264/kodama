@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -37,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -132,7 +134,16 @@ internal class ContestScreen(
         val auth: Auth = koinInject()
         val currentUser = auth.currentUserOrNull()
         val isAdmin = currentUser.isAdmin
-        val isJudge = currentUser?.isJudge(state.contestUsers) ?: false
+        if (state.contestUsers == null) {
+            // If this happened, something terribly wrong happened, or maybe connection is terrible
+            Box(modifier = Modifier.fillMaxSize()) {
+                Button(onClick = { viewModel.refreshUsers() }) {
+                    Text("Retry")
+                }
+            }
+            return
+        }
+        val isJudge = currentUser?.isJudge(state.contestUsers.orEmpty()) ?: false
 
         val bonsaiList = state.bonsaiList
 //        val sortedBonsaiList = remember(bonsaiList) {
@@ -161,27 +172,48 @@ internal class ContestScreen(
                     if (isAdmin && state.contest?.state == "draft" && !state.isUpdatingState) {
                         DropdownSplitButton(
                             leadingButton = {
-                                SplitButtonDefaults.LeadingButton(onClick = {
-                                    dialog = AlertDialogBuilder().apply {
-                                        titleRes = Res.string.finalize_contest_confirm_title
-                                        textRes = Res.string.finalize_contest_confirm_text
-                                        confirmText = "Ya, Buka"
-                                        cancelText = "Batal"
-                                        onConfirm = {
-                                            dialog = null
-                                            viewModel.transitionContestState(
-                                                newState = "accepting",
-                                                onError = { error ->
-                                                    coroutineScope.launch {
-                                                        snackbarHostState.showSnackbar(error)
-                                                    }
-                                                },
-                                                onSuccess = {},
-                                            )
+                                SplitButtonDefaults.LeadingButton(
+                                    onClick = {
+                                        if (!state.canFinalizeContest) {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Minimal satu juri per kelas atau satu ketua juri diperlukan!")
+                                            }
+                                            return@LeadingButton
                                         }
-                                        onCancel = { dialog = null }
-                                    }
-                                }) {
+
+                                        dialog = AlertDialogBuilder().apply {
+                                            titleRes = Res.string.finalize_contest_confirm_title
+                                            textRes = Res.string.finalize_contest_confirm_text
+                                            confirmText = "Ya, Buka"
+                                            cancelText = "Batal"
+                                            onConfirm = {
+                                                dialog = null
+                                                viewModel.transitionContestState(
+                                                    newState = "accepting",
+                                                    onError = { error ->
+                                                        coroutineScope.launch {
+                                                            snackbarHostState.showSnackbar(error)
+                                                        }
+                                                    },
+                                                    onSuccess = {},
+                                                )
+                                            }
+                                            onCancel = { dialog = null }
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (state.canFinalizeContest) {
+                                            ButtonDefaults.buttonColors().containerColor
+                                        } else {
+                                            ButtonDefaults.buttonColors().disabledContainerColor
+                                        },
+                                        contentColor = if (state.canFinalizeContest) {
+                                            ButtonDefaults.buttonColors().contentColor
+                                        } else {
+                                            ButtonDefaults.buttonColors().disabledContentColor
+                                        }
+                                    )
+                                ) {
                                     Text(stringResource(Res.string.finalize_contest))
                                 }
                             },

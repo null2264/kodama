@@ -85,6 +85,13 @@ data class User(
 )
 
 @Serializable
+data class RawContestUser(
+    val id: String,
+    val user_id: String,
+    val contest_id: String,
+)
+
+@Serializable
 data class ContestUser(
     val user_id: String,
     val email: String,
@@ -237,6 +244,31 @@ class ContestRepository(private val client: SupabaseClient) {
             schema = "kodama"
         }.decodeList<ContestUser>()
     }
+
+    @OptIn(SupabaseExperimental::class)
+    fun subscribeContestUsers(contestId: String): Flow<List<RawContestUser>> {
+        return client.from("kodama", "contest_participants").selectAsFlow(RawContestUser::id) {
+            eq("contest_id", contestId)
+        }
+    }
+
+    suspend fun getFullContestUser(rawContestUser: RawContestUser): ContestUser {
+        return client.from("kodama", "contest_participants")
+            .select(Columns.raw("user_id, email: auth.users(email), role, contest_class_id")) {
+                filter {
+                    eq("contest_id", rawContestUser.contest_id)
+                    eq("user_id", rawContestUser.user_id)
+                }
+            }
+            .decodeAs<ContestUser>()
+    }
+    /*
+    SELECT p.user_id, u.email, p.role, p.contest_class_id
+    FROM kodama.contest_participants p
+    JOIN auth.users u ON u.id = p.user_id
+    WHERE p.contest_id = p_contest_id
+    ORDER BY p.role, u.email;
+     */
 
     suspend fun verifyBonsai(bonsaiId: String): Boolean {
         return client.postgrest.rpc(
