@@ -122,7 +122,7 @@ import kotlin.time.Instant
 internal class ContestScreen(
     private val contestId: String,
 ) : Screen() {
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, InternalVoyagerApi::class)
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val viewModel = koinViewModel<ContestViewModel> {
@@ -171,11 +171,6 @@ internal class ContestScreen(
         var dialog by remember { mutableStateOf<AlertDialogBuilder?>(null) }
 
         val snackbarHostState = remember { SnackbarHostState() }
-        val bottomSheetState = rememberBottomSheetState()
-
-        BackHandler(enabled = bottomSheetState.currentValue == SheetPosition.Expanded) {
-            coroutineScope.launch { bottomSheetState.animateTo(SheetPosition.HalfExpanded) }
-        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
@@ -427,7 +422,6 @@ internal class ContestScreen(
 
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    state = bottomSheetState,
                     dragHandleToolTipString = "Bonsai List",
                 ) {
                     LazyColumn(

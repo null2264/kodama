@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
+import cafe.adriel.voyager.navigator.internal.BackHandler
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 enum class SheetPosition { Collapsed, HalfExpanded, Expanded }
@@ -61,7 +66,7 @@ fun rememberBottomSheetState(initialState: SheetPosition = SheetPosition.Collaps
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, InternalVoyagerApi::class)
 @Composable
 fun KodamaBottomSheet(
     modifier: Modifier = Modifier,
@@ -70,10 +75,17 @@ fun KodamaBottomSheet(
     dragHandleToolTipString: String = "Bottom Sheet",
     sheetContent: @Composable () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    BackHandler(enabled = state.currentValue == SheetPosition.Expanded) {
+        coroutineScope.launch { state.animateTo(SheetPosition.HalfExpanded) }
+    }
+
     BoxWithConstraints(modifier = modifier.statusBarsPadding().fillMaxSize()) {
         val density = LocalDensity.current
         val layoutHeight = with(density) { maxHeight.toPx() }
         val flingBehavior = AnchoredDraggableDefaults.flingBehavior(state)
+
 
         val nestedScrollConnection = remember(state) {
             object : NestedScrollConnection {
