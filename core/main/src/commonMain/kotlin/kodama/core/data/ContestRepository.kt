@@ -106,9 +106,8 @@ class ContestRepository(private val client: SupabaseClient) {
             .select {
                 filter {
                     or {
-                        eq("state", "accepting")
-                        eq("state", "draft")
-                        eq("state", "reviewing")
+                        neq("state", "finished")
+                        neq("state", "ended")
                     }
                 }
             }

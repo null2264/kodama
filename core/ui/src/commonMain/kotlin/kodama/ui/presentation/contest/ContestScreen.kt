@@ -50,10 +50,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import coil3.compose.AsyncImage
+import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
@@ -169,79 +171,106 @@ internal class ContestScreen(
                 actions = {
                     if (state.isLoading) return@KodamaScaffold
 
-                    if (isAdmin && state.contest?.state == "draft" && !state.isUpdatingState) {
-                        DropdownSplitButton(
-                            leadingButton = {
-                                SplitButtonDefaults.LeadingButton(
-                                    onClick = {
-                                        if (!state.canFinalizeContest) {
-                                            coroutineScope.launch {
-                                                snackbarHostState.showSnackbar("Minimal satu juri per kelas atau satu ketua juri diperlukan!")
+                    when {
+                        isAdmin && state.contest?.state == "draft" && !state.isUpdatingState -> {
+                            DropdownSplitButton(
+                                leadingButton = {
+                                    SplitButtonDefaults.LeadingButton(
+                                        onClick = {
+                                            if (!state.canFinalizeContest) {
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar("Minimal satu juri per kelas atau satu ketua juri diperlukan!")
+                                                }
+                                                return@LeadingButton
                                             }
-                                            return@LeadingButton
-                                        }
 
-                                        dialog = AlertDialogBuilder().apply {
-                                            titleRes = Res.string.finalize_contest_confirm_title
-                                            textRes = Res.string.finalize_contest_confirm_text
-                                            confirmText = "Ya, Buka"
-                                            cancelText = "Batal"
-                                            onConfirm = {
-                                                dialog = null
-                                                viewModel.transitionContestState(
-                                                    newState = "accepting",
-                                                    onError = { error ->
-                                                        coroutineScope.launch {
-                                                            snackbarHostState.showSnackbar(error)
-                                                        }
-                                                    },
-                                                    onSuccess = {},
-                                                )
+                                            dialog = AlertDialogBuilder().apply {
+                                                titleRes = Res.string.finalize_contest_confirm_title
+                                                textRes = Res.string.finalize_contest_confirm_text
+                                                confirmText = "Ya, Buka"
+                                                cancelText = "Batal"
+                                                onConfirm = {
+                                                    dialog = null
+                                                    viewModel.transitionContestState(
+                                                        newState = "accepting",
+                                                        onError = { error ->
+                                                            coroutineScope.launch {
+                                                                snackbarHostState.showSnackbar(error)
+                                                            }
+                                                        },
+                                                        onSuccess = {},
+                                                    )
+                                                }
+                                                onCancel = { dialog = null }
                                             }
-                                            onCancel = { dialog = null }
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (state.canFinalizeContest) {
-                                            ButtonDefaults.buttonColors().containerColor
-                                        } else {
-                                            ButtonDefaults.buttonColors().disabledContainerColor
                                         },
-                                        contentColor = if (state.canFinalizeContest) {
-                                            ButtonDefaults.buttonColors().contentColor
-                                        } else {
-                                            ButtonDefaults.buttonColors().disabledContentColor
-                                        }
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (state.canFinalizeContest) {
+                                                ButtonDefaults.buttonColors().containerColor
+                                            } else {
+                                                ButtonDefaults.buttonColors().disabledContainerColor
+                                            },
+                                            contentColor = if (state.canFinalizeContest) {
+                                                ButtonDefaults.buttonColors().contentColor
+                                            } else {
+                                                ButtonDefaults.buttonColors().disabledContentColor
+                                            }
+                                        )
+                                    ) {
+                                        Text(stringResource(Res.string.finalize_contest))
+                                    }
+                                },
+                                dropdownItems = { dismiss ->
+                                    DropdownMenuItem(
+                                        text = { Text("Edit") },
+                                        onClick = {
+                                            dismiss()
+                                        },
+                                        leadingIcon = { Icon(edit, contentDescription = null) },
                                     )
-                                ) {
-                                    Text(stringResource(Res.string.finalize_contest))
+                                    DropdownMenuItem(
+                                        text = { Text("Assign Judge") },
+                                        onClick = {
+                                            dismiss()
+                                            navigator?.push(AssignJudgesScreen(contestId))
+                                        },
+                                        leadingIcon = { Icon(flag, contentDescription = null) },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(Res.string.delete_bonsai)) },
+                                        onClick = {
+                                            dismiss()
+                                        },
+                                        leadingIcon = { Icon(delete, contentDescription = null) },
+                                    )
+                                },
+                            )
+                        }
+                        isAdmin && state.contest?.state == "accepting" && !state.isUpdatingState -> {
+                            Button(onClick = {
+                                dialog = AlertDialogBuilder().apply {
+                                    title = "Tutup pendaftaran"
+                                    text = "Tutup pendaftaran kontes?"
+                                    confirmText = "Ya, Tutup"
+                                    cancelText = "Batal"
+                                    onConfirm = {
+                                        dialog = null
+                                        viewModel.transitionContestState(
+                                            newState = "closed",
+                                            onError = { error ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(error)
+                                                }
+                                            },
+                                            onSuccess = {},
+                                        )
+                                    }
+                                    onCancel = { dialog = null }
                                 }
-                            },
-                            dropdownItems = { dismiss ->
-                                DropdownMenuItem(
-                                    text = { Text("Edit") },
-                                    onClick = {
-                                        dismiss()
-                                    },
-                                    leadingIcon = { Icon(edit, contentDescription = null) },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Assign Judge") },
-                                    onClick = {
-                                        dismiss()
-                                        navigator?.push(AssignJudgesScreen(contestId))
-                                    },
-                                    leadingIcon = { Icon(flag, contentDescription = null) },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(Res.string.delete_bonsai)) },
-                                    onClick = {
-                                        dismiss()
-                                    },
-                                    leadingIcon = { Icon(delete, contentDescription = null) },
-                                )
-                            },
-                        )
+                            }) {
+                                Text("Close Registration")
+                            }
+                        }
                     }
                 },
             ) { contentPadding ->
@@ -335,7 +364,7 @@ internal class ContestScreen(
                 ) {
                     LazyColumn(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                     ) {
                         // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
                         if (contest.state == "accepting" && !currentUser.isAdmin) {
@@ -350,7 +379,7 @@ internal class ContestScreen(
                                     },
                                 )
                             }
-                            item { Spacer(Modifier.height(4.dp)) }
+                            item { Spacer(Modifier.height(6.dp)) }
                         }
 
                         val isReviewing = contest.state == "reviewing"
@@ -463,7 +492,7 @@ internal class ContestScreen(
             !isReviewing && state == "waiting_verify" -> {
                 Chip("Waiting to be verified", flag)
             }
-            !isReviewing -> {
+            !isReviewing && state == "verified" -> {
                 Chip("Verified", flag)
             }
         }
@@ -475,14 +504,36 @@ internal class ContestScreen(
         isReviewing: Boolean,
         onBonsaiVerify: (Bonsai) -> Unit,
     ) {
+        val supabaseClient: SupabaseClient = koinInject()
+        val supabaseUrl = supabaseClient.config.supabaseUrl
+
+        val uriHandler = LocalUriHandler.current
+
         when {
             !isReviewing && state == "waiting_verify" -> {
-                LoadingButton(
-                    onClick = { onBonsaiVerify(this) },
-                    isLoading = viewModelState.bonsaiIsVerifying.getOrDefault(id, false),
-                ) {
-                    Text(stringResource(Res.string.verify_bonsai))
-                }
+                DropdownSplitButton(
+                    leadingButton = {
+                        SplitButtonDefaults.LeadingButton(onClick = {
+                            val proofUrl = payment_proof_path?.let { "https://$supabaseUrl/storage/v1/object/public/kodama-images/$it" } ?: return@LeadingButton
+                            uriHandler.openUri(proofUrl)
+                        }) {
+                            Text("Buka bukti bayar")
+                        }
+                    },
+                    dropdownItems = { dismiss ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.verify_bonsai)) },
+                            onClick = {
+                                dismiss()
+                                onBonsaiVerify(this@AdminAction)
+                            },
+                            leadingIcon = { Icon(edit, contentDescription = null) },
+                        )
+                    },
+                )
+            }
+            !isReviewing && state == "verified" -> {
+                Chip("Verified", flag)
             }
         }
     }
