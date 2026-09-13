@@ -50,10 +50,22 @@ import kotlin.math.roundToInt
 
 enum class SheetPosition { Collapsed, HalfExpanded, Expanded }
 
+typealias BottomSheetState = AnchoredDraggableState<SheetPosition>
+
+@Composable
+fun rememberBottomSheetState(initialState: SheetPosition = SheetPosition.Collapsed): BottomSheetState = rememberSaveable(
+    saver = AnchoredDraggableState.Saver()
+) {
+    AnchoredDraggableState(
+        initialValue = SheetPosition.Collapsed,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KodamaBottomSheet(
     modifier: Modifier = Modifier,
+    state: BottomSheetState = rememberBottomSheetState(),
     peekHeightPx: Float = 300f,
     dragHandleToolTipString: String = "Bottom Sheet",
     sheetContent: @Composable () -> Unit
@@ -61,14 +73,6 @@ fun KodamaBottomSheet(
     BoxWithConstraints(modifier = modifier.statusBarsPadding().fillMaxSize()) {
         val density = LocalDensity.current
         val layoutHeight = with(density) { maxHeight.toPx() }
-
-        val state = rememberSaveable(
-            saver = AnchoredDraggableState.Saver()
-        ) {
-            AnchoredDraggableState(
-                initialValue = SheetPosition.Collapsed,
-            )
-        }
         val flingBehavior = AnchoredDraggableDefaults.flingBehavior(state)
 
         val nestedScrollConnection = remember(state) {

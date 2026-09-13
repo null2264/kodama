@@ -3,6 +3,7 @@ package kodama.ui.presentation.contest
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.internal.BackHandler
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
@@ -92,6 +95,8 @@ import kodama.ui.component.DropdownSplitButton
 import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
+import kodama.ui.component.SheetPosition
+import kodama.ui.component.rememberBottomSheetState
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.bonsai.getFlagPotential
 import kodama.ui.presentation.contest.slop.AssignJudgesScreen
@@ -117,7 +122,7 @@ import kotlin.time.Instant
 internal class ContestScreen(
     private val contestId: String,
 ) : Screen() {
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, InternalVoyagerApi::class)
     @Composable
     override fun Content() {
         val viewModel = koinViewModel<ContestViewModel> {
@@ -166,6 +171,11 @@ internal class ContestScreen(
         var dialog by remember { mutableStateOf<AlertDialogBuilder?>(null) }
 
         val snackbarHostState = remember { SnackbarHostState() }
+        val bottomSheetState = rememberBottomSheetState()
+
+        BackHandler(enabled = bottomSheetState.currentValue == SheetPosition.Expanded) {
+            coroutineScope.launch { bottomSheetState.animateTo(SheetPosition.HalfExpanded) }
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             KodamaScaffold(
@@ -417,6 +427,7 @@ internal class ContestScreen(
 
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
+                    state = bottomSheetState,
                     dragHandleToolTipString = "Bonsai List",
                 ) {
                     LazyColumn(
