@@ -165,10 +165,10 @@ internal class ContestScreen(
                 appBarType = AppBarType.SMALL,
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 actions = {
-                    if (state.isLoading || isError) return@KodamaScaffold
+                    if (state.isLoading || state.isUpdatingState || isError) return@KodamaScaffold
 
                     when {
-                        isAdmin && state.contest?.state == ContestState.Draft && !state.isUpdatingState -> {
+                        isAdmin && state.contest?.state == ContestState.Draft -> {
                             DropdownSplitButton(
                                 leadingButton = {
                                     SplitButtonDefaults.LeadingButton(
@@ -242,7 +242,7 @@ internal class ContestScreen(
                                 },
                             )
                         }
-                        isAdmin && state.contest?.state == ContestState.Accepting && !state.isUpdatingState -> {
+                        isAdmin && state.contest?.state == ContestState.Accepting -> {
                             Button(onClick = {
                                 dialog = AlertDialogBuilder().apply {
                                     title = "Tutup pendaftaran?"
@@ -265,6 +265,31 @@ internal class ContestScreen(
                                 }
                             }) {
                                 Text("Close Registration")
+                            }
+                        }
+                        isAdmin && state.contest?.state == ContestState.Closed -> {
+                            Button(onClick = {
+                                dialog = AlertDialogBuilder().apply {
+                                    title = "Start review phase?"
+                                    text = "Allow judges to start reviewing contestants' bonsai."
+                                    confirmText = "Ya, Mulai"
+                                    cancelText = "Batal"
+                                    onConfirm = {
+                                        dialog = null
+                                        viewModel.transitionContestState(
+                                            newState = "reviewing",
+                                            onError = { error ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(error)
+                                                }
+                                            },
+                                            onSuccess = {},
+                                        )
+                                    }
+                                    onCancel = { dialog = null }
+                                }
+                            }) {
+                                Text("Start Reviewing Phase")
                             }
                         }
                     }
@@ -394,7 +419,7 @@ internal class ContestScreen(
                                 val hasBeenReviewed = review != null
                                 Card(
                                     modifier = Modifier.fillMaxWidth()
-                                        .clickable {
+                                        .clickable(enabled = currentUser?.let { bonsai.owner_id == it.id } ?: false) {
                                             navigator?.push(BonsaiDetailScreen(contestId, bonsai.id))
                                         },
                                     shape = when {
@@ -551,11 +576,7 @@ internal class ContestScreen(
                 )
             }
             !isReviewing && !hasBeenReviewed -> {
-                TextButton(
-                    onClick = { /*onRateBonsai(bonsai.id)*/ },
-                ) {
-                    Text("Rate")
-                }
+                Text("Not yet rated")
             }
         }
     }
