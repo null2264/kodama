@@ -50,6 +50,7 @@ import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
+import kodama.core.data.model.ContestState
 import kodama.core.util.BonsaiConstants
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
@@ -133,13 +134,13 @@ internal class ContestDetailScreen(
         var bonsaiToDelete by remember { mutableStateOf<Bonsai?>(null) }
         val sheetState = rememberModalBottomSheetState()
         val coroutineScope = rememberCoroutineScope()
-        val isFinishedOrEnded = state.contest?.state == "finished" || state.contest?.state == "ended"
-        val isReviewDone = state.contest?.state == "review_done"
+        val isFinishedOrEnded = state.contest?.state == ContestState.Finished || state.contest?.state == ContestState.Ended
+        val isReviewDone = state.contest?.state == ContestState.ReviewDone
         val canViewResults = isFinishedOrEnded || (isReviewDone && (isAdmin || isJudge))
         val isReadOnly = isFinishedOrEnded || isReviewDone
 
-        val canShowSheet = state.contest?.state == "accepting" || state.contest?.state == "reviewing" ||
-            (state.contest?.state == "review_done" && (isAdmin || isJudge))
+        val canShowSheet = state.contest?.state == ContestState.Accepting || state.contest?.state == ContestState.Reviewing ||
+            (state.contest?.state == ContestState.ReviewDone && (isAdmin || isJudge))
 
         LaunchedEffect(showCreatedSnackbar) {
             if (showCreatedSnackbar) {
@@ -153,7 +154,7 @@ internal class ContestDetailScreen(
             appBarType = AppBarType.SMALL,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             actions = {
-                if (isAdmin && state.contest?.state == "draft") {
+                if (isAdmin && state.contest?.state == ContestState.Draft) {
                     ToolTipButton(
                         toolTipLabel = "Edit",
                         icon = edit,
@@ -197,7 +198,7 @@ internal class ContestDetailScreen(
                                 style = MaterialTheme.typography.headlineMedium,
                             )
                             Text(
-                                text = contest.state.replaceFirstChar { it.uppercase() },
+                                text = contest.state.name,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -211,7 +212,7 @@ internal class ContestDetailScreen(
                             )
                         }
 
-                        if (isAdmin && contest.state == "draft") {
+                        if (isAdmin && contest.state == ContestState.Draft) {
                             val canFinalize = state.canFinalizeContest
                             LoadingButton(
                                 onClick = { showFinalizeDialog = true },
@@ -231,7 +232,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isAdmin && contest.state == "draft") {
+                        if (isAdmin && contest.state == ContestState.Draft) {
                             AssistChip(
                                 onClick = { navigator?.push(AssignJudgesScreen(contestId)) },
                                 label = { Text("Assign Judges") },
@@ -241,7 +242,7 @@ internal class ContestDetailScreen(
                             )
                         }
 
-                        if (isAdmin && contest.state == "accepting") {
+                        if (isAdmin && contest.state == ContestState.Accepting) {
                             LoadingButton(
                                 onClick = {
                                     pendingTransitionState = "closed"
@@ -255,7 +256,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isAdmin && contest.state == "closed") {
+                        if (isAdmin && contest.state == ContestState.Closed) {
                             LoadingButton(
                                 onClick = {
                                     pendingTransitionState = "reviewing"
@@ -269,7 +270,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isAdmin && contest.state == "reviewing") {
+                        if (isAdmin && contest.state == ContestState.Reviewing) {
                             LoadingButton(
                                 onClick = { showFinishDialog = true },
                                 modifier = Modifier.fillMaxWidth(),
@@ -280,7 +281,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isAdmin && contest.state == "review_done") {
+                        if (isAdmin && contest.state == ContestState.ReviewDone) {
                             LoadingButton(
                                 onClick = { showRevealDialog = true },
                                 modifier = Modifier.fillMaxWidth(),
@@ -291,7 +292,7 @@ internal class ContestDetailScreen(
                             }
                         }
 
-                        if (isAdmin && contest.state == "finished") {
+                        if (isAdmin && contest.state == ContestState.Finished) {
                             LoadingButton(
                                 onClick = {
                                     pendingTransitionState = "ended"
@@ -354,7 +355,7 @@ internal class ContestDetailScreen(
                             )
                         }
 
-                        if (!isAdmin && contest.state == "accepting") {
+                        if (!isAdmin && contest.state == ContestState.Accepting) {
                             Column {
                                 Text(
                                     text = stringResource(Res.string.my_bonsai),
@@ -431,8 +432,8 @@ internal class ContestDetailScreen(
                                                 }
                                             }
 
-                                            if (contest.state == "finished" || contest.state == "ended" ||
-                                                (contest.state == "review_done" && (isAdmin || isJudge))
+                                            if (contest.state == ContestState.Finished || contest.state == ContestState.Ended ||
+                                                (contest.state == ContestState.ReviewDone && (isAdmin || isJudge))
                                             ) {
                                                 val bonsaiReviews = state.reviews.filter { it.bonsai_id == bonsai.id }
                                                 if (bonsaiReviews.isNotEmpty()) {
@@ -649,7 +650,7 @@ internal class ContestDetailScreen(
                                 CircularProgressIndicator()
                             }
                         }
-                        contestState == "accepting" && isAdmin -> {
+                        contestState == ContestState.Accepting && isAdmin -> {
                             AdminAcceptingSheet(
                                 bonsaiList = state.bonsaiList.filter { it.state == "waiting_verify" },
                                 onVerify = { bonsaiId ->
@@ -658,14 +659,14 @@ internal class ContestDetailScreen(
                                 supabaseUrl = supabaseUrl,
                             )
                         }
-                        contestState == "reviewing" && isAdmin -> {
+                        contestState == ContestState.Reviewing && isAdmin -> {
                             AdminReviewingSheet(
                                 bonsaiList = state.bonsaiList.filter { it.state == "verified" },
                                 reviews = state.reviews,
                                 contestUsers = state.contestUsers,
                             )
                         }
-                        contestState == "reviewing" -> {
+                        contestState == ContestState.Reviewing -> {
                             val myAssignment = state.contestUsers.find { it.user_id == currentUserId }
                             val filteredBonsai = if (myAssignment?.role == "judge" && myAssignment.contest_class_id != null) {
                                 state.bonsaiList.filter {
@@ -684,14 +685,14 @@ internal class ContestDetailScreen(
                                 },
                             )
                         }
-                        contestState == "review_done" && isAdmin -> {
+                        contestState == ContestState.ReviewDone && isAdmin -> {
                             AdminReviewingSheet(
                                 bonsaiList = state.bonsaiList.filter { it.state == "verified" },
                                 reviews = state.reviews,
                                 contestUsers = state.contestUsers,
                             )
                         }
-                        contestState == "review_done" && isJudge -> {
+                        contestState == ContestState.ReviewDone && isJudge -> {
                             val myAssignment = state.contestUsers.find { it.user_id == currentUserId }
                             val filteredBonsai = if (myAssignment?.role == "judge" && myAssignment.contest_class_id != null) {
                                 state.bonsaiList.filter {

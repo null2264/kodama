@@ -21,6 +21,7 @@ kotlin {
                 api(libs.koin.core)
 
                 implementation(projects.core.preferences)
+                implementation(projects.resources)
 
                 api(project.dependencies.platform(libs.supabase.bom))
                 api(libs.bundles.supabase)

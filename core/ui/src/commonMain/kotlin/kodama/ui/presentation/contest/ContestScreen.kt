@@ -59,6 +59,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
+import kodama.core.data.model.ContestState
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.resources.Res
@@ -75,6 +76,8 @@ import kodama.resources.icons.chevron
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
 import kodama.resources.icons.flag
+import kodama.resources.icons.schedule
+import kodama.resources.icons.verified
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.ui.component.AlertDialogBuilder
@@ -172,7 +175,7 @@ internal class ContestScreen(
                     if (state.isLoading) return@KodamaScaffold
 
                     when {
-                        isAdmin && state.contest?.state == "draft" && !state.isUpdatingState -> {
+                        isAdmin && state.contest?.state == ContestState.Draft && !state.isUpdatingState -> {
                             DropdownSplitButton(
                                 leadingButton = {
                                     SplitButtonDefaults.LeadingButton(
@@ -246,11 +249,11 @@ internal class ContestScreen(
                                 },
                             )
                         }
-                        isAdmin && state.contest?.state == "accepting" && !state.isUpdatingState -> {
+                        isAdmin && state.contest?.state == ContestState.Accepting && !state.isUpdatingState -> {
                             Button(onClick = {
                                 dialog = AlertDialogBuilder().apply {
-                                    title = "Tutup pendaftaran"
-                                    text = "Tutup pendaftaran kontes?"
+                                    title = "Tutup pendaftaran?"
+                                    text = "Users won't be able to register new bonsai."
                                     confirmText = "Ya, Tutup"
                                     cancelText = "Batal"
                                     onConfirm = {
@@ -323,7 +326,9 @@ internal class ContestScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                item { Chip(contest.state.replaceFirstChar { it.uppercase() }, account_circle) }
+                                item {
+                                    Chip(contest.state.name, contest.state.symbol)
+                                }
                                 items(classVectors) {
                                     Chip(it.first.name, fallbackShape = it.second.toShape())
                                 }
@@ -354,9 +359,9 @@ internal class ContestScreen(
             dialog?.Content()
 
             state.contest?.let { contest ->
-                if (contest.state == "draft") return@let
+                if (contest.state == ContestState.Draft) return@let
                 // Wouldn't be fair to have judge able to join the contest now is it?
-                if (contest.state == "accepting" && isJudge) return@let
+                if (contest.state == ContestState.Accepting && isJudge) return@let
 
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -367,7 +372,7 @@ internal class ContestScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                     ) {
                         // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
-                        if (contest.state == "accepting" && !currentUser.isAdmin) {
+                        if (contest.state == ContestState.Accepting && !currentUser.isAdmin) {
                             item(key = "bottom_sheet_add") {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
@@ -382,7 +387,7 @@ internal class ContestScreen(
                             item { Spacer(Modifier.height(6.dp)) }
                         }
 
-                        val isReviewing = contest.state == "reviewing"
+                        val isReviewing = contest.state == ContestState.Reviewing
                         if (state.isSheetLoading) {
                             item(key = "bottom_sheet_loading") {
                                 Box(Modifier.fillMaxWidth().padding(top = 16.dp)) {
@@ -490,10 +495,10 @@ internal class ContestScreen(
                 )
             }
             !isReviewing && state == "waiting_verify" -> {
-                Chip("Waiting to be verified", flag)
+                Chip("Waiting to be verified", schedule)
             }
             !isReviewing && state == "verified" -> {
-                Chip("Verified", flag)
+                Chip("Verified", verified)
             }
         }
     }
@@ -533,7 +538,7 @@ internal class ContestScreen(
                 )
             }
             !isReviewing && state == "verified" -> {
-                Chip("Verified", flag)
+                Chip("Verified", verified)
             }
         }
     }

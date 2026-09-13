@@ -51,6 +51,7 @@ import io.github.jan.supabase.auth.Auth
 import kodama.resources.icons.add
 import kodama.core.data.Contest
 import kodama.core.data.ImageRepository
+import kodama.core.data.model.ContestState
 import kodama.core.util.kodamaRole
 import kodama.resources.Res
 import kodama.resources.add_contest
@@ -123,15 +124,15 @@ internal object HomeTab : Tab {
         var searchQuery by remember { mutableStateOf("") }
         var selectedFilter by remember { mutableStateOf("All") }
 
-        val visibleContests = if (isAdmin) state.contests else state.contests.filter { it.state != "draft" }
+        val visibleContests = if (isAdmin) state.contests else state.contests.filter { it.state != ContestState.Draft }
 
         val filteredContests = remember(visibleContests, selectedFilter) {
             visibleContests.filter { contest ->
                 val matchesSearch = searchQuery.isBlank() || contest.name.contains(searchQuery, ignoreCase = true)
                 val matchesFilter = when (selectedFilter) {
-                    "Registration" -> contest.state == "accepting"
-                    "On-going" -> contest.state in listOf("closed", "reviewing", "review_done")
-                    "Ended" -> contest.state == "ended" || contest.state == "finished"
+                    "Registration" -> contest.state == ContestState.Accepting
+                    "On-going" -> contest.state in listOf(ContestState.Closed, ContestState.Reviewing, ContestState.ReviewDone)
+                    "Ended" -> contest.state == ContestState.Ended || contest.state == ContestState.Finished
                     else -> true
                 }
                 matchesSearch && matchesFilter
@@ -269,7 +270,7 @@ private fun ContestCard(contest: Contest, imageRepository: ImageRepository = koi
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
 
-                Chip(contest.state.replaceFirstChar { it.uppercase() }, account_circle)
+                Chip(contest.state.name, contest.state.symbol)
 
                 Text(
                     text = contest.name,

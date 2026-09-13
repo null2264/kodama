@@ -8,6 +8,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
+import kodama.core.data.model.ContestState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
@@ -16,7 +17,7 @@ data class Contest(
     val id: String,
     val name: String,
     val description: String? = null,
-    val state: String,
+    val state: ContestState,
     val banner_path: String? = null,
     val created_at: String? = null,
     val updated_at: String? = null,

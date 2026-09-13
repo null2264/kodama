@@ -43,6 +43,7 @@ import coil3.compose.AsyncImage
 import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ImageRepository
+import kodama.core.data.model.ContestState
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.schedule
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
@@ -89,9 +90,9 @@ internal object RecentsTab : Tab {
 
         val filteredContests = contests.filter { contest ->
             when (selectedFilter) {
-                "Registration" -> contest.state == "accepting"
-                "On-going" -> contest.state == "reviewing" || contest.state == "review_done"
-                "Ended" -> contest.state == "ended" || contest.state == "finished"
+                "Registration" -> contest.state == ContestState.Accepting
+                "On-going" -> contest.state in listOf(ContestState.Closed, ContestState.Reviewing, ContestState.ReviewDone)
+                "Ended" -> contest.state == ContestState.Ended || contest.state == ContestState.Finished
                 else -> true
             }
         }
@@ -217,7 +218,7 @@ private fun JoinedContestCard(contest: Contest, onClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = contest.state.replaceFirstChar { it.uppercase() },
+                        text = contest.state.name,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )

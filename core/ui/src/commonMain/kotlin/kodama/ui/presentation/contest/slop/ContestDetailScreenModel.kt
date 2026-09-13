@@ -8,6 +8,7 @@ import kodama.core.data.Contest
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
+import kodama.core.data.model.ContestState
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -42,29 +43,29 @@ class ContestDetailScreenModel(
         }
     }
 
-    private suspend fun loadSheetData(contestState: String?) {
-        if (contestState != "draft" && contestState != "accepting" &&
-            contestState != "reviewing" && contestState != "review_done" &&
-            contestState != "finished" && contestState != "ended"
+    private suspend fun loadSheetData(contestState: ContestState?) {
+        if (contestState != ContestState.Draft && contestState != ContestState.Accepting &&
+            contestState != ContestState.Reviewing && contestState != ContestState.ReviewDone &&
+            contestState != ContestState.Finished && contestState != ContestState.Ended
         ) return
         mutableState.update { it.copy(isSheetLoading = true) }
         try {
-            val bonsai = if (contestState != "draft") {
+            val bonsai = if (contestState != ContestState.Draft) {
                 contestRepository.getBonsaiWithMetadataForContest(contestId)
             } else {
                 emptyList()
             }
-            val myBonsai = if (contestState != "draft") {
+            val myBonsai = if (contestState != ContestState.Draft) {
                 contestRepository.getMyBonsaiForContest(contestId)
             } else {
                 emptyList()
             }
-            val reviews = if (contestState == "reviewing" || contestState == "review_done" || contestState == "finished" || contestState == "ended") {
+            val reviews = if (contestState == ContestState.Reviewing || contestState == ContestState.ReviewDone || contestState == ContestState.Finished || contestState == ContestState.Ended) {
                 contestRepository.getReviewsForContest(contestId)
             } else {
                 emptyList()
             }
-            val users = if (contestState == "draft" || contestState == "reviewing" || contestState == "review_done") {
+            val users = if (contestState == ContestState.Draft || contestState == ContestState.Reviewing || contestState == ContestState.ReviewDone) {
                 contestRepository.getContestUsers(contestId)
             } else {
                 emptyList()
