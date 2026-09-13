@@ -1,9 +1,7 @@
 package kodama.ui.presentation.contest
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,23 +22,20 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SplitButtonDefaults
-import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,15 +45,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.internal.BackHandler
 import coil3.compose.AsyncImage
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
@@ -75,9 +67,7 @@ import kodama.resources.finalize_bonsai
 import kodama.resources.finalize_contest
 import kodama.resources.finalize_contest_confirm_text
 import kodama.resources.finalize_contest_confirm_title
-import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
-import kodama.resources.icons.chevron
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
 import kodama.resources.icons.flag
@@ -88,15 +78,13 @@ import kodama.resources.icons.verified
 import kodama.resources.judges_voted_format
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
+import kodama.resources.voting_progress_format
 import kodama.ui.component.AlertDialogBuilder
 import kodama.ui.component.AppBarType
 import kodama.ui.component.Chip
 import kodama.ui.component.DropdownSplitButton
 import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.component.KodamaScaffold
-import kodama.ui.component.LoadingButton
-import kodama.ui.component.SheetPosition
-import kodama.ui.component.rememberBottomSheetState
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
 import kodama.ui.presentation.bonsai.getFlagPotential
 import kodama.ui.presentation.contest.slop.AssignJudgesScreen
@@ -420,6 +408,11 @@ internal class ContestScreen(
                 // Wouldn't be fair to have judge able to join the contest now is it?
                 if (contest.state == ContestState.Accepting && isJudge) return@let
 
+                val totalJudges = state.contestUsers.orEmpty().count { it.role == "judge" || it.role == "head_judge" }
+                val totalReviews = bonsaiList.size * totalJudges
+                val completedReviews = if (isAdmin) reviews.size else if (isJudge) reviews.filter { it.judge_id == currentUser.id }.size else 0
+                val progress = completedReviews.toFloat() / totalReviews
+
                 KodamaBottomSheet(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     dragHandleToolTipString = "Bonsai List",
@@ -429,7 +422,7 @@ internal class ContestScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                     ) {
                         // Not sure whether I should let admin register their bonsai or not, but it makes more sense not to I feel like.
-                        if (contest.state == ContestState.Accepting && !currentUser.isAdmin) {
+                        if (contest.state == ContestState.Accepting && !isAdmin) {
                             item(key = "bottom_sheet_add") {
                                 Button(
                                     modifier = Modifier.fillMaxWidth(),
@@ -442,6 +435,23 @@ internal class ContestScreen(
                                 )
                             }
                             item { Spacer(Modifier.height(6.dp)) }
+                        } else if (contest.state in listOf(ContestState.Reviewing, ContestState.ReviewDone) && (isAdmin || isJudge)) {
+                            item(key = "bottom_sheet_progress") {
+                                Column(modifier = Modifier.padding(bottom = 14.dp)) {
+                                    Text(
+                                        text = stringResource(Res.string.voting_progress_format, completedReviews, totalReviews),
+                                        style = MaterialTheme.typography.labelMediumEmphasized,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    LinearProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    HorizontalDivider(Modifier.fillMaxWidth())
+                                }
+                            }
                         }
 
                         val isReviewing = contest.state == ContestState.Reviewing

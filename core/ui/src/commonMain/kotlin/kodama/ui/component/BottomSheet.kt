@@ -62,7 +62,7 @@ fun rememberBottomSheetState(initialState: SheetPosition = SheetPosition.Collaps
     saver = AnchoredDraggableState.Saver()
 ) {
     AnchoredDraggableState(
-        initialValue = SheetPosition.Collapsed,
+        initialValue = initialState,
     )
 }
 
