@@ -90,7 +90,7 @@ internal class BonsaiDetailScreen(
 
                 if (state.bonsai == null) return@KodamaScaffold
 
-                val flagPotential = runBlocking { state.reviews?.getFlagPotential(contestId, state.bonsai!!.contest_class_id) }
+                val flagPotential = runBlocking { state.reviews?.fetchFlagPotential(contestId, state.bonsai!!.contest_class_id) }
                 if (flagPotential == null) return@KodamaScaffold
 
                 if (flagPotential >= BonsaiConstants.RED_THRESHOLD) {
@@ -285,11 +285,15 @@ fun List<Review>.getTotalReview(): Int {
     return sumOf { it.total_score }
 }
 
-suspend fun List<Review>.getFlagPotential(contestId: String, contestClassId: String): Long {
+suspend fun List<Review>.fetchFlagPotential(contestId: String, contestClassId: String): Long {
     val contestRepository: ContestRepository = inject()
     val totalReview = getTotalReview()
     val judgesCount = contestRepository.getJudgesCount(contestId, contestClassId)
     requireNotNull(judgesCount) { "judgesCount must not be null" }
 
     return totalReview / judgesCount
+}
+
+fun List<Review>.getFlagPotential(judgesCount: Long): Long {
+    return getTotalReview() / judgesCount
 }

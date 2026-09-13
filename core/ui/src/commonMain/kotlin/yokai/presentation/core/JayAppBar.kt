@@ -126,6 +126,7 @@ fun JayExpandedTopAppBar(
                     Box(
                         modifier =
                             Modifier
+                                .then(if (navigationIcon == null) Modifier.padding(16.dp, 12.dp) else Modifier)
                                 .weight(1f)
                                 .alpha(titleAlpha())
                     ) {
@@ -306,7 +307,11 @@ fun JayTopAppBar(
                             it()
                         }
                     }
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .then(if (navigationIcon == null) Modifier.padding(16.dp, 12.dp) else Modifier)
+                            .weight(1f)
+                    ) {
                         ProvideContentColorTextStyle(
                             contentColor = colors.titleContentColor,
                             textStyle = titleTextStyle,

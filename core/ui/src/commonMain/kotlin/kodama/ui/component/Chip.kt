@@ -32,6 +32,7 @@ fun Chip(
     icon: ImageVector? = null,
     fallbackShape: Shape? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
 ) {
     Box(
         modifier = Modifier
@@ -47,7 +48,7 @@ fun Chip(
                     modifier = Modifier.padding(start = 6.dp).size(20.dp),
                     imageVector = icon,
                     contentDescription = "Chip icon",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = contentColor,
                 )
             } else if (fallbackShape != null) {
                 Box(
@@ -55,7 +56,7 @@ fun Chip(
                         .padding(start = 8.dp, end = 2.dp)
                         .padding(vertical = 2.dp)
                         .size(16.dp)
-                        .border(1.3.dp, MaterialTheme.colorScheme.onPrimaryContainer, fallbackShape),
+                        .border(1.3.dp, contentColor, fallbackShape),
                 )
             }
             Text(
@@ -65,7 +66,7 @@ fun Chip(
                 ),
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = contentColor,
             )
         }
     }

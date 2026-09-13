@@ -1,6 +1,7 @@
 package kodama.ui.presentation.contest
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -76,8 +78,11 @@ import kodama.resources.icons.chevron
 import kodama.resources.icons.delete
 import kodama.resources.icons.edit
 import kodama.resources.icons.flag
+import kodama.resources.icons.rate_review
+import kodama.resources.icons.reviews
 import kodama.resources.icons.schedule
 import kodama.resources.icons.verified
+import kodama.resources.judges_voted_format
 import kodama.resources.verify_bonsai
 import kodama.resources.voted
 import kodama.ui.component.AlertDialogBuilder
@@ -88,6 +93,7 @@ import kodama.ui.component.KodamaBottomSheet
 import kodama.ui.component.KodamaScaffold
 import kodama.ui.component.LoadingButton
 import kodama.ui.presentation.bonsai.BonsaiDetailScreen
+import kodama.ui.presentation.bonsai.getFlagPotential
 import kodama.ui.presentation.contest.slop.AssignJudgesScreen
 import kodama.ui.presentation.contest.slop.CreateBonsaiScreen
 import kodama.ui.presentation.contest.slop.FinalizeEntryScreen
@@ -104,6 +110,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import kotlin.collections.count
+import kotlin.collections.orEmpty
 import kotlin.time.Instant
 
 internal class ContestScreen(
@@ -292,6 +300,31 @@ internal class ContestScreen(
                                 Text("Start Reviewing Phase")
                             }
                         }
+                        isAdmin && state.contest?.state == ContestState.Reviewing -> {
+                            Button(onClick = {
+                                dialog = AlertDialogBuilder().apply {
+                                    title = "Close review?"
+                                    text = "Judges won't be able to review any more bonsai."
+                                    confirmText = "Ya, Tutup"
+                                    cancelText = "Batal"
+                                    onConfirm = {
+                                        dialog = null
+                                        viewModel.transitionContestState(
+                                            newState = "review_done",
+                                            onError = { error ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(error)
+                                                }
+                                            },
+                                            onSuccess = {},
+                                        )
+                                    }
+                                    onCancel = { dialog = null }
+                                }
+                            }) {
+                                Text("Close Review")
+                            }
+                        }
                     }
                 },
             ) { contentPadding ->
@@ -453,6 +486,7 @@ internal class ContestScreen(
                                                 hasBeenReviewed = hasBeenReviewed,
                                             )
                                             else -> bonsai.UserAction(
+                                                viewModelState = state,
                                                 isReviewing = isReviewing,
                                                 onBonsaiDelete = { bonsai ->
                                                     dialog = AlertDialogBuilder().apply {
@@ -481,10 +515,22 @@ internal class ContestScreen(
 
     @Composable
     fun Bonsai.UserAction(
+        viewModelState: ContestViewModel.State,
         isReviewing: Boolean,
         onBonsaiDelete: (Bonsai) -> Unit,
     ) {
         val navigator = LocalNavigator.current
+
+        val bonsaiReviews = viewModelState.reviews.filter { it.bonsai_id == id }
+        val contestUsers = viewModelState.contestUsers.orEmpty()
+        val judgesForClass = contestUsers.count {
+            it.role == "judge" && it.contest_class_id == contest_class_id
+        } + contestUsers.count { it.role == "head_judge" }
+        val votedCount = bonsaiReviews.size
+
+        val isFullyVoted = votedCount == judgesForClass
+        val flagPotential = if (isFullyVoted) bonsaiReviews.getFlagPotential(judgesForClass.toLong()) else 0
+
         when {
             !isReviewing && state == "draft" -> {
                 DropdownSplitButton(
@@ -519,6 +565,20 @@ internal class ContestScreen(
             !isReviewing && state == "verified" -> {
                 Chip("Verified", verified)
             }
+            isReviewing && isFullyVoted && flagPotential >= 200L -> {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(100))
+                        .background(if (flagPotential >= 350L) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(horizontal = 6.dp).size(20.dp),
+                        imageVector = flag,
+                        contentDescription = "Chip icon",
+                        tint = if (flagPotential >= 350L) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
         }
     }
 
@@ -532,6 +592,13 @@ internal class ContestScreen(
         val supabaseUrl = supabaseClient.config.supabaseUrl
 
         val uriHandler = LocalUriHandler.current
+
+        val bonsaiReviews = viewModelState.reviews.filter { it.bonsai_id == id }
+        val contestUsers = viewModelState.contestUsers.orEmpty()
+        val judgesForClass = contestUsers.count {
+            it.role == "judge" && it.contest_class_id == contest_class_id
+        } + contestUsers.count { it.role == "head_judge" }
+        val votedCount = bonsaiReviews.size
 
         when {
             !isReviewing && state == "waiting_verify" -> {
@@ -559,6 +626,12 @@ internal class ContestScreen(
             !isReviewing && state == "verified" -> {
                 Chip("Verified", verified)
             }
+            isReviewing -> {
+                Chip(
+                    text = stringResource(Res.string.judges_voted_format, votedCount, judgesForClass),
+                    icon = reviews,
+                )
+            }
         }
     }
 
@@ -567,16 +640,14 @@ internal class ContestScreen(
         isReviewing: Boolean,
         hasBeenReviewed: Boolean,
     ) {
+        if (!isReviewing) return
+
         when {
-            !isReviewing && hasBeenReviewed -> {
-                Text(
-                    text = stringResource(Res.string.voted),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+            hasBeenReviewed -> {
+                Chip(stringResource(Res.string.voted), reviews)
             }
-            !isReviewing && !hasBeenReviewed -> {
-                Text("Not yet rated")
+            !hasBeenReviewed -> {
+                Chip("Not yet rated", rate_review)
             }
         }
     }
