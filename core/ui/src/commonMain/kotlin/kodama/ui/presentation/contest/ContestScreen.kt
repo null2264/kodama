@@ -139,15 +139,8 @@ internal class ContestScreen(
         val auth: Auth = koinInject()
         val currentUser = auth.currentUserOrNull()
         val isAdmin = currentUser.isAdmin
-        if (state.contestUsers == null) {
-            // If this happened, something terribly wrong happened, or maybe connection is terrible
-            Box(modifier = Modifier.fillMaxSize()) {
-                Button(onClick = { viewModel.refreshUsers() }) {
-                    Text("Retry")
-                }
-            }
-            return
-        }
+
+        val isError = state.contestUsers == null || state.contest == null
         val isJudge = currentUser?.isJudge(state.contestUsers.orEmpty()) ?: false
 
         val bonsaiList = state.bonsaiList
@@ -172,7 +165,7 @@ internal class ContestScreen(
                 appBarType = AppBarType.SMALL,
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 actions = {
-                    if (state.isLoading) return@KodamaScaffold
+                    if (state.isLoading || isError) return@KodamaScaffold
 
                     when {
                         isAdmin && state.contest?.state == ContestState.Draft && !state.isUpdatingState -> {
@@ -287,19 +280,18 @@ internal class ContestScreen(
                     return@KodamaScaffold
                 }
 
-                if (state.contest == null) {
+                if (isError) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(contentPadding),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("Unable to load contest")
-                        Button(
-                            onClick = { viewModel.loadContest() },
-                        ) {
+                        Button(onClick = { viewModel.loadContest() }) {
                             Text("Try again")
                         }
                     }
+                    return@KodamaScaffold
                 }
 
                 val contest = state.contest ?: return@KodamaScaffold
@@ -355,6 +347,8 @@ internal class ContestScreen(
 
                 }
             }
+
+            if (isError) return@Box
 
             dialog?.Content()
 
