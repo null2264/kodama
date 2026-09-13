@@ -57,6 +57,8 @@ import io.github.jan.supabase.auth.Auth
 import kodama.core.data.Bonsai
 import kodama.core.data.ImageRepository
 import kodama.core.data.model.ContestState
+import kodama.core.util.BonsaiConstants
+import kodama.core.util.BonsaiConstants.FlagsThreshold
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.resources.Res
@@ -408,7 +410,7 @@ internal class ContestScreen(
                 // Wouldn't be fair to have judge able to join the contest now is it?
                 if (contest.state == ContestState.Accepting && isJudge) return@let
 
-                val totalJudges = state.contestUsers.orEmpty().count { it.role == "judge" || it.role == "head_judge" }
+                val totalJudges = if (!isJudge) state.contestUsers.orEmpty().count { it.role == "judge" || it.role == "head_judge" } else 1
                 val totalReviews = bonsaiList.size * totalJudges
                 val completedReviews = if (isAdmin) reviews.size else if (isJudge) reviews.filter { it.judge_id == currentUser.id }.size else 0
                 val progress = completedReviews.toFloat() / totalReviews
@@ -580,17 +582,21 @@ internal class ContestScreen(
             !isReviewing && state == "verified" -> {
                 Chip("Verified", verified)
             }
-            isReviewing && isFullyVoted && flagPotential >= 200L -> {
+            isReviewing && isFullyVoted && flagPotential >= FlagsThreshold.GREEN -> {
+                // NOTE: Each bonsai can have multiple flags except for Green and Red, which is mutually exclusive.
+                // But since this is during reviewing phase, means the only visible flag is Green and Red flag...
+                // Best 10, Best in Class, Best in Shows will be shown after Admin or Judges tap the
+                // "Reveal contest results" button.
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(100))
-                        .background(if (flagPotential >= 350L) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
+                        .background(if (flagPotential >= FlagsThreshold.RED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
                 ) {
                     Icon(
-                        modifier = Modifier.padding(horizontal = 6.dp).size(20.dp),
+                        modifier = Modifier.padding(6.dp).size(20.dp),
                         imageVector = flag,
                         contentDescription = "Chip icon",
-                        tint = if (flagPotential >= 350L) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = if (flagPotential >= FlagsThreshold.RED) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
             }

@@ -10,6 +10,7 @@ import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
 import kodama.core.util.isAdmin
+import kodama.core.util.isJudge
 import kodama.ui.presentation.utils.StateViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -27,12 +28,11 @@ class ContestViewModel(
 
     init {
         loadContest(true)
-        subscribeRealtime()
     }
 
     fun loadContest(cold: Boolean = false) {
         viewModelScope.launch {
-            mutableState.update { it.copy(isLoading = true) }
+            mutableState.update { it.copy(isSheetLoading = true, isLoading = true) }
             try {
                 val contest = contestRepository.getContestById(contestId)
                 val contestClasses = contestRepository.getContestClasses(contestId)
@@ -81,6 +81,28 @@ class ContestViewModel(
                     )
                 }
             }
+
+            val currentState = state.value
+            val contestUsers = currentState.contestUsers.orEmpty()
+            // FIXME: This looks like race condition waiting to happened... But my brain is too fried to think of something better atm.
+            val isJudge = currentUser?.isJudge(contestUsers) ?: false
+
+            contestRepository.subscribeBonsaiListForContest(contestId).combine(
+                currentUser?.let { usr ->
+                    if (isJudge) contestRepository.subscribeMyReviews(usr.id)
+                    else contestRepository.subscribeAllReviews()
+                } ?: flowOf()
+            ) { bonsaiList, review ->
+                Pair(bonsaiList, review)
+            }.collect { (bonsaiList, reviews) ->
+                mutableState.update {
+                    it.copy(
+                        bonsaiList = bonsaiList,
+                        reviews = reviews,
+                        isSheetLoading = false,
+                    )
+                }
+            }
         }
     }
 
@@ -113,29 +135,6 @@ class ContestViewModel(
             } catch (e: Exception) {
                 mutableState.update { it.copy(isUpdatingState = false) }
                 onError(e.message ?: "Terjadi kesalahan")
-            }
-        }
-    }
-
-    /**
-     * Subscribe to realtime changes for bonsai list and reviews
-     */
-    fun subscribeRealtime() {
-        viewModelScope.launch {
-            mutableState.update { it.copy(isSheetLoading = true) }
-            val currentUser = auth.currentUserOrNull()
-            contestRepository.subscribeBonsaiListForContest(contestId).combine(
-                currentUser?.let { contestRepository.subscribeMyReviews(it.id) } ?: flowOf()
-            ) { bonsaiList, review ->
-                Pair(bonsaiList, review)
-            }.collect { (bonsaiList, reviews) ->
-                mutableState.update {
-                    it.copy(
-                        bonsaiList = bonsaiList,
-                        reviews = reviews,
-                        isSheetLoading = false,
-                    )
-                }
             }
         }
     }

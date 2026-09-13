@@ -52,6 +52,7 @@ import kodama.core.data.ContestUser
 import kodama.core.data.Review
 import kodama.core.data.model.ContestState
 import kodama.core.util.BonsaiConstants
+import kodama.core.util.BonsaiConstants.FlagsThreshold
 import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.resources.Res
@@ -994,7 +995,7 @@ private fun JudgeReviewingSheet(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
-                                if (review.total_score >= BonsaiConstants.RED_THRESHOLD) {
+                                if (review.total_score >= FlagsThreshold.RED) {
                                     Icon(
                                         imageVector = flag,
                                         contentDescription = "Bendera",

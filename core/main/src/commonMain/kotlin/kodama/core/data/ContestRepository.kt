@@ -466,6 +466,14 @@ class ContestRepository(private val client: SupabaseClient) {
         }
     }
 
+    /**
+     * Subscribe to all reviews, normal (non judge) users will only see reviews for their bonsai.
+     */
+    @OptIn(SupabaseExperimental::class)
+    fun subscribeAllReviews(): Flow<List<Review>> {
+        return client.from("kodama", "reviews").selectAsFlow(Review::id)
+    }
+
     suspend fun submitReview(bonsaiId: String, scores: Map<String, Int>, totalScore: Int, comments: String?) {
         client.from("kodama", "reviews")
             .insert(

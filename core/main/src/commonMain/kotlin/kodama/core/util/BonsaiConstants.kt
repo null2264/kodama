@@ -3,13 +3,18 @@ package kodama.core.util
 object BonsaiConstants {
     /**
      * Bonsai Flags:
-     * Baik -> Green
-     * Baik Sekali -> Red
-     * Best 10 -> Yellow
-     * Best in Class -> Blue
-     * Best in Show -> White
+     * - Baik -> Green
+     * - Baik Sekali -> Red
+     * - Best 10 -> Yellow
+     * - Best in Class -> Blue
+     * - Best in Show -> White
+     *
+     * As far as I know, Green and Red flags is the only mutually exclusive flag here.
      */
-    const val GREEN_THRESHOLD = 280
-    const val RED_THRESHOLD = 350
-    const val FULL_THRESHOLD = 400
+    object FlagsThreshold {
+        const val GREEN = 280
+        const val RED = 350
+        const val FULL = 400
+    }
+
 }

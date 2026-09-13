@@ -43,6 +43,7 @@ import io.github.jan.supabase.auth.Auth
 import kodama.core.data.ContestRepository
 import kodama.core.data.Review
 import kodama.core.util.BonsaiConstants
+import kodama.core.util.BonsaiConstants.FlagsThreshold
 import kodama.resources.Res
 import kodama.resources.bonsai_detail
 import kodama.resources.finalize_bonsai
@@ -93,7 +94,7 @@ internal class BonsaiDetailScreen(
                 val flagPotential = runBlocking { state.reviews?.fetchFlagPotential(contestId, state.bonsai!!.contest_class_id) }
                 if (flagPotential == null) return@KodamaScaffold
 
-                if (flagPotential >= BonsaiConstants.RED_THRESHOLD) {
+                if (flagPotential >= FlagsThreshold.RED) {
                     Icon(flag, "Bendera")
                 }
             },
