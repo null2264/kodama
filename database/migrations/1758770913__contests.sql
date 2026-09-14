@@ -91,6 +91,10 @@ CREATE POLICY "Participants can view their own assignments." ON kodama.contest_p
 FOR SELECT TO authenticated
 USING (user_id = auth.uid());
 
+CREATE POLICY "Allow authenticated users to read contest users." ON kodama.contest_participants
+FOR SELECT TO authenticated
+USING (true);
+
 CREATE POLICY "Head Judges can update contest states." ON kodama.contests
 FOR UPDATE TO authenticated
 USING (
