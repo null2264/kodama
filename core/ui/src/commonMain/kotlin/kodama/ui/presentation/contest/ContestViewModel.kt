@@ -9,6 +9,7 @@ import kodama.core.data.ContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
+import kodama.core.data.model.ContestState
 import kodama.core.util.isJudge
 import kodama.ui.presentation.utils.StateViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -114,14 +115,14 @@ class ContestViewModel(
     }
 
     fun transitionContestState(
-        newState: String,
+        newState: ContestState,
         onError: (String) -> Unit = {},
         onSuccess: () -> Unit,
     ) {
         viewModelScope.launch {
             mutableState.update { it.copy(isUpdatingState = true) }
             try {
-                contestRepository.updateContestState(contestId, newState)
+                contestRepository.updateContestState(contestId, newState.serialName)
                 loadContest()
                 mutableState.update { it.copy(isUpdatingState = false) }
                 onSuccess()

@@ -191,7 +191,7 @@ internal class ContestScreen(
                                                 onConfirm = {
                                                     dialog = null
                                                     viewModel.transitionContestState(
-                                                        newState = "accepting",
+                                                        newState = ContestState.Accepting,
                                                         onError = { error ->
                                                             coroutineScope.launch {
                                                                 snackbarHostState.showSnackbar(error)
@@ -255,7 +255,7 @@ internal class ContestScreen(
                                     onConfirm = {
                                         dialog = null
                                         viewModel.transitionContestState(
-                                            newState = "closed",
+                                            newState = ContestState.Closed,
                                             onError = { error ->
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar(error)
@@ -280,7 +280,7 @@ internal class ContestScreen(
                                     onConfirm = {
                                         dialog = null
                                         viewModel.transitionContestState(
-                                            newState = "reviewing",
+                                            newState = ContestState.Reviewing,
                                             onError = { error ->
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar(error)
@@ -305,7 +305,7 @@ internal class ContestScreen(
                                     onConfirm = {
                                         dialog = null
                                         viewModel.transitionContestState(
-                                            newState = "review_done",
+                                            newState = ContestState.ReviewDone,
                                             onError = { error ->
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar(error)

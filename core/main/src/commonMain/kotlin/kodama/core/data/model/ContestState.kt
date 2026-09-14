@@ -11,12 +11,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class ContestState(val symbol: ImageVector) {
-    @SerialName("draft") Draft(draft_orders),
-    @SerialName("accepting") Accepting(edit),
-    @SerialName("closed") Closed(lock),
-    @SerialName("reviewing") Reviewing(rate_review),
-    @SerialName("review_done") ReviewDone(reviews),
-    @SerialName("finished") Finished(schedule),
-    @SerialName("ended") Ended(schedule);
+enum class ContestState(val symbol: ImageVector, val serialName: String) {
+    @SerialName("draft") Draft(draft_orders, "draft"),
+    @SerialName("accepting") Accepting(edit, "accepting"),
+    @SerialName("closed") Closed(lock, "closed"),
+    @SerialName("reviewing") Reviewing(rate_review, "reviewing"),
+    @SerialName("review_done") ReviewDone(reviews, "review_done"),
+    @SerialName("finished") Finished(schedule, "finished"),
+    @SerialName("ended") Ended(schedule, "ended");
 }
