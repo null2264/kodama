@@ -320,6 +320,57 @@ internal class ContestScreen(
                                 Text("Close Review")
                             }
                         }
+                        isAdmin && state.contest?.state == ContestState.ReviewDone -> {
+                            // FIXME: Maybe reveal results should be split to 2, reveal Best 10 then reveal final results.
+                            Button(onClick = {
+                                dialog = AlertDialogBuilder().apply {
+                                    title = "Reveal Results?"
+                                    text = "This will reveal Best 10, Best in Class and Best in Show."
+                                    confirmText = "Ya, Reveal"
+                                    cancelText = "Batal"
+                                    onConfirm = {
+                                        dialog = null
+                                        viewModel.transitionContestState(
+                                            newState = ContestState.Finished,
+                                            onError = { error ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(error)
+                                                }
+                                            },
+                                            onSuccess = {},
+                                        )
+                                    }
+                                    onCancel = { dialog = null }
+                                }
+                            }) {
+                                Text("Reveal Results")
+                            }
+                        }
+                        isAdmin && state.contest?.state == ContestState.Finished -> {
+                            Button(onClick = {
+                                dialog = AlertDialogBuilder().apply {
+                                    title = "Archive this contest?"
+                                    text = "..."
+                                    confirmText = "Ya, Arsipkan"
+                                    cancelText = "Batal"
+                                    onConfirm = {
+                                        dialog = null
+                                        viewModel.transitionContestState(
+                                            newState = ContestState.Ended,
+                                            onError = { error ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(error)
+                                                }
+                                            },
+                                            onSuccess = {},
+                                        )
+                                    }
+                                    onCancel = { dialog = null }
+                                }
+                            }) {
+                                Text("Archive")
+                            }
+                        }
                     }
                 },
             ) { contentPadding ->
