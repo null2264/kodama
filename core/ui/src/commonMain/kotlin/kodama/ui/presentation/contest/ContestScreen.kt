@@ -437,7 +437,7 @@ internal class ContestScreen(
                                 )
                             }
                             item { Spacer(Modifier.height(6.dp)) }
-                        } else if (contest.state in listOf(ContestState.Reviewing, ContestState.ReviewDone) && (isAdmin || isJudge)) {
+                        } else if (contest.state in listOf(ContestState.Reviewing, ContestState.ReviewDone) && (isAdmin || isJudge) && !state.isSheetLoading) {
                             item(key = "bottom_sheet_progress") {
                                 Column(modifier = Modifier.padding(bottom = 14.dp)) {
                                     Text(

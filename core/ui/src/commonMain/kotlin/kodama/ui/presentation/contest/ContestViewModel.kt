@@ -9,14 +9,14 @@ import kodama.core.data.ContestClass
 import kodama.core.data.ContestRepository
 import kodama.core.data.ContestUser
 import kodama.core.data.Review
-import kodama.core.util.isAdmin
 import kodama.core.util.isJudge
 import kodama.ui.presentation.utils.StateViewModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,12 +27,14 @@ class ContestViewModel(
 ) : StateViewModel<ContestViewModel.State>(State()) {
 
     init {
-        loadContest(true)
+        subscribeSheet()
+        subscribeContestUsers()
+        loadContest()
     }
 
-    fun loadContest(cold: Boolean = false) {
+    fun loadContest() {
         viewModelScope.launch {
-            mutableState.update { it.copy(isSheetLoading = true, isLoading = true) }
+            mutableState.update { it.copy(isLoading = true) }
             try {
                 val contest = contestRepository.getContestById(contestId)
                 val contestClasses = contestRepository.getContestClasses(contestId)
@@ -53,47 +55,39 @@ class ContestViewModel(
             } catch (_: Exception) {
                 mutableState.update { it.copy(isLoading = false) }
             }
+        }
+    }
 
-            if (!cold) return@launch
+    fun subscribeContestUsers() = viewModelScope.launch {
+        contestRepository.watchContestUsers(contestId).collect {
+            try {
+                val users = contestRepository.getContestUsers(contestId)
+                mutableState.update { it.copy(contestUsers = users) }
+            } catch (_: Exception) {}
+        }
+    }
 
-            val currentUser = auth.currentUserOrNull()
-            val isAdmin = currentUser.isAdmin
-            val flow =
-                if (isAdmin) contestRepository.subscribeContestUsers(contestId).map {
-                    val users = try {
-                        contestRepository.getContestUsers(contestId)
-                    } catch (_: Exception) {
-                        state.value.contestUsers.orEmpty()
-                    }.associateBy { u -> u.user_id }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun subscribeSheet() = viewModelScope.launch {
+        mutableState.update { it.copy(isSheetLoading = true) }
 
-                    it.mapNotNull { user -> users[user.user_id] }
-                } else flowOf(try {
-                    // Not the best, but nothing can be done at the moment, subscribeContestUsers wouldn't work for
-                    // non-admin. Maybe I can lax the RLS a bit so that non-admin can use subscribeContestUsers.
-                    contestRepository.getContestUsers(contestId)
-                } catch (e: Exception) {
-                    null
-                })
-            flow.collect { users ->
-                mutableState.update {
-                    it.copy(
-                        contestUsers = users,
-                    )
+        state.map { it.contestUsers }
+            .distinctUntilChanged()
+            .flatMapLatest {
+                val contestUsers = it.orEmpty()
+                val currentUser = auth.currentUserOrNull()
+                val isJudge = currentUser?.isJudge(contestUsers) == true
+
+                val reviewFlow = when {
+                    currentUser == null -> flowOf(emptyList())
+                    isJudge -> contestRepository.subscribeMyReviews(currentUser.id)
+                    else -> contestRepository.subscribeAllReviews()
                 }
-            }
 
-            val currentState = state.value
-            val contestUsers = currentState.contestUsers.orEmpty()
-            // FIXME: This looks like race condition waiting to happened... But my brain is too fried to think of something better atm.
-            val isJudge = currentUser?.isJudge(contestUsers) ?: false
-
-            contestRepository.subscribeBonsaiListForContest(contestId).combine(
-                currentUser?.let { usr ->
-                    if (isJudge) contestRepository.subscribeMyReviews(usr.id)
-                    else contestRepository.subscribeAllReviews()
-                } ?: flowOf()
-            ) { bonsaiList, review ->
-                Pair(bonsaiList, review)
+                contestRepository.subscribeBonsaiListForContest(contestId)
+                    .combine(reviewFlow) { bonsaiList, reviews ->
+                        bonsaiList to reviews
+                    }
             }.collect { (bonsaiList, reviews) ->
                 mutableState.update {
                     it.copy(
@@ -103,7 +97,6 @@ class ContestViewModel(
                     )
                 }
             }
-        }
     }
 
     fun refreshUsers() {

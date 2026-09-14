@@ -7,9 +7,16 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.realtime.selectAsFlow
 import kodama.core.data.model.ContestState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -249,6 +256,20 @@ class ContestRepository(private val client: SupabaseClient) {
     fun subscribeContestUsers(contestId: String): Flow<List<RawContestUser>> {
         return client.from("kodama", "contest_participants").selectAsFlow(RawContestUser::id) {
             eq("contest_id", contestId)
+        }
+    }
+
+    fun watchContestUsers(contestId: String): Flow<PostgresAction> {
+        val realtime = client.realtime
+        val channel = realtime.channel("")
+        return flow {
+            val channelFlow = channel.postgresChangeFlow<PostgresAction>(schema = "kodama") {
+                table = "contest_participants"
+            }
+            channel.subscribe()
+            emitAll(channelFlow)
+        }.onCompletion {
+            realtime.removeChannel(channel)
         }
     }
 
