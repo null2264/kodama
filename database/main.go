@@ -723,7 +723,7 @@ func doKeepAlive(cmd *cobra.Command, args []string) {
 	}
 	_, dbErr= db.Exec(`DELETE FROM public.keep_alive;`)
 	if dbErr != nil {
-		log.Fatal("Unable to keep alive")
+		log.Fatal("Unable to clean up keep alive")
 	}
 }
 
