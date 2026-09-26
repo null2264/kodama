@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	supabase "github.com/supabase-community/supabase-go"
 	"github.com/supabase-community/gotrue-go/types"
 	"github.com/google/uuid"
@@ -42,6 +43,12 @@ var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Generate new revision",
 	Run:   doMigrate,
+}
+
+var keepAliveCmd = &cobra.Command{
+	Use:   "keepalive",
+	Short: "Keep Supabase alive",
+	Run:   doKeepAlive,
 }
 
 var resetCmd = &cobra.Command{
@@ -699,15 +706,40 @@ func doUpgrade(cmd *cobra.Command, args []string) {
 	migration.Upgrade(enableTestRev)
 }
 
+func doKeepAlive(cmd *cobra.Command, args []string) {
+	dsn, ok := os.LookupEnv("PG_URI")
+	if !ok {
+		log.Fatal("PG_URI is not set")
+	}
+
+	db, dbErr := sql.Open("pgx", dsn)
+	if dbErr != nil {
+		log.Fatal("Unable to open DB")
+	}
+
+	_, dbErr = db.Exec(`INSERT INTO public.keep_alive (name) VALUES ("dingus");`)
+	if dbErr != nil {
+		log.Fatal("Unable to keep alive")
+	}
+	_, dbErr= db.Exec(`DELETE FROM public.keep_alive;`)
+	if dbErr != nil {
+		log.Fatal("Unable to keep alive")
+	}
+}
+
 func init() {
 	dbCmd.AddCommand(testCmd)
 	dbCmd.AddCommand(migrateCmd)
 	dbCmd.AddCommand(resetCmd)
 	dbCmd.AddCommand(upgradeCmd)
+	dbCmd.AddCommand(keepAliveCmd)
+
 	migrateCmd.Flags().StringVarP(&revisionReason, "reason", "r", "", "the reason for this revision")
 	migrateCmd.MarkFlagRequired("reason")
 	migrateCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "mark this revision as a test revision")
+
 	upgradeCmd.Flags().BoolVarP(&enableTestRev, "test", "t", false, "apply test revisions")
+
 	rootCmd.AddCommand(dbCmd)
 }
 
