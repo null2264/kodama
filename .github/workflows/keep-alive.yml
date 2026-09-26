@@ -1,0 +1,19 @@
+name: Supabase Keep-Alive
+on:
+  schedule:
+    - cron: "0 0 * * 1,4"
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run keep-alive command
+        run: |
+          cd database
+          go run . db keepalive
+        env:
+          PG_URI: ${{ secrets.PG_URI }}
