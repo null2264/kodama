@@ -717,7 +717,7 @@ func doKeepAlive(cmd *cobra.Command, args []string) {
 		log.Fatal("Unable to open DB")
 	}
 
-	_, dbErr = db.Exec(`INSERT INTO public.keep_alive (name) VALUES ("dingus");`)
+	_, dbErr = db.Exec(`INSERT INTO public.keep_alive (name) VALUES ('dingus');`)
 	if dbErr != nil {
 		log.Fatal("Unable to keep alive")
 	}
