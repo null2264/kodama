@@ -13,7 +13,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA kodama GRANT ALL ON FUNCTIONS TO postgres, an
 ALTER DEFAULT PRIVILEGES IN SCHEMA kodama GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
 
 -- REF: https://supabase.com/docs/guides/troubleshooting/pgrst106-the-schema-must-be-one-of-the-following-error-when-querying-an-exposed-schema
-ALTER ROLE authenticator SET pgrst.db_schemas = 'public,kodama';
+ALTER ROLE authenticator SET pgrst.db_schemas = 'public,graphql_public,kodama';
 --#endregion
 
 --#region Enums / Custom Types
