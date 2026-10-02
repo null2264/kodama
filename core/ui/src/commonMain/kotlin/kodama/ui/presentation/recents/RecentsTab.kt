@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +49,11 @@ import kodama.core.data.model.ContestState
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.schedule
 import kodama.ui.presentation.contest.slop.ContestDetailScreen
+import kodama.ui.presentation.main.MainViewModel
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 internal object RecentsTab : Tab {
 
@@ -86,6 +92,29 @@ internal object RecentsTab : Tab {
             } finally {
                 isLoading = false
             }
+        }
+
+        val listState = rememberLazyListState()
+        val mainViewModel = koinViewModel<MainViewModel>()
+
+        LaunchedEffect(Unit) {
+            mainViewModel.updateScrollBehaviour(
+                listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0,
+                listState.canScrollForward || listState.canScrollBackward,
+            )
+        }
+
+        LaunchedEffect(listState) {
+            combine(
+                snapshotFlow { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 },
+                snapshotFlow { listState.canScrollForward || listState.canScrollBackward },
+            ) {
+                Pair(it[0], it[1])
+            }
+                .distinctUntilChanged()
+                .collect { (atTop, canScroll) ->
+                    mainViewModel.updateScrollBehaviour(atTop, canScroll)
+                }
         }
 
         val filteredContests = contests.filter { contest ->
@@ -152,6 +181,7 @@ internal object RecentsTab : Tab {
                 }
                 else -> {
                     LazyColumn(
+                        state = listState,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(filteredContests, key = { it.id }) { contest ->

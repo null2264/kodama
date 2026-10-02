@@ -17,11 +17,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -37,10 +39,14 @@ import kodama.resources.icons.edit
 import kodama.resources.logout
 import kodama.resources.security_settings
 import kodama.ui.component.LoadingButton
+import kodama.ui.presentation.main.MainViewModel
 import kodama.ui.presentation.settings.TotpSetupScreen
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 internal object ProfileTab : Tab {
 
@@ -63,6 +69,29 @@ internal object ProfileTab : Tab {
         val coroutineScope = rememberCoroutineScope()
         val navigator = LocalNavigator.current
 
+        val scrollState = rememberScrollState()
+        val mainViewModel = koinViewModel<MainViewModel>()
+
+        LaunchedEffect(Unit) {
+            mainViewModel.updateScrollBehaviour(
+                scrollState.value == 0,
+                scrollState.canScrollForward || scrollState.canScrollBackward,
+            )
+        }
+
+        LaunchedEffect(scrollState) {
+            combine(
+                snapshotFlow { scrollState.value == 0 },
+                snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward },
+            ) {
+                Pair(it[0], it[1])
+            }
+                .distinctUntilChanged()
+                .collect { (atTop, canScroll) ->
+                    mainViewModel.updateScrollBehaviour(atTop, canScroll)
+                }
+        }
+
         val auth: Auth = koinInject()
         val user = auth.currentUserOrNull()
         val userName = user?.userMetadata?.get("name")?.toString()?.trim('"') ?: "unnamed"
@@ -72,7 +101,7 @@ internal object ProfileTab : Tab {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

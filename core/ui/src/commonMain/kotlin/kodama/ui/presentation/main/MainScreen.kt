@@ -3,6 +3,7 @@ package kodama.ui.presentation.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -10,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
@@ -30,6 +32,7 @@ internal class MainScreen : Screen() {
     override fun Content() {
         val viewModel = koinViewModel<MainViewModel>()
 
+        val focusManager = LocalFocusManager.current
         val textFieldState = rememberTextFieldState()
 
         val scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
@@ -55,7 +58,8 @@ internal class MainScreen : Screen() {
                 textFieldState = if (tabNavigator.current !is ProfileTab) textFieldState else null
             ) { contentPadding ->
                 LaunchedEffect(tabNavigator) {
-                    viewModel.updateScrollBehaviour(isAtTop = true, canScroll = true)
+                    textFieldState.clearText()
+                    focusManager.clearFocus()
                 }
 
                 Box(modifier = Modifier.padding(contentPadding)) {
@@ -67,18 +71,15 @@ internal class MainScreen : Screen() {
 }
 
 @Composable
-private fun RowScope.TabNavigationItem(tab: Tab, scrollBehavior: JayAppBarScrollBehavior) {
+private fun RowScope.TabNavigationItem(tab: Tab, scrollBehavior: JayAppBarScrollBehavior, onClickButNotChanged: () -> Unit = {}) {
     val tabNavigator = LocalTabNavigator.current
 
     NavigationBarItem(
         selected = tabNavigator.current == tab,
         onClick = {
-            val isChanged = tabNavigator.current != tab
             tabNavigator.current = tab
-            if (isChanged) {
-                scrollBehavior.scrollOffset = 0f
-                scrollBehavior.contentOffset = 0f
-            }
+            scrollBehavior.scrollOffset = 0f
+            scrollBehavior.contentOffset = 0f
         },
         icon = { Icon(tab.options.icon!!, tab.options.title) }
     )

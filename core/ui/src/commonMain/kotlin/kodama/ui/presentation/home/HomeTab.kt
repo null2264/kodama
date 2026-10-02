@@ -94,9 +94,17 @@ internal object HomeTab : Tab {
         val navigator = LocalNavigator.current
         val screenModel = rememberScreenModel<HomeTabScreenModel>()
         val state by screenModel.state.collectAsState()
-        val mainViewModel = koinViewModel<MainViewModel>()
 
         val listState = rememberLazyListState()
+
+        val mainViewModel = koinViewModel<MainViewModel>()
+
+        LaunchedEffect(Unit) {
+            mainViewModel.updateScrollBehaviour(
+                listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0,
+                listState.canScrollForward || listState.canScrollBackward,
+            )
+        }
 
         LaunchedEffect(listState) {
             combine(
