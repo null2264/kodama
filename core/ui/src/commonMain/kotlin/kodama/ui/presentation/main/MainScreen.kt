@@ -33,7 +33,6 @@ internal class MainScreen : Screen() {
         val viewModel = koinViewModel<MainViewModel>()
 
         val focusManager = LocalFocusManager.current
-        val textFieldState = rememberTextFieldState()
 
         val scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
             canScroll = { viewModel.canScroll },
@@ -55,10 +54,10 @@ internal class MainScreen : Screen() {
                     }
                 },
                 title = tabNavigator.current.options.title,
-                textFieldState = if (tabNavigator.current !is ProfileTab) textFieldState else null
+                textFieldState = if (tabNavigator.current !is ProfileTab) viewModel.searchTextFieldState else null
             ) { contentPadding ->
                 LaunchedEffect(tabNavigator) {
-                    textFieldState.clearText()
+                    viewModel.handleIntent(Intent.ClearSearch)
                     focusManager.clearFocus()
                 }
 

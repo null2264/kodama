@@ -1,5 +1,7 @@
 package kodama.ui.presentation.main
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,6 +18,8 @@ class MainViewModel : ViewModel() {
     var isAtTop by mutableStateOf(true)
         private set
 
+    val searchTextFieldState = TextFieldState()
+
     private val effectChannel = Channel<Effect>()
     val effect = effectChannel.receiveAsFlow()
 
@@ -27,7 +31,7 @@ class MainViewModel : ViewModel() {
 
     fun handleIntent(intent: Intent) {
         when (intent) {
-            Intent.DoNothing -> {}
+            Intent.ClearSearch -> searchTextFieldState.clearText()
         }
     }
 
@@ -38,7 +42,7 @@ class MainViewModel : ViewModel() {
 }
 
 sealed interface Intent {
-    object DoNothing : Intent
+    object ClearSearch : Intent
 }
 
 sealed interface Effect {

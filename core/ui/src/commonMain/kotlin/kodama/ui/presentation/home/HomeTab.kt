@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -150,25 +151,20 @@ internal object HomeTab : Tab {
                 modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             ) {
                 item(key = "tab_contests_header") {
-                    Column(
-                        modifier = Modifier.padding(vertical = 8.dp),
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            val filters = listOf("All", "Location", "Registration", "On-going", "Ended")
-                            filters.forEach { filter ->
-                                FilterChip(
-                                    selected = selectedFilter == filter,
-                                    onClick = { selectedFilter = filter },
-                                    label = { Text(filter) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    ),
-                                )
-                            }
+                        val filters = listOf("All", "Registration", "On-going", "Ended")
+                        items(filters) { filter ->
+                            FilterChip(
+                                selected = selectedFilter == filter,
+                                onClick = { selectedFilter = filter },
+                                label = { Text(filter) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ),
+                            )
                         }
                     }
                 }
