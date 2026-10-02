@@ -3,9 +3,9 @@ package kodama.ui.presentation.main
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import cafe.adriel.voyager.core.model.ScreenModel
+import androidx.lifecycle.ViewModel
 
-class MainScreenModel : ScreenModel {
+class MainViewModel : ViewModel() {
 
     var canScroll by mutableStateOf(true)
         private set

@@ -23,7 +23,7 @@ import kodama.ui.presentation.home.HomeTab
 import kodama.ui.presentation.profile.ProfileTab
 import kodama.ui.presentation.recents.RecentsTab
 import kodama.ui.presentation.utils.Screen
-import kodama.ui.presentation.utils.rememberScreenModel
+import org.koin.compose.viewmodel.koinViewModel
 import yokai.presentation.core.JayAppBarScrollBehavior
 import yokai.presentation.core.enterAlwaysCollapsedAppBarScrollBehavior
 
@@ -31,12 +31,12 @@ internal class MainScreen : Screen() {
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel<MainScreenModel>()
+        val viewModel = koinViewModel<MainViewModel>()
 
         var title by remember { mutableStateOf("") }
         val scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
-            canScroll = { screenModel.canScroll },
-            isAtTop = { screenModel.isAtTop },
+            canScroll = { viewModel.canScroll },
+            isAtTop = { viewModel.isAtTop },
         )
         TabNavigator(HomeTab) {
             KodamaScaffold(
@@ -55,7 +55,7 @@ internal class MainScreen : Screen() {
                 val tabNavigator = LocalTabNavigator.current
 
                 LaunchedEffect(tabNavigator) {
-                    screenModel.updateScrollBehaviour(isAtTop = true, canScroll = true)
+                    viewModel.updateScrollBehaviour(isAtTop = true, canScroll = true)
                 }
 
                 if (title != tabNavigator.current.options.title) title = tabNavigator.current.options.title

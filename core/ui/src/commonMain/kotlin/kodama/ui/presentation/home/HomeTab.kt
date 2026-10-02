@@ -4,9 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +17,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -41,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
@@ -55,7 +51,6 @@ import kodama.core.data.model.ContestState
 import kodama.core.util.kodamaRole
 import kodama.resources.Res
 import kodama.resources.add_contest
-import kodama.resources.icons.account_circle
 import kodama.resources.icons.alternate_email
 import kodama.resources.icons.home
 import kodama.resources.no_open_contests
@@ -63,11 +58,9 @@ import kodama.ui.component.Chip
 import kodama.ui.presentation.contest.ContestBannerRatio
 import kodama.ui.presentation.contest.ContestScreen
 import kodama.ui.presentation.contest.DateTimeFormat
-import kodama.ui.presentation.contest.slop.ContestDetailScreen
 import kodama.ui.presentation.contest.slop.CreateContestScreen
-import kodama.ui.presentation.main.MainScreenModel
+import kodama.ui.presentation.main.MainViewModel
 import kodama.ui.presentation.utils.rememberScreenModel
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.TimeZone
@@ -75,6 +68,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Instant
 
 internal object HomeTab : Tab {
@@ -100,7 +94,7 @@ internal object HomeTab : Tab {
         val navigator = LocalNavigator.current
         val screenModel = rememberScreenModel<HomeTabScreenModel>()
         val state by screenModel.state.collectAsState()
-        val mainScreenModel = rememberScreenModel<MainScreenModel>()
+        val mainViewModel = koinViewModel<MainViewModel>()
 
         val listState = rememberLazyListState()
 
@@ -113,7 +107,7 @@ internal object HomeTab : Tab {
             }
                 .distinctUntilChanged()
                 .collect { (atTop, canScroll) ->
-                    mainScreenModel.updateScrollBehaviour(atTop, canScroll)
+                    mainViewModel.updateScrollBehaviour(atTop, canScroll)
                 }
         }
 
