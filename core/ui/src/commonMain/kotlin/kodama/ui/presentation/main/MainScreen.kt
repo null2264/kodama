@@ -3,15 +3,12 @@ package kodama.ui.presentation.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -33,15 +30,19 @@ internal class MainScreen : Screen() {
     override fun Content() {
         val viewModel = koinViewModel<MainViewModel>()
 
-        var title by remember { mutableStateOf("") }
+        val textFieldState = rememberTextFieldState()
+
         val scrollBehavior = enterAlwaysCollapsedAppBarScrollBehavior(
             canScroll = { viewModel.canScroll },
             isAtTop = { viewModel.isAtTop },
         )
+
         TabNavigator(HomeTab) {
+            val tabNavigator = LocalTabNavigator.current
+
             KodamaScaffold(
                 onNavigationIconClicked = null,
-                appBarType = AppBarType.LARGE,
+                appBarType = AppBarType.SMALL,
                 scrollBehavior = scrollBehavior,
                 bottomBar = {
                     NavigationBar {
@@ -50,15 +51,12 @@ internal class MainScreen : Screen() {
                         TabNavigationItem(ProfileTab, scrollBehavior = scrollBehavior)
                     }
                 },
-                title = title,
+                title = tabNavigator.current.options.title,
+                textFieldState = if (tabNavigator.current !is ProfileTab) textFieldState else null
             ) { contentPadding ->
-                val tabNavigator = LocalTabNavigator.current
-
                 LaunchedEffect(tabNavigator) {
                     viewModel.updateScrollBehaviour(isAtTop = true, canScroll = true)
                 }
-
-                if (title != tabNavigator.current.options.title) title = tabNavigator.current.options.title
 
                 Box(modifier = Modifier.padding(contentPadding)) {
                     CurrentTab()
