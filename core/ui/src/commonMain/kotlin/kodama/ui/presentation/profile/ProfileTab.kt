@@ -1,6 +1,7 @@
 package kodama.ui.presentation.profile
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,8 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,9 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import io.github.jan.supabase.auth.Auth
@@ -97,125 +105,134 @@ internal object ProfileTab : Tab {
         val userName = user?.userMetadata?.get("name")?.toString()?.trim('"') ?: "unnamed"
         val userEmail = user?.email ?: ""
 
-        Column(
+        var isLoggingOut by remember { mutableStateOf(false) }
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(scrollState),
+                .padding(16.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = account_circle,
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(64.dp),
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.headlineSmall,
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = account_circle,
+                        contentDescription = "Profile",
+                        modifier = Modifier.size(64.dp),
                     )
-                    Text(
-                        text = userEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = userName,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                        Text(
+                            text = userEmail,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            Text(
-                text = "General",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { navigator?.push(EditProfileScreen()) }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = edit,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(modifier = Modifier.width(16.dp))
+            item {
                 Text(
-                    text = "Edit Profile",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    imageVector = arrow_back,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
+                    text = "General",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
 
-            HorizontalDivider()
-
-            Text(
-                text = "Security",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+            val generalOptions = listOf(
+                Option("Edit Profile", edit) { it.push(EditProfileScreen()) },
+                Option("Appearance", edit) {},
             )
+            itemsIndexed(generalOptions) { index, option ->
+                option.OptionCard(index, generalOptions)
+            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { navigator?.push(TotpSetupScreen()) }
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = account_circle,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(modifier = Modifier.width(16.dp))
+            item {
                 Text(
-                    text = stringResource(Res.string.security_settings),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    imageVector = arrow_back,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
+                    text = "Security",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
                 )
             }
 
-            HorizontalDivider()
+            val securityOptions = listOf(
+                Option("Keamanan", account_circle) { it.push(TotpSetupScreen()) },
+            )
+            itemsIndexed(securityOptions) { index, option ->
+                option.OptionCard(index, securityOptions)
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            var isLoggingOut by remember { mutableStateOf(false) }
-
-            LoadingButton(
-                modifier = Modifier.fillMaxWidth(),
-                isLoading = isLoggingOut,
-                onClick = {
-                    isLoggingOut = true
-                    coroutineScope.launch {
-                        try {
-                            auth.signOut()
-                        } catch (_: Exception) {
-                            isLoggingOut = false
+            item {
+                LoadingButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    isLoading = isLoggingOut,
+                    onClick = {
+                        isLoggingOut = true
+                        coroutineScope.launch {
+                            try {
+                                auth.signOut()
+                            } catch (_: Exception) {
+                                isLoggingOut = false
+                            }
                         }
-                    }
-                },
-            ) {
-                Text(stringResource(Res.string.logout))
+                    },
+                ) {
+                    Text(stringResource(Res.string.logout))
+                }
             }
         }
     }
 }
+
+@Composable
+fun Option.OptionCard(index: Int, optionList: List<Option>) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+            .padding(when {
+                index <= 0 -> 2.dp
+                else -> 0.dp
+            })
+            .clickable() {},
+        shape = when {
+            optionList.size == 1 -> RoundedCornerShape(16.dp)
+            index <= 0 -> RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp, topStart = 16.dp, topEnd = 16.dp)
+            index >= optionList.size - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp, topStart = 4.dp, topEnd = 4.dp)
+            else -> RoundedCornerShape(4.dp)
+        },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+data class Option(val name: String, val icon: ImageVector, val onNavigate: (Navigator) -> Unit)

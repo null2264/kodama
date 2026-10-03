@@ -53,7 +53,7 @@ internal class MainScreen : Screen() {
                         TabNavigationItem(ProfileTab, scrollBehavior = scrollBehavior)
                     }
                 },
-                title = tabNavigator.current.options.title,
+                title = if (tabNavigator.current !is ProfileTab) tabNavigator.current.options.title else "",
                 textFieldState = if (tabNavigator.current !is ProfileTab) viewModel.searchTextFieldState else null
             ) { contentPadding ->
                 LaunchedEffect(tabNavigator) {
