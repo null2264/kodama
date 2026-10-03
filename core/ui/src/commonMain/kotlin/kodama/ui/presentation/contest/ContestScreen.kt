@@ -152,9 +152,8 @@ internal class ContestScreen(
 //
 //            bonsaiList?.sortedBy { it.created_at }
 //        }
-        val reviews = state.reviews
-        val mappedReviews = remember(reviews) {
-            reviews.associateBy { it.bonsai_id }
+        val mappedReviews = remember(state.reviews) {
+            state.reviews.associateBy { it.bonsai_id }
         }
 
         val coroutineScope = rememberCoroutineScope()
@@ -463,7 +462,7 @@ internal class ContestScreen(
 
                 val totalJudges = if (!isJudge) state.contestUsers.orEmpty().count { it.role == "judge" || it.role == "head_judge" } else 1
                 val totalReviews = bonsaiList.size * totalJudges
-                val completedReviews = if (isAdmin) reviews.size else if (isJudge) reviews.filter { it.judge_id == currentUser.id }.size else 0
+                val completedReviews = if (isAdmin) mappedReviews.size else if (isJudge) mappedReviews.filter { (k, v) -> v.judge_id == currentUser.id }.size else 0
                 val progress = completedReviews.toFloat() / totalReviews
 
                 KodamaBottomSheet(

@@ -373,9 +373,7 @@ class ContestRepository(private val client: SupabaseClient) {
     fun subscribeBonsaiListForContest(contestId: String): Flow<List<Bonsai>> {
         return client.from("kodama", "bonsai").selectAsFlow(
             Bonsai::id,
-        ) {
-            eq("contest_id", contestId)
-        }
+        )
     }
 
     suspend fun getAllContests(): List<Contest> {

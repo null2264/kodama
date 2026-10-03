@@ -87,7 +87,8 @@ class ContestViewModel(
 
                 contestRepository.subscribeBonsaiListForContest(contestId)
                     .combine(reviewFlow) { bonsaiList, reviews ->
-                        bonsaiList to reviews
+                        val bonsaiIds = bonsaiList.map { b -> b.id }
+                        bonsaiList to reviews.filter { r -> r.bonsai_id in bonsaiIds }
                     }
             }.collect { (bonsaiList, reviews) ->
                 mutableState.update {
